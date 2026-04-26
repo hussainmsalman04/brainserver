@@ -1,18 +1,23 @@
 /**
  * MCP server for ClawMemory vault.
  *
- * Single Vercel function that speaks the streamable-HTTP MCP protocol.
- * Exposes three tools:
- *   - list_vault_files   : list .md files under a vault directory
- *   - read_vault_file    : fetch a vault file's content (so claude.ai can dedup before appending)
- *   - append_to_vault    : append a dated markdown entry to a vault file (creates file if missing)
+ * Vercel Node serverless function. Uses the legacy (req, res) signature
+ * because Vercel's nodejs runtime dispatches that reliably; pairs naturally
+ * with the SDK's Node-style StreamableHTTPServerTransport.
  *
- * Auth: Bearer token in Authorization header, checked against MCP_BEARER_TOKEN env.
+ * Tools exposed:
+ *   - list_vault_files
+ *   - read_vault_file
+ *   - append_to_vault
+ *
+ * Auth: Bearer token in Authorization header, validated against MCP_BEARER_TOKEN.
  * Storage: GitHub Contents API on the configured repo + branch.
  */
 
+import type { VercelRequest, VercelResponse } from "@vercel/node";
+
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
@@ -20,40 +25,16 @@ import {
 import { z } from "zod";
 
 import { VaultClient } from "../lib/github.js";
-import { checkAuth } from "../lib/auth.js";
 import { ALLOWED_DIRECTORIES, validateDirectory, validateVaultPath } from "../lib/validation.js";
-
-export const config = {
-  runtime: "nodejs",
-};
 
 // ---------- Tool input schemas ----------
 
-const ListFilesInput = z.object({
-  directory: z
-    .string()
-    .describe(`One of: ${ALLOWED_DIRECTORIES.join(", ")}.`),
-});
-
-const ReadFileInput = z.object({
-  path: z
-    .string()
-    .describe(
-      "Path within the vault, e.g. `01-Career/Job-Search-State.md`. Must be a `.md` under an allowed top-level directory."
-    ),
-});
-
+const ListFilesInput = z.object({ directory: z.string() });
+const ReadFileInput = z.object({ path: z.string() });
 const AppendInput = z.object({
-  path: z.string().describe("Vault path, e.g. `04-Personal/Health.md`."),
-  entry: z
-    .string()
-    .describe(
-      "Markdown content to append. Should typically start with a `## YYYY-MM-DD — <topic>` header followed by Context / What he said / Facts / Open sections."
-    ),
-  commit_message: z
-    .string()
-    .optional()
-    .describe("Optional git commit message. Defaults to `memory: append to <path> (claude.ai)`."),
+  path: z.string(),
+  entry: z.string(),
+  commit_message: z.string().optional(),
 });
 
 // ---------- Build MCP server ----------
@@ -73,10 +54,7 @@ function buildServer(vault: VaultClient): Server {
         inputSchema: {
           type: "object",
           properties: {
-            directory: {
-              type: "string",
-              description: `One of: ${ALLOWED_DIRECTORIES.join(", ")}.`,
-            },
+            directory: { type: "string", description: `One of: ${ALLOWED_DIRECTORIES.join(", ")}.` },
           },
           required: ["directory"],
         },
@@ -88,10 +66,7 @@ function buildServer(vault: VaultClient): Server {
         inputSchema: {
           type: "object",
           properties: {
-            path: {
-              type: "string",
-              description: "Vault path like `01-Career/Job-Search-State.md`.",
-            },
+            path: { type: "string", description: "Vault path like `01-Career/Job-Search-State.md`." },
           },
           required: ["path"],
         },
@@ -103,19 +78,13 @@ function buildServer(vault: VaultClient): Server {
         inputSchema: {
           type: "object",
           properties: {
-            path: {
-              type: "string",
-              description: "Vault path like `04-Personal/Health.md`.",
-            },
+            path: { type: "string", description: "Vault path like `04-Personal/Health.md`." },
             entry: {
               type: "string",
               description:
                 "Markdown to append. Should begin with `## YYYY-MM-DD — <short topic>` and include Context / What he said / Facts / Open sections.",
             },
-            commit_message: {
-              type: "string",
-              description: "Optional git commit message.",
-            },
+            commit_message: { type: "string", description: "Optional git commit message." },
           },
           required: ["path", "entry"],
         },
@@ -174,30 +143,45 @@ function toolError(text: string) {
   return { content: [{ type: "text", text: `ERROR: ${text}` }], isError: true };
 }
 
-// ---------- Vercel handler (Web Fetch API) ----------
+// ---------- Auth ----------
 
-const CORS_HEADERS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
-  "Access-Control-Allow-Headers": "authorization, content-type, mcp-session-id, mcp-protocol-version",
-  "Access-Control-Max-Age": "86400",
-};
+function checkAuth(req: VercelRequest): { ok: true } | { ok: false; reason: string } {
+  const expected = process.env.MCP_BEARER_TOKEN;
+  if (!expected || expected.length < 16) {
+    return { ok: false, reason: "Server misconfigured: MCP_BEARER_TOKEN missing or too short" };
+  }
+  const header = (req.headers["authorization"] ?? "") as string;
+  const m = /^Bearer\s+(.+)$/i.exec(header);
+  if (!m) return { ok: false, reason: "Missing or malformed Authorization header" };
+  const provided = m[1].trim();
+  if (provided.length !== expected.length) return { ok: false, reason: "Invalid token" };
+  let diff = 0;
+  for (let i = 0; i < provided.length; i++) {
+    diff |= provided.charCodeAt(i) ^ expected.charCodeAt(i);
+  }
+  return diff === 0 ? { ok: true } : { ok: false, reason: "Invalid token" };
+}
 
-export default async function handler(req: Request): Promise<Response> {
+// ---------- Vercel handler ----------
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // CORS preflight
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "authorization, content-type, mcp-session-id, mcp-protocol-version"
+  );
   if (req.method === "OPTIONS") {
-    return new Response(null, { status: 204, headers: CORS_HEADERS });
+    res.status(204).end();
+    return;
   }
 
   const auth = checkAuth(req);
   if (!auth.ok) {
-    return new Response(JSON.stringify({ error: auth.reason }), {
-      status: 401,
-      headers: {
-        "content-type": "application/json",
-        "www-authenticate": "Bearer",
-        ...CORS_HEADERS,
-      },
-    });
+    res.setHeader("WWW-Authenticate", "Bearer");
+    res.status(401).json({ error: auth.reason });
+    return;
   }
 
   const token = process.env.GITHUB_TOKEN;
@@ -205,31 +189,26 @@ export default async function handler(req: Request): Promise<Response> {
   const repo = process.env.GITHUB_REPO_NAME;
   const branch = process.env.GITHUB_BRANCH ?? "main";
   if (!token || !owner || !repo) {
-    return new Response(
-      JSON.stringify({
-        error:
-          "Server misconfigured: missing GITHUB_TOKEN / GITHUB_REPO_OWNER / GITHUB_REPO_NAME",
-      }),
-      {
-        status: 500,
-        headers: { "content-type": "application/json", ...CORS_HEADERS },
-      }
-    );
+    res.status(500).json({
+      error: "Server misconfigured: missing GITHUB_TOKEN / GITHUB_REPO_OWNER / GITHUB_REPO_NAME",
+    });
+    return;
   }
 
-  const vault = new VaultClient(token, { owner, repo, branch });
-  const server = buildServer(vault);
+  try {
+    const vault = new VaultClient(token, { owner, repo, branch });
+    const server = buildServer(vault);
+    const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
+    await server.connect(transport);
 
-  // Stateless transport — each Vercel invocation creates a fresh one.
-  const transport = new WebStandardStreamableHTTPServerTransport({
-    sessionIdGenerator: undefined,
-  });
-  await server.connect(transport);
-
-  const response = await transport.handleRequest(req);
-
-  // Mix CORS headers into the SDK's response.
-  const merged = new Headers(response.headers);
-  for (const [k, v] of Object.entries(CORS_HEADERS)) merged.set(k, v);
-  return new Response(response.body, { status: response.status, headers: merged });
+    // Vercel parses JSON bodies for us when content-type is application/json.
+    // The transport expects the parsed body as the third arg (or undefined).
+    const parsedBody = typeof req.body === "object" ? req.body : undefined;
+    await transport.handleRequest(req as any, res as any, parsedBody);
+  } catch (err: any) {
+    console.error("MCP handler error:", err);
+    if (!res.headersSent) {
+      res.status(500).json({ error: err?.message ?? String(err) });
+    }
+  }
 }
