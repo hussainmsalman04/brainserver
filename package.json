@@ -1,0 +1,25 @@
+{
+  "name": "clawmemory-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MCP server that lets claude.ai append durable memory entries to Aayush's Obsidian vault on GitHub.",
+  "type": "module",
+  "scripts": {
+    "build": "tsc --noEmit",
+    "dev": "vercel dev",
+    "deploy": "vercel deploy --prod"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "@octokit/rest": "^21.0.2",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.0",
+    "typescript": "^5.6.0",
+    "vercel": "^39.0.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
