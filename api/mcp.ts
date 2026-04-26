@@ -150,10 +150,25 @@ function checkAuth(req: VercelRequest): { ok: true } | { ok: false; reason: stri
   if (!expected || expected.length < 16) {
     return { ok: false, reason: "Server misconfigured: MCP_BEARER_TOKEN missing or too short" };
   }
+
+  // Accept token from EITHER the Authorization: Bearer header OR a ?token=... query param.
+  // Query-param mode is needed because claude.ai's "Add custom connector" UI doesn't expose
+  // a header field — only OAuth, which would be heavier to implement.
+  let provided: string | undefined;
   const header = (req.headers["authorization"] ?? "") as string;
   const m = /^Bearer\s+(.+)$/i.exec(header);
-  if (!m) return { ok: false, reason: "Missing or malformed Authorization header" };
-  const provided = m[1].trim();
+  if (m) {
+    provided = m[1].trim();
+  } else if (typeof req.query?.token === "string") {
+    provided = req.query.token;
+  }
+
+  if (!provided) {
+    return {
+      ok: false,
+      reason: "Missing token. Provide via `Authorization: Bearer <token>` header or `?token=...` query param.",
+    };
+  }
   if (provided.length !== expected.length) return { ok: false, reason: "Invalid token" };
   let diff = 0;
   for (let i = 0; i < provided.length; i++) {
