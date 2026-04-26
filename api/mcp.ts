@@ -24,7 +24,7 @@ import { checkAuth } from "../lib/auth.js";
 import { ALLOWED_DIRECTORIES, validateDirectory, validateVaultPath } from "../lib/validation.js";
 
 export const config = {
-  runtime: "edge",
+  runtime: "nodejs20.x",
 };
 
 // ---------- Tool input schemas ----------
