@@ -74,16 +74,58 @@ export class VaultClient {
     return { content, sha: file.sha };
   }
 
-  /**
-   * Append content to a file (or create it if missing). Returns the new commit sha.
-   * Always reads first to get the existing sha — never overwrites blind.
+  /** Normalize text for a conservative duplicate check.
+   *  This intentionally only catches effectively identical entries.
+   *  It will never decide that two merely-similar memories are the same.
    */
-  async appendToFile(
+  private normalizeForDedup(text: string): string {
+    return text
+      .replace(/\r\n/g, "\n")
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0)
+      .join("\n")
+      .trim();
+  }
+
+  /**
+   * Save an entry in one server-side operation.
+   *
+   * Safety properties:
+   * - Reads the file before writing.
+   * - Uses GitHub's sha precondition, so a concurrent edit cannot be overwritten.
+   * - Skips the write when the same normalized entry is already present.
+   * - Never rewrites, moves, deletes, or semantically merges existing notes.
+   */
+  async saveIfNew(
+    path: string,
+    entry: string,
+    commitMessage: string
+  ): Promise<{ commitSha: string; created: boolean; skippedDuplicate: boolean }> {
+    const existing = await this.readFile(path);
+    const normalizedEntry = this.normalizeForDedup(entry);
+
+    if (!normalizedEntry) {
+      throw new Error("entry is empty after normalization");
+    }
+
+    if (existing) {
+      const normalizedExisting = this.normalizeForDedup(existing.content);
+      if (normalizedExisting.includes(normalizedEntry)) {
+        return { commitSha: "", created: false, skippedDuplicate: true };
+      }
+    }
+
+    const result = await this.appendUsingExisting(path, entry, commitMessage, existing);
+    return { ...result, skippedDuplicate: false };
+  }
+
+  private async appendUsingExisting(
     path: string,
     toAppend: string,
-    commitMessage: string
+    commitMessage: string,
+    existing: { content: string; sha: string } | null
   ): Promise<{ commitSha: string; created: boolean }> {
-    const existing = await this.readFile(path);
     let newContent: string;
     let created = false;
     if (existing) {
@@ -97,7 +139,6 @@ export class VaultClient {
       newContent = `# ${title}\n\n_Auto-populated by claude.ai memory keeper on ${today}._\n\n${toAppend.replace(/^\s+/, "")}\n`;
     }
 
-    // base64 encode UTF-8 → binary string → btoa.
     const utf8 = new TextEncoder().encode(newContent);
     let binary = "";
     for (let i = 0; i < utf8.length; i++) binary += String.fromCharCode(utf8[i]);
@@ -121,5 +162,18 @@ export class VaultClient {
     }
     const data = (await res.json()) as { commit?: { sha?: string } };
     return { commitSha: data.commit?.sha ?? "", created };
+  }
+
+  /**
+   * Append content to a file (or create it if missing). Returns the new commit sha.
+   * Always reads first to get the existing sha — never overwrites blind.
+   */
+  async appendToFile(
+    path: string,
+    toAppend: string,
+    commitMessage: string
+  ): Promise<{ commitSha: string; created: boolean }> {
+    const existing = await this.readFile(path);
+    return this.appendUsingExisting(path, toAppend, commitMessage, existing);
   }
 }
