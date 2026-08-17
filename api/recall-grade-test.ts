@@ -70,6 +70,7 @@ type GradeResult = {
   whyItWasWrong: string;
   repair: string;
   knowledgeGap: string[];
+  testedDimensions: string[];
   requiredDimensions: string[];
 };
 
@@ -344,6 +345,12 @@ return MASTERED and an empty knowledgeGap and requiredDimensions array.
 For requiredDimensions, list only the dimensions that remain unresolved after
 evaluating the current answer.
 
+For testedDimensions, list every knowledge dimension actually tested by the
+CURRENT QUESTION. These dimensions must be reported whether the student
+MASTERED, PARTIALLY demonstrated, INCORRECTLY answered, or was MISSING.
+Do not omit a tested dimension because the student answered it correctly.
+Do not include dimensions that the CURRENT QUESTION did not test.
+
 Return ONLY valid JSON with exactly this shape:
 
 {
@@ -353,6 +360,7 @@ Return ONLY valid JSON with exactly this shape:
   "whyItWasWrong": "...",
   "repair": "...",
   "knowledgeGap": ["..."],
+  "testedDimensions": ["..."],
   "requiredDimensions": ["..."]
 }
 
@@ -393,9 +401,10 @@ Rules:
       });
     }
 
-    if (
-      !Array.isArray(gradeResult.requiredDimensions) ||
-      !Array.isArray(gradeResult.knowledgeGap)
+  if (
+  !Array.isArray(gradeResult.requiredDimensions) ||
+  !Array.isArray(gradeResult.knowledgeGap) ||
+  !Array.isArray(gradeResult.testedDimensions)
     ) {
       return res.status(502).json({
         error: "Grader returned invalid dimension data",
