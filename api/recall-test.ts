@@ -23,7 +23,7 @@ export default async function handler(
         },
         body: JSON.stringify({
           model: "google/gemini-3.1-flash-lite",
-         messages: [
+        messages: [
   {
     role: "user",
     content: `You are an MCAT active-recall examiner.
@@ -33,10 +33,33 @@ PFK-1 (phosphofructokinase-1) is the rate-limiting enzyme of glycolysis.
 PFK-1 is activated by AMP and fructose-2,6-bisphosphate (F2,6BP).
 PFK-1 is inhibited by ATP and citrate.
 
-Using ONLY the source material above, generate ONE free-recall question that tests understanding rather than simple recognition.
+QUESTION:
+If a cell is experiencing a high-energy state characterized by an abundance of ATP and a surplus of citric acid cycle intermediates, how would the activity of the glycolysis pathway be modulated, and which specific enzyme serves as the control point for this regulation?
 
-Do not provide the answer.
-Return only the question.`,
+STUDENT ANSWER:
+Glycolysis would increase because the cell has lots of ATP available. PFK-1 is the main regulatory enzyme.
+
+Grade the student's answer using ONLY the source material.
+
+Return these sections:
+
+RESULT:
+Choose exactly one: MASTERED, PARTIAL, INCORRECT, or MISSING
+
+WHAT WAS RIGHT:
+Identify the correct parts of the student's answer.
+
+WHAT WAS WRONG OR MISSING:
+Identify every important error or omission.
+
+WHY IT WAS WRONG:
+Explain the conceptual reason for the error, not merely the correct answer.
+
+REPAIR:
+Give the minimum information necessary to repair the student's understanding.
+
+RETEST QUESTION:
+Ask a different free-recall question testing the same weakness. Do not provide the answer to the retest question.`,
   },
 ],
         }),
