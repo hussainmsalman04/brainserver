@@ -121,12 +121,50 @@ export default async function handler(
     });
   }
 
-  const question =
-    typeof req.body?.question === "string" ? req.body.question.trim() : "";
+        const question =
+        typeof req.body?.question === "string"
+          ? req.body.question.trim()
+          : "";
 
-  const studentAnswer =
-    typeof req.body?.answer === "string" ? req.body.answer.trim() : "";
+      const studentAnswer =
+        typeof req.body?.answer === "string"
+          ? req.body.answer.trim()
+          : "";
 
+      const incomingReviewState =
+        req.body?.reviewState &&
+        typeof req.body.reviewState === "object"
+          ? req.body.reviewState
+          : null;
+
+      const reviewState = {
+        originalQuestion:
+          typeof incomingReviewState?.originalQuestion === "string"
+            ? incomingReviewState.originalQuestion.trim()
+            : question,
+
+        requiredDimensions:
+          Array.isArray(incomingReviewState?.requiredDimensions)
+            ? incomingReviewState.requiredDimensions.filter(
+                (item: unknown): item is string =>
+                  typeof item === "string" && item.trim().length > 0
+              )
+            : [],
+
+        knowledgeGap:
+          Array.isArray(incomingReviewState?.knowledgeGap)
+            ? incomingReviewState.knowledgeGap.filter(
+                (item: unknown): item is string =>
+                  typeof item === "string" && item.trim().length > 0
+              )
+            : [],
+
+        retestNumber:
+          typeof incomingReviewState?.retestNumber === "number" &&
+          Number.isInteger(incomingReviewState.retestNumber)
+            ? incomingReviewState.retestNumber
+            : 0,
+      };
   if (!question) {
     return res.status(400).json({
       error: "question is required",
@@ -169,6 +207,22 @@ ${question}
 STUDENT ANSWER:
 ${studentAnswer}
 
+REVIEW SESSION:
+This may be either a new review or a continuation of an existing review
+session.
+
+ORIGINAL QUESTION:
+${reviewState.originalQuestion}
+
+REQUIRED DIMENSIONS FROM THE ORIGINAL REVIEW:
+${JSON.stringify(reviewState.requiredDimensions)}
+
+PREVIOUS KNOWLEDGE GAP:
+${JSON.stringify(reviewState.knowledgeGap)}
+
+CURRENT RETEST NUMBER:
+${reviewState.retestNumber}
+
 Determine the student's result using this rubric:
 
 MASTERED = all important source-supported components are correct and no
@@ -183,11 +237,34 @@ required component.
 
 MISSING = no meaningful answer was provided.
 
-Identify the specific knowledge gap.
+Identify the student's current unresolved knowledge gap.
 
-For requiredDimensions, list the concrete concepts or comparison dimensions
-that must be retrieved to fully answer the QUESTION and that the student did
-not successfully demonstrate.
+If CURRENT RETEST NUMBER is 0, identify the complete set of required concepts
+or comparison dimensions from the QUESTION that the student did not
+successfully demonstrate.
+
+If CURRENT RETEST NUMBER is greater than 0, treat PREVIOUS KNOWLEDGE GAP as
+the authoritative starting point for the current evaluation.
+
+For a retest, do not restart the knowledge-gap analysis from scratch.
+
+Evaluate whether the student has now demonstrated each item in the PREVIOUS
+KNOWLEDGE GAP.
+
+If the student successfully demonstrates an item from the PREVIOUS KNOWLEDGE
+GAP, remove that item from the new knowledgeGap.
+
+If the student still fails to demonstrate an item, keep that item in the new
+knowledgeGap.
+
+Do not re-add a concept that was already demonstrated and is no longer part
+of the unresolved gap.
+
+If the student has successfully demonstrated every unresolved component,
+return MASTERED and an empty knowledgeGap and requiredDimensions array.
+
+For requiredDimensions, list only the dimensions that remain unresolved after
+evaluating the current answer.
 
 Return ONLY valid JSON with exactly this shape:
 
@@ -206,11 +283,21 @@ Rules:
 - Repair must reconstruct the student's actual missing or incorrect knowledge.
 - Do not generalize a specific Brain relationship into a broader scientific
   rule unless that broader rule is explicitly stated in the Brain.
-- requiredDimensions must contain only dimensions genuinely required by the
-  original QUESTION and not successfully demonstrated by the student.
-- If the student is MASTERED, requiredDimensions must be an empty array.
-- Do not generate a retest question yet.`;
+- On a new review where CURRENT RETEST NUMBER is 0, requiredDimensions must
+  contain the required dimensions from the original QUESTION that the student
+  did not successfully demonstrate.
 
+- On a retest where CURRENT RETEST NUMBER is greater than 0,
+  requiredDimensions must contain only the dimensions that remain unresolved
+  from the PREVIOUS KNOWLEDGE GAP.
+
+- Never restore a previously resolved dimension merely because it was part of
+  the original QUESTION.
+
+- If the student is MASTERED, knowledgeGap and requiredDimensions must both be
+  empty arrays.
+
+- Do not generate a retest question yet.
     const grade = await callGateway(aiKey, gradePrompt);
     const gradeResult = parseJsonObject<GradeResult>(grade.content);
 
@@ -238,29 +325,56 @@ Rules:
       });
     }
 
-    if (gradeResult.result === "MASTERED") {
-      return res.status(200).json({
-        success: true,
-        source: "study/mcat-bbfl.md",
-        question,
-        answer: studentAnswer,
-        evaluation: {
-          ...gradeResult,
-          retestQuestion: "",
-        },
-        verification: "SUPPORTED",
-        gradingUsage: grade.usage,
-        verificationUsage: null,
-        retestAttempts: 0,
-      });
-    }
+         if (gradeResult.result === "MASTERED") {
+        return res.status(200).json({
+          success: true,
+          source: "study/mcat-bbfl.md",
+          question,
+          answer: studentAnswer,
+          evaluation: {
+            ...gradeResult,
+            retestQuestion: "",
+          },
+          verification: "SUPPORTED",
+          gradingUsage: grade.usage,
+          verificationUsage: null,
+          retestAttempts: 0,
+          reviewState: {
+            originalQuestion: reviewState.originalQuestion,
+            requiredDimensions: [],
+            knowledgeGap: [],
+            retestNumber: reviewState.retestNumber,
+            mastered: true,
+          },
+        });
+      }
 
-    if (gradeResult.requiredDimensions.length === 0) {
-      return res.status(502).json({
-        error: "Grader did not identify a required knowledge gap",
-      });
-    }
+      if (reviewState.retestNumber >= 3) {
+        return res.status(422).json({
+          success: false,
+          blocked: true,
+          source: "study/mcat-bbfl.md",
+          question,
+          answer: studentAnswer,
+          evaluation: gradeResult,
+          error: "Review reached the maximum of 3 retests.",
+          reviewState: {
+            originalQuestion: reviewState.originalQuestion,
+            requiredDimensions: gradeResult.requiredDimensions,
+            knowledgeGap: gradeResult.knowledgeGap,
+            retestNumber: reviewState.retestNumber,
+            mastered: false,
+          },
+          gradingUsage: grade.usage,
+        });
+      }
 
+      if (gradeResult.requiredDimensions.length === 0) {
+        return res.status(502).json({
+          error: "Grader did not identify a required knowledge gap",
+        });
+      }
+      
     const attempts: Array<{
       attempt: number;
       question: string;
@@ -280,26 +394,51 @@ BRAIN MATERIAL:
 ${file.content}
 
 ORIGINAL QUESTION:
-${question}
+${reviewState.originalQuestion}
 
-STUDENT KNOWLEDGE GAP:
+ORIGINAL REQUIRED DIMENSIONS:
+${JSON.stringify(reviewState.requiredDimensions)}
+
+CURRENT RETEST NUMBER:
+${reviewState.retestNumber}
+
+CURRENT REMAINING KNOWLEDGE GAP:
 ${JSON.stringify(gradeResult.knowledgeGap)}
 
-REQUIRED RETEST DIMENSIONS:
+CURRENT REMAINING REQUIRED DIMENSIONS:
 ${JSON.stringify(gradeResult.requiredDimensions)}
 
 Generate ONE different free-recall retest question.
 
-The retest must:
-- use the same named concepts and entities as the original question when
-  those concepts/entities are part of the required dimensions;
-- test EVERY required retest dimension;
-- target the student's actual knowledge gap;
-- use only information explicitly supported by the BRAIN MATERIAL;
-- not switch to an adjacent concept;
-- not turn a specific comparison into a universal scientific rule;
-- not add a new concept.
+The retest must directly target the CURRENT REMAINING KNOWLEDGE GAP.
 
+The retest must test EVERY CURRENT REMAINING REQUIRED DIMENSION.
+
+The retest must preserve the same named concepts and entities required by the
+ORIGINAL QUESTION.
+
+Do not use the current question as the conceptual source for the retest.
+The ORIGINAL QUESTION is the authoritative conceptual anchor for the entire
+Review session.
+
+Do not introduce a new physiological setting, location, condition, mechanism,
+or contextual scenario that was not part of the ORIGINAL QUESTION or the
+CURRENT REMAINING KNOWLEDGE GAP.
+
+Do not introduce an adjacent concept merely because it appears in the BRAIN
+MATERIAL.
+
+Every scientific claim and every piece of contextual framing must be
+explicitly supported by the BRAIN MATERIAL.
+
+Do not add information merely to make the question sound more realistic.
+
+Do not turn a specific Brain-supported relationship into a broader scientific
+rule.
+
+The retest must be meaningfully different in wording or retrieval angle from
+previous retests while testing the same remaining knowledge gap.
+  
 Return ONLY valid JSON with exactly this shape:
 
 {
@@ -307,9 +446,9 @@ Return ONLY valid JSON with exactly this shape:
   "dimensions": ["...", "..."]
 }
 
-The dimensions array must list every required retest dimension that the
-question actually tests. Do not include dimensions that the question does not
-test.`;
+The dimensions array must list every CURRENT REMAINING REQUIRED DIMENSION
+that the question actually tests. Do not include dimensions that the question
+does not test, and do not add dimensions that have already been resolved.`;
 
       let retest: RetestCandidate;
       let generationUsage: unknown = null;
@@ -434,7 +573,10 @@ Return nothing else.`;
         verificationUsage,
       });
 
-      if (verification === "SUPPORTED") {
+          if (verification === "SUPPORTED") {
+        const nextRetestNumber =
+          reviewState.retestNumber + 1;
+
         return res.status(200).json({
           success: true,
           source: "study/mcat-bbfl.md",
@@ -449,8 +591,18 @@ Return nothing else.`;
           verificationUsage: totalVerificationUsage,
           retestAttempts: attempt,
           retestAudit: attempts,
+          reviewState: {
+            originalQuestion: reviewState.originalQuestion,
+            requiredDimensions:
+              gradeResult.requiredDimensions,
+            knowledgeGap:
+              gradeResult.knowledgeGap,
+            retestNumber: nextRetestNumber,
+            mastered: false,
+          },
         });
-      }
+     }
+
     }
 
     return res.status(422).json({
