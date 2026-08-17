@@ -245,7 +245,27 @@ what the BRAIN MATERIAL explicitly states.
 
 Do not provide the answer.
 
-Return only the question.`,
+Return ONLY valid JSON with exactly this shape:
+
+{
+  "question": "...",
+  "dimensionId": "...",
+  "dimensionLabel": "..."
+}
+
+The dimensionId must be a stable, concise identifier for the specific
+knowledge dimension tested by this question.
+
+Use lowercase snake_case.
+
+The dimensionLabel must briefly describe the exact knowledge dimension
+tested by the question.
+
+If a semantically identical dimension already appears in the COVERED
+DIMENSIONS, do not select it for a NEW question.
+
+If a dimension is not covered, use the same dimensionId consistently for that
+dimension whenever it is referenced again.
               },
             ],
           }),
@@ -261,10 +281,34 @@ Return only the question.`,
         });
       }
 
-      const question =
-        generationData?.choices?.[0]?.message?.content?.trim();
+     const generatedContent =
+  generationData?.choices?.[0]?.message?.content?.trim();
 
-      if (!question) {
+let generatedQuestion: {
+  question: string;
+  dimensionId: string;
+  dimensionLabel: string;
+} | null = null;
+
+try {
+  const parsed = JSON.parse(generatedContent ?? "");
+
+  if (
+    typeof parsed?.question === "string" &&
+    typeof parsed?.dimensionId === "string" &&
+    typeof parsed?.dimensionLabel === "string"
+  ) {
+    generatedQuestion = parsed;
+  }
+} catch {
+  generatedQuestion = null;
+}
+
+const question = generatedQuestion?.question?.trim() ?? "";
+const dimensionId = generatedQuestion?.dimensionId?.trim() ?? "";
+const dimensionLabel = generatedQuestion?.dimensionLabel?.trim() ?? "";
+
+     if (!question || !dimensionId || !dimensionLabel) {
         attempts.push({
           attempt,
           result: "NO_QUESTION",
@@ -342,6 +386,8 @@ Return nothing else.`,
           source: "study/mcat-bbfl.md",
           reviewScope: scope || null,
           question,
+          dimensionId,
+          dimensionLabel,
           verification: "SUPPORTED",
           attempt,
           attempts,
