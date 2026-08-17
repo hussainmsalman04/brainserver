@@ -506,7 +506,7 @@ does not test, and do not add dimensions that have already been resolved.`;
         continue;
       }
 
-      const verifierPrompt = `You are the final evidence and targeting verifier.
+     const verifierPrompt = `You are the final evidence and targeting verifier.
 
 BRAIN MATERIAL:
 ${file.content}
