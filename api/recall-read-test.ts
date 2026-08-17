@@ -108,7 +108,8 @@ if (!question) {
     error: "Generator returned no question",
   });
 }
-
+const questionToVerify =
+  "Why might a cell favor the use of glucokinase over hexokinase for glucose phosphorylation when blood glucose levels are exceptionally high, despite the differences in their affinities for glucose?";
 const verifyResponse = await fetch(
   "https://ai-gateway.vercel.sh/v1/chat/completions",
   {
@@ -128,7 +129,7 @@ BRAIN MATERIAL:
 ${file.content}
 
 CANDIDATE QUESTION:
-${question}
+${questionToVerify}
 
 Determine whether every scientific condition, relationship, assumption,
 descriptor, and piece of context required by the CANDIDATE QUESTION is
@@ -168,7 +169,7 @@ if (verification !== "SUPPORTED") {
     success: false,
     blocked: true,
     source: "study/mcat-bbfl.md",
-    candidateQuestion: question,
+    candidateQuestion: questionToVerify,
     verification,
     generationUsage: data?.usage ?? null,
     verificationUsage: verifyData?.usage ?? null,
