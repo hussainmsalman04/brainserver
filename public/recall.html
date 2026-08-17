@@ -350,6 +350,8 @@
   <script>
     let token = "";
 let currentQuestion = "";
+  let currentDimensionId = "";
+let currentDimensionLabel = "";
 let reviewState = null;
 let reviewScope =
   new URLSearchParams(window.location.search)
@@ -471,8 +473,8 @@ let coveredDimensions = [];
 reviewState = null;
 currentRetest = "";
 
-currentQuestion = data.question;
-questionCount += 1;
+currentDimensionId = data.dimensionId;
+currentDimensionLabel = data.dimensionLabel;
 
         document.getElementById("questionNumber").textContent =
           "Question " + questionCount;
@@ -531,7 +533,9 @@ body: JSON.stringify({
   question: currentQuestion,
   answer,
   reviewState,
-  reviewScope
+  reviewScope,
+  dimensionId: currentDimensionId,
+  dimensionLabel: currentDimensionLabel
 })
           }
         );
