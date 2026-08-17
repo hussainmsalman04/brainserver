@@ -1,6 +1,63 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { VaultClient } from "../lib/github.js";
 import { checkAuth } from "../lib/auth.js";
+function extractBrainSection(
+  content: string,
+  scope: string
+): string | null {
+  const target = scope.trim().toLowerCase();
+
+  if (!target) {
+    return content;
+  }
+
+  const lines = content.split(/\r?\n/);
+
+  const startIndex = lines.findIndex((line) => {
+    const match = line.match(/^(#+)\s+(.+?)\s*$/);
+
+    return (
+      !!match &&
+      match[2].toLowerCase().includes(target)
+    );
+  });
+
+  if (startIndex === -1) {
+    return null;
+  }
+
+  const headingMatch =
+    lines[startIndex].match(/^(#+)\s+/);
+
+  if (!headingMatch) {
+    return null;
+  }
+
+  const headingLevel = headingMatch[1].length;
+  let endIndex = lines.length;
+
+  for (
+    let index = startIndex + 1;
+    index < lines.length;
+    index++
+  ) {
+    const nextHeading =
+      lines[index].match(/^(#+)\s+/);
+
+    if (
+      nextHeading &&
+      nextHeading[1].length <= headingLevel
+    ) {
+      endIndex = index;
+      break;
+    }
+  }
+
+  return lines
+    .slice(startIndex, endIndex)
+    .join("\n")
+    .trim();
+}
 
 const MODEL = "google/gemini-3.1-flash-lite";
 const GATEWAY_URL = "https://ai-gateway.vercel.sh/v1/chat/completions";
@@ -189,13 +246,29 @@ export default async function handler(
       branch,
     });
 
-    const file = await vault.readFile("study/mcat-bbfl.md");
+  const file = await vault.readFile("study/mcat-bbfl.md");
 
-    if (!file) {
-      return res.status(404).json({
-        error: "study/mcat-bbfl.md was not found",
-      });
-    }
+if (!file) {
+  return res.status(404).json({
+    error: "study/mcat-bbfl.md was not found",
+  });
+}
+
+const reviewScope =
+  typeof req.body?.reviewScope === "string"
+    ? req.body.reviewScope.trim()
+    : "";
+
+const brainMaterial = extractBrainSection(
+  file.content,
+  reviewScope
+);
+
+if (!brainMaterial) {
+  return res.status(404).json({
+    error: `Review scope was not found in the Brain: ${reviewScope}`,
+  });
+}
 
     const gradePrompt = `You are an evidence-bound MCAT active-recall examiner.
 
@@ -204,7 +277,7 @@ Do not introduce or rely on scientific information that is not explicitly
 supported by the BRAIN MATERIAL.
 
 BRAIN MATERIAL:
-${file.content}
+${brainMaterial}
 
 QUESTION:
 ${question}
@@ -403,7 +476,7 @@ Rules:
       const retestPrompt = `You are an MCAT retest-question generator.
 
 BRAIN MATERIAL:
-${file.content}
+${brainMaterial}
 
 ORIGINAL QUESTION:
 ${reviewState.originalQuestion}
@@ -531,7 +604,7 @@ does not test, and do not add dimensions that have already been resolved.`;
         const verifierPrompt = `You are the final evidence and targeting verifier.
 
 BRAIN MATERIAL:
-${file.content}
+${brainMaterial}
 
 ORIGINAL QUESTION:
 ${reviewState.originalQuestion}
