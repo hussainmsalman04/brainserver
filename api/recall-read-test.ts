@@ -94,19 +94,95 @@ Return only the question.`,
 
     const data = await response.json();
 
-    if (!response.ok) {
-      return res.status(response.status).json({
-        error: "AI Gateway request failed",
-        details: data,
-      });
-    }
+if (!response.ok) {
+  return res.status(response.status).json({
+    error: "AI Gateway generation request failed",
+    details: data,
+  });
+}
 
-    return res.status(200).json({
-      success: true,
-      source: "study/mcat-bbfl.md",
-      question: data?.choices?.[0]?.message?.content,
-      usage: data?.usage ?? null,
-    });
+const question = data?.choices?.[0]?.message?.content?.trim();
+
+if (!question) {
+  return res.status(500).json({
+    error: "Generator returned no question",
+  });
+}
+
+const verifyResponse = await fetch(
+  "https://ai-gateway.vercel.sh/v1/chat/completions",
+  {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${aiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "google/gemini-3.1-flash-lite",
+      messages: [
+        {
+          role: "user",
+          content: `You are a strict evidence verifier.
+
+BRAIN MATERIAL:
+${file.content}
+
+CANDIDATE QUESTION:
+${question}
+
+Determine whether every scientific condition, relationship, assumption,
+descriptor, and piece of context required by the CANDIDATE QUESTION is
+explicitly supported by the BRAIN MATERIAL.
+
+Do not use outside knowledge.
+Do not infer unstated scientific relationships.
+
+If the question is completely supported, reply exactly:
+SUPPORTED
+
+If any part requires information not explicitly present in the BRAIN MATERIAL,
+reply:
+UNSUPPORTED: followed by a brief description of the unsupported information.
+
+Return nothing else.`,
+        },
+      ],
+    }),
+  }
+);
+
+const verifyData = await verifyResponse.json();
+
+if (!verifyResponse.ok) {
+  return res.status(verifyResponse.status).json({
+    error: "AI Gateway verification request failed",
+    details: verifyData,
+  });
+}
+
+const verification =
+  verifyData?.choices?.[0]?.message?.content?.trim() ?? "";
+
+if (verification !== "SUPPORTED") {
+  return res.status(422).json({
+    success: false,
+    blocked: true,
+    source: "study/mcat-bbfl.md",
+    candidateQuestion: question,
+    verification,
+    generationUsage: data?.usage ?? null,
+    verificationUsage: verifyData?.usage ?? null,
+  });
+}
+
+return res.status(200).json({
+  success: true,
+  source: "study/mcat-bbfl.md",
+  question,
+  verification: "SUPPORTED",
+  generationUsage: data?.usage ?? null,
+  verificationUsage: verifyData?.usage ?? null,
+});
   } catch (error) {
     return res.status(500).json({
       error: "Unexpected error",
