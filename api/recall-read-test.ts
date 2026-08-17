@@ -11,22 +11,24 @@ export default async function handler(
       error: "Method not allowed",
     });
   }
-const authRequest = new Request("https://brainserver.local", {
-  headers: {
-    authorization:
-      typeof req.headers.authorization === "string"
-        ? req.headers.authorization
-        : "",
-  },
-});
 
-const auth = checkAuth(authRequest);
-
-if (!auth.ok) {
-  return res.status(401).json({
-    error: auth.reason,
+  const authRequest = new Request("https://brainserver.local", {
+    headers: {
+      authorization:
+        typeof req.headers.authorization === "string"
+          ? req.headers.authorization
+          : "",
+    },
   });
-}
+
+  const auth = checkAuth(authRequest);
+
+  if (!auth.ok) {
+    return res.status(401).json({
+      error: auth.reason,
+    });
+  }
+
   const aiKey = process.env.AI_GATEWAY_API_KEY;
   const githubToken = process.env.GITHUB_TOKEN;
   const owner = process.env.GITHUB_REPO_OWNER;
@@ -41,10 +43,10 @@ if (!auth.ok) {
 
   try {
     const vault = new VaultClient(githubToken, {
-  owner,
-  repo,
-  branch,
-});
+      owner,
+      repo,
+      branch,
+    });
 
     const file = await vault.readFile("study/mcat-bbfl.md");
 
@@ -54,26 +56,30 @@ if (!auth.ok) {
       });
     }
 
-    const response = await fetch(
-      "https://ai-gateway.vercel.sh/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${aiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-3.1-flash-lite",
-          messages: [
-            {
-              role: "user",
-              content: `You are an evidence-bound MCAT active-recall examiner.
+    const MAX_ATTEMPTS = 3;
+    const attempts = [];
+
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      const generationResponse = await fetch(
+        "https://ai-gateway.vercel.sh/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${aiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "google/gemini-3.1-flash-lite",
+            messages: [
+              {
+                role: "user",
+                content: `You are an evidence-bound MCAT active-recall examiner.
 
 STRICT GROUNDING RULE:
 The BRAIN MATERIAL below is the complete source for this task.
 
-Do not introduce, infer, or use scientific information that is not explicitly
-supported by the BRAIN MATERIAL.
+Do not introduce, infer, assume, or use scientific information that is not
+explicitly supported by the BRAIN MATERIAL.
 
 BRAIN MATERIAL:
 ${file.content}
@@ -83,53 +89,61 @@ Generate ONE free-recall question using only the BRAIN MATERIAL.
 The question should test understanding, relationships, mechanisms, or
 comparisons when the source supports them rather than simple recognition.
 
+Every scientific condition, relationship, assumption, descriptor, and piece
+of context required to answer the question must be explicitly supported by
+the BRAIN MATERIAL.
+
 Do not provide the answer.
 
 Return only the question.`,
-            },
-          ],
-        }),
+              },
+            ],
+          }),
+        }
+      );
+
+      const generationData = await generationResponse.json();
+
+      if (!generationResponse.ok) {
+        return res.status(generationResponse.status).json({
+          error: "AI Gateway generation request failed",
+          details: generationData,
+        });
       }
-    );
 
-    const data = await response.json();
+      const question =
+        generationData?.choices?.[0]?.message?.content?.trim();
 
-if (!response.ok) {
-  return res.status(response.status).json({
-    error: "AI Gateway generation request failed",
-    details: data,
-  });
-}
+      if (!question) {
+        attempts.push({
+          attempt,
+          result: "NO_QUESTION",
+          generationUsage: generationData?.usage ?? null,
+        });
 
-const question = data?.choices?.[0]?.message?.content?.trim();
+        continue;
+      }
 
-if (!question) {
-  return res.status(500).json({
-    error: "Generator returned no question",
-  });
-}
-const questionToVerify =
-  "Why might a cell favor the use of glucokinase over hexokinase for glucose phosphorylation when blood glucose levels are exceptionally high, despite the differences in their affinities for glucose?";
-const verifyResponse = await fetch(
-  "https://ai-gateway.vercel.sh/v1/chat/completions",
-  {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${aiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "google/gemini-3.1-flash-lite",
-      messages: [
+      const verifyResponse = await fetch(
+        "https://ai-gateway.vercel.sh/v1/chat/completions",
         {
-          role: "user",
-          content: `You are a strict evidence verifier.
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${aiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "google/gemini-3.1-flash-lite",
+            messages: [
+              {
+                role: "user",
+                content: `You are a strict evidence verifier.
 
 BRAIN MATERIAL:
 ${file.content}
 
 CANDIDATE QUESTION:
-${questionToVerify}
+${question}
 
 Determine whether every scientific condition, relationship, assumption,
 descriptor, and piece of context required by the CANDIDATE QUESTION is
@@ -146,44 +160,51 @@ reply:
 UNSUPPORTED: followed by a brief description of the unsupported information.
 
 Return nothing else.`,
-        },
-      ],
-    }),
-  }
-);
+              },
+            ],
+          }),
+        }
+      );
 
-const verifyData = await verifyResponse.json();
+      const verifyData = await verifyResponse.json();
 
-if (!verifyResponse.ok) {
-  return res.status(verifyResponse.status).json({
-    error: "AI Gateway verification request failed",
-    details: verifyData,
-  });
-}
+      if (!verifyResponse.ok) {
+        return res.status(verifyResponse.status).json({
+          error: "AI Gateway verification request failed",
+          details: verifyData,
+        });
+      }
 
-const verification =
-  verifyData?.choices?.[0]?.message?.content?.trim() ?? "";
+      const verification =
+        verifyData?.choices?.[0]?.message?.content?.trim() ?? "";
 
-if (verification !== "SUPPORTED") {
-  return res.status(422).json({
-    success: false,
-    blocked: true,
-    source: "study/mcat-bbfl.md",
-    candidateQuestion: questionToVerify,
-    verification,
-    generationUsage: data?.usage ?? null,
-    verificationUsage: verifyData?.usage ?? null,
-  });
-}
+      attempts.push({
+        attempt,
+        question,
+        verification,
+        generationUsage: generationData?.usage ?? null,
+        verificationUsage: verifyData?.usage ?? null,
+      });
 
-return res.status(200).json({
-  success: true,
-  source: "study/mcat-bbfl.md",
-  question,
-  verification: "SUPPORTED",
-  generationUsage: data?.usage ?? null,
-  verificationUsage: verifyData?.usage ?? null,
-});
+      if (verification === "SUPPORTED") {
+        return res.status(200).json({
+          success: true,
+          source: "study/mcat-bbfl.md",
+          question,
+          verification: "SUPPORTED",
+          attempt,
+          attempts,
+        });
+      }
+    }
+
+    return res.status(422).json({
+      success: false,
+      blocked: true,
+      source: "study/mcat-bbfl.md",
+      error: "No grounded question passed verification after 3 attempts",
+      attempts,
+    });
   } catch (error) {
     return res.status(500).json({
       error: "Unexpected error",
