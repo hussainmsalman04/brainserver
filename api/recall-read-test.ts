@@ -1,6 +1,63 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { VaultClient } from "../lib/github.js";
 import { checkAuth } from "../lib/auth.js";
+function extractBrainSection(
+  content: string,
+  scope: string
+): string | null {
+  const target = scope.trim().toLowerCase();
+
+  if (!target) {
+    return content;
+  }
+
+  const lines = content.split(/\r?\n/);
+
+  const startIndex = lines.findIndex((line) => {
+    const match = line.match(/^(#+)\s+(.+?)\s*$/);
+
+    return (
+      !!match &&
+      match[2].toLowerCase().includes(target)
+    );
+  });
+
+  if (startIndex === -1) {
+    return null;
+  }
+
+  const headingMatch =
+    lines[startIndex].match(/^(#+)\s+/);
+
+  if (!headingMatch) {
+    return null;
+  }
+
+  const headingLevel = headingMatch[1].length;
+  let endIndex = lines.length;
+
+  for (
+    let index = startIndex + 1;
+    index < lines.length;
+    index++
+  ) {
+    const nextHeading =
+      lines[index].match(/^(#+)\s+/);
+
+    if (
+      nextHeading &&
+      nextHeading[1].length <= headingLevel
+    ) {
+      endIndex = index;
+      break;
+    }
+  }
+
+  return lines
+    .slice(startIndex, endIndex)
+    .join("\n")
+    .trim();
+}
 
 export default async function handler(
   req: VercelRequest,
@@ -50,11 +107,27 @@ export default async function handler(
 
     const file = await vault.readFile("study/mcat-bbfl.md");
 
-    if (!file) {
-      return res.status(404).json({
-        error: "study/mcat-bbfl.md was not found",
-      });
-    }
+if (!file) {
+  return res.status(404).json({
+    error: "study/mcat-bbfl.md was not found",
+  });
+}
+
+const scope =
+  typeof req.query?.scope === "string"
+    ? req.query.scope.trim()
+    : "";
+
+const brainMaterial = extractBrainSection(
+  file.content,
+  scope
+);
+
+if (!brainMaterial) {
+  return res.status(404).json({
+    error: `Review scope was not found in the Brain: ${scope}`,
+  });
+}
 
     const MAX_ATTEMPTS = 3;
     const attempts = [];
@@ -82,7 +155,7 @@ Do not introduce, infer, assume, or use scientific information that is not
 explicitly supported by the BRAIN MATERIAL.
 
 BRAIN MATERIAL:
-${file.content}
+${brainMaterial}
 
 Generate ONE free-recall question using only the BRAIN MATERIAL.
 
@@ -163,7 +236,7 @@ Return only the question.`,
                 content: `You are a strict evidence verifier.
 
 BRAIN MATERIAL:
-${file.content}
+${brainMaterial}
 
 CANDIDATE QUESTION:
 ${question}
@@ -213,6 +286,7 @@ Return nothing else.`,
         return res.status(200).json({
           success: true,
           source: "study/mcat-bbfl.md",
+          reviewScope: scope || null,
           question,
           verification: "SUPPORTED",
           attempt,
