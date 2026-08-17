@@ -1,1 +1,709 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MCAT Brain Recall</title>
 
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #0b0b0b;
+      color: #f2f2f2;
+      font-family:
+        Inter,
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+    }
+
+    .shell {
+      width: min(920px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 48px 0 80px;
+    }
+
+    .eyebrow {
+      color: #999;
+      font-size: 13px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(32px, 6vw, 52px);
+      font-weight: 650;
+      letter-spacing: -0.04em;
+    }
+
+    .subtitle {
+      margin: 12px 0 32px;
+      color: #a7a7a7;
+      line-height: 1.55;
+    }
+
+    .card {
+      background: #171717;
+      border: 1px solid #303030;
+      border-radius: 24px;
+      padding: 28px;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #bcbcbc;
+      font-size: 14px;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      color: #f3f3f3;
+      background: #101010;
+      border: 1px solid #353535;
+      border-radius: 14px;
+      padding: 14px 16px;
+      font: inherit;
+      outline: none;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: #777;
+    }
+
+    textarea {
+      min-height: 160px;
+      resize: vertical;
+      line-height: 1.55;
+    }
+
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 18px;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      background: #f3f3f3;
+      color: #101010;
+    }
+
+    button.secondary {
+      background: #262626;
+      color: #f2f2f2;
+      border: 1px solid #3d3d3d;
+    }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .auth-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+    }
+
+    .status {
+      margin-top: 12px;
+      color: #969696;
+      font-size: 13px;
+    }
+
+    .question-number {
+      color: #8d8d8d;
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+
+    .question {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(24px, 4vw, 34px);
+      line-height: 1.35;
+      letter-spacing: -0.02em;
+      margin-bottom: 28px;
+    }
+
+    .answer-wrap {
+      margin-top: 18px;
+    }
+
+    .actions {
+      margin-top: 18px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .result-badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      padding: 0 13px;
+      border-radius: 999px;
+      background: #242424;
+      border: 1px solid #3e3e3e;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      margin-bottom: 22px;
+    }
+
+    .review-section {
+      padding: 20px 0;
+      border-top: 1px solid #303030;
+    }
+
+    .review-section:first-of-type {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .review-title {
+      color: #929292;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 9px;
+    }
+
+    .review-text {
+      white-space: pre-wrap;
+      line-height: 1.6;
+      color: #eeeeee;
+    }
+
+    .meta {
+      margin-top: 24px;
+      color: #777;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .error {
+      margin-top: 16px;
+      padding: 14px 16px;
+      border: 1px solid #623838;
+      background: #241515;
+      border-radius: 14px;
+      color: #ffbdbd;
+      white-space: pre-wrap;
+    }
+
+    @media (max-width: 650px) {
+      .auth-row {
+        grid-template-columns: 1fr;
+      }
+
+      .shell {
+        padding-top: 28px;
+      }
+
+      .card {
+        padding: 20px;
+      }
+
+      button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="shell">
+    <div class="eyebrow">MCAT Brain</div>
+    <h1>Recall</h1>
+    <p class="subtitle">
+      Retrieve from memory first. The Brain supplies the source;
+      the Recall Engine tests, verifies, diagnoses, repairs, and retests.
+    </p>
+
+    <section id="authCard" class="card">
+      <label for="token">Brain access token</label>
+
+      <div class="auth-row">
+        <input
+          id="token"
+          type="password"
+          autocomplete="off"
+          placeholder="Paste MCP bearer token"
+        />
+
+        <button id="startButton">
+          Start Recall
+        </button>
+      </div>
+
+      <div class="status">
+        The token stays only in this browser tab's memory.
+        This page does not save it to localStorage.
+      </div>
+
+      <div id="authError" class="error hidden"></div>
+    </section>
+
+    <section id="questionCard" class="card hidden">
+      <div id="questionNumber" class="question-number">
+        Question 1
+      </div>
+
+      <div id="questionText" class="question"></div>
+
+      <div class="answer-wrap">
+        <label for="answer">Your answer</label>
+
+        <textarea
+          id="answer"
+          placeholder="Reconstruct the concept from memory..."
+        ></textarea>
+      </div>
+
+      <div class="actions">
+        <button id="submitButton">
+          Submit
+        </button>
+      </div>
+
+      <div id="questionStatus" class="status"></div>
+      <div id="questionError" class="error hidden"></div>
+    </section>
+
+    <section id="resultCard" class="card hidden">
+      <div id="resultBadge" class="result-badge"></div>
+
+      <div class="review-section">
+        <div class="review-title">Your answer</div>
+        <div id="studentAnswer" class="review-text"></div>
+      </div>
+
+      <div class="review-section">
+        <div class="review-title">What you got right</div>
+        <div id="rightText" class="review-text"></div>
+      </div>
+
+      <div class="review-section">
+        <div class="review-title">What was wrong or missing</div>
+        <div id="wrongText" class="review-text"></div>
+      </div>
+
+      <div class="review-section">
+        <div class="review-title">Why</div>
+        <div id="whyText" class="review-text"></div>
+      </div>
+
+      <div class="review-section">
+        <div class="review-title">Repair</div>
+        <div id="repairText" class="review-text"></div>
+      </div>
+
+      <div class="review-section">
+        <div class="review-title">Retest</div>
+        <div id="retestText" class="review-text"></div>
+      </div>
+
+      <div class="actions">
+        <button id="retestButton" class="secondary">
+          Retest
+        </button>
+
+        <button id="nextButton">
+          Next Question
+        </button>
+      </div>
+
+      <div id="resultMeta" class="meta"></div>
+      <div id="resultError" class="error hidden"></div>
+    </section>
+  </main>
+
+  <script>
+    let token = "";
+    let currentQuestion = "";
+    let currentRetest = "";
+    let questionCount = 0;
+
+    const authCard = document.getElementById("authCard");
+    const questionCard = document.getElementById("questionCard");
+    const resultCard = document.getElementById("resultCard");
+
+    const tokenInput = document.getElementById("token");
+    const startButton = document.getElementById("startButton");
+    const submitButton = document.getElementById("submitButton");
+    const nextButton = document.getElementById("nextButton");
+    const retestButton = document.getElementById("retestButton");
+
+    function showError(element, message) {
+      element.textContent = message;
+      element.classList.remove("hidden");
+    }
+
+    function hideError(element) {
+      element.textContent = "";
+      element.classList.add("hidden");
+    }
+
+    function extractSection(text, name, nextNames) {
+      const startMarker = name + ":";
+      const start = text.indexOf(startMarker);
+
+      if (start === -1) return "";
+
+      const contentStart = start + startMarker.length;
+      let contentEnd = text.length;
+
+      for (const nextName of nextNames) {
+        const nextIndex = text.indexOf(nextName + ":", contentStart);
+
+        if (nextIndex !== -1 && nextIndex < contentEnd) {
+          contentEnd = nextIndex;
+        }
+      }
+
+      return text
+        .slice(contentStart, contentEnd)
+        .trim()
+        .replace(/^[-*]\s*/gm, "");
+    }
+
+    function parseEvaluation(text) {
+      return {
+        result: extractSection(
+          text,
+          "RESULT",
+          [
+            "WHAT WAS RIGHT",
+            "WHAT WAS WRONG OR MISSING",
+            "WHY IT WAS WRONG",
+            "REPAIR",
+            "RETEST QUESTION",
+            "GROUNDING CHECK"
+          ]
+        ),
+
+        right: extractSection(
+          text,
+          "WHAT WAS RIGHT",
+          [
+            "WHAT WAS WRONG OR MISSING",
+            "WHY IT WAS WRONG",
+            "REPAIR",
+            "RETEST QUESTION",
+            "GROUNDING CHECK"
+          ]
+        ),
+
+        wrong: extractSection(
+          text,
+          "WHAT WAS WRONG OR MISSING",
+          [
+            "WHY IT WAS WRONG",
+            "REPAIR",
+            "RETEST QUESTION",
+            "GROUNDING CHECK"
+          ]
+        ),
+
+        why: extractSection(
+          text,
+          "WHY IT WAS WRONG",
+          [
+            "REPAIR",
+            "RETEST QUESTION",
+            "GROUNDING CHECK"
+          ]
+        ),
+
+        repair: extractSection(
+          text,
+          "REPAIR",
+          [
+            "RETEST QUESTION",
+            "GROUNDING CHECK"
+          ]
+        ),
+
+        retest: extractSection(
+          text,
+          "RETEST QUESTION",
+          [
+            "GROUNDING CHECK"
+          ]
+        )
+      };
+    }
+
+    async function loadQuestion(questionOverride = "") {
+      const questionError =
+        document.getElementById("questionError");
+
+      hideError(questionError);
+
+      questionCard.classList.remove("hidden");
+      resultCard.classList.add("hidden");
+
+      submitButton.disabled = true;
+      document.getElementById("answer").value = "";
+
+      if (questionOverride) {
+        currentQuestion = questionOverride;
+        questionCount += 1;
+
+        document.getElementById("questionNumber").textContent =
+          "Retest";
+
+        document.getElementById("questionText").textContent =
+          currentQuestion;
+
+        document.getElementById("questionStatus").textContent =
+          "Retesting the repaired concept.";
+
+        submitButton.disabled = false;
+        return;
+      }
+
+      document.getElementById("questionStatus").textContent =
+        "Generating and verifying a Brain-grounded question...";
+
+      try {
+        const response = await fetch(
+          "/api/recall-read-test",
+          {
+            method: "GET",
+            headers: {
+              Authorization: "Bearer " + token
+            }
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.error ||
+            data.verification ||
+            "Could not generate a question."
+          );
+        }
+
+        currentQuestion = data.question;
+        questionCount += 1;
+
+        document.getElementById("questionNumber").textContent =
+          "Question " + questionCount;
+
+        document.getElementById("questionText").textContent =
+          currentQuestion;
+
+        document.getElementById("questionStatus").textContent =
+          "Verified against study/mcat-bbfl.md";
+
+        submitButton.disabled = false;
+      } catch (error) {
+        document.getElementById("questionStatus").textContent = "";
+
+        showError(
+          questionError,
+          error instanceof Error
+            ? error.message
+            : String(error)
+        );
+      }
+    }
+
+    async function gradeAnswer() {
+      const answer =
+        document.getElementById("answer").value.trim();
+
+      const questionError =
+        document.getElementById("questionError");
+
+      hideError(questionError);
+
+      if (!answer) {
+        showError(
+          questionError,
+          "Type an answer before submitting."
+        );
+        return;
+      }
+
+      submitButton.disabled = true;
+
+      document.getElementById("questionStatus").textContent =
+        "Grading and independently verifying your result...";
+
+      try {
+        const response = await fetch(
+          "/api/recall-grade-test",
+          {
+            method: "POST",
+            headers: {
+              Authorization: "Bearer " + token,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              question: currentQuestion,
+              answer
+            })
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.verification ||
+            data.error ||
+            "The grading card was blocked."
+          );
+        }
+
+        const parsed = parseEvaluation(data.evaluation);
+
+        currentRetest = parsed.retest;
+
+        document.getElementById("resultBadge").textContent =
+          parsed.result || "RESULT";
+
+        document.getElementById("studentAnswer").textContent =
+          answer;
+
+        document.getElementById("rightText").textContent =
+          parsed.right || "—";
+
+        document.getElementById("wrongText").textContent =
+          parsed.wrong || "—";
+
+        document.getElementById("whyText").textContent =
+          parsed.why || "—";
+
+        document.getElementById("repairText").textContent =
+          parsed.repair || "—";
+
+        document.getElementById("retestText").textContent =
+          parsed.retest || "No retest returned.";
+
+        retestButton.disabled = !parsed.retest;
+
+        const gradingCost =
+          data.gradingUsage?.cost ?? 0;
+
+        const verificationCost =
+          data.verificationUsage?.cost ?? 0;
+
+        const totalCost =
+          gradingCost + verificationCost;
+
+        document.getElementById("resultMeta").textContent =
+          "Grounding: " +
+          (data.verification || "unknown") +
+          " • AI cost: $" +
+          totalCost.toFixed(6);
+
+        questionCard.classList.add("hidden");
+        resultCard.classList.remove("hidden");
+      } catch (error) {
+        document.getElementById("questionStatus").textContent = "";
+
+        showError(
+          questionError,
+          error instanceof Error
+            ? error.message
+            : String(error)
+        );
+
+        submitButton.disabled = false;
+      }
+    }
+
+    startButton.addEventListener(
+      "click",
+      async () => {
+        const authError =
+          document.getElementById("authError");
+
+        hideError(authError);
+
+        token = tokenInput.value.trim();
+
+        if (!token) {
+          showError(
+            authError,
+            "Paste your MCP bearer token first."
+          );
+          return;
+        }
+
+        startButton.disabled = true;
+        startButton.textContent = "Connecting...";
+
+        try {
+          authCard.classList.add("hidden");
+          await loadQuestion();
+        } catch (error) {
+          authCard.classList.remove("hidden");
+
+          showError(
+            authError,
+            error instanceof Error
+              ? error.message
+              : String(error)
+          );
+        } finally {
+          startButton.disabled = false;
+          startButton.textContent = "Start Recall";
+        }
+      }
+    );
+
+    submitButton.addEventListener(
+      "click",
+      gradeAnswer
+    );
+
+    nextButton.addEventListener(
+      "click",
+      () => {
+        loadQuestion();
+      }
+    );
+
+    retestButton.addEventListener(
+      "click",
+      () => {
+        if (currentRetest) {
+          loadQuestion(currentRetest);
+        }
+      }
+    );
+  </script>
+</body>
+</html>
