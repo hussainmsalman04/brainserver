@@ -86,12 +86,35 @@ ${file.content}
 
 Generate ONE free-recall question using only the BRAIN MATERIAL.
 
-The question should test understanding, relationships, mechanisms, or
-comparisons when the source supports them rather than simple recognition.
+SELECT THE CONTENT FIRST:
+Choose one or two explicit facts or relationships that are directly stated
+in the BRAIN MATERIAL.
 
-Every scientific condition, relationship, assumption, descriptor, and piece
-of context required to answer the question must be explicitly supported by
-the BRAIN MATERIAL.
+QUESTION CONSTRAINT:
+The answer to the question must be reconstructable directly from the selected
+facts or relationships.
+
+Do not invent or add:
+- physiological scenarios
+- locations or organs
+- purposes or functions
+- causal explanations
+- "why" relationships
+- applications
+- implications
+- contextual conditions
+unless they are explicitly stated in the BRAIN MATERIAL.
+
+You may combine two explicitly stated facts into one question.
+
+Prefer questions such as:
+- What is the relationship between X and Y?
+- How does X differ from Y?
+- What happens to X when Y is present?
+- Which molecule/enzyme/process has the stated property?
+
+Do not ask questions that require the student to infer information beyond
+what the BRAIN MATERIAL explicitly states.
 
 Do not provide the answer.
 
