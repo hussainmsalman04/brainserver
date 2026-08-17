@@ -23,12 +23,22 @@ export default async function handler(
         },
         body: JSON.stringify({
           model: "google/gemini-3.1-flash-lite",
-          messages: [
-            {
-              role: "user",
-              content: "Reply with exactly: RECALL_AI_OK",
-            },
-          ],
+         messages: [
+  {
+    role: "user",
+    content: `You are an MCAT active-recall examiner.
+
+SOURCE MATERIAL:
+PFK-1 (phosphofructokinase-1) is the rate-limiting enzyme of glycolysis.
+PFK-1 is activated by AMP and fructose-2,6-bisphosphate (F2,6BP).
+PFK-1 is inhibited by ATP and citrate.
+
+Using ONLY the source material above, generate ONE free-recall question that tests understanding rather than simple recognition.
+
+Do not provide the answer.
+Return only the question.`,
+  },
+],
         }),
       }
     );
