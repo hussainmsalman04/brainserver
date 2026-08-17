@@ -75,10 +75,15 @@ function hasAllRequiredDimensions(
   required: string[],
   candidate: string[]
 ): boolean {
+  const requiredSet = new Set(required.map(normalizeDimension));
   const candidateSet = new Set(candidate.map(normalizeDimension));
 
-  return required.every((dimension) =>
-    candidateSet.has(normalizeDimension(dimension))
+  if (requiredSet.size !== candidateSet.size) {
+    return false;
+  }
+
+  return [...requiredSet].every((dimension) =>
+    candidateSet.has(dimension)
   );
 }
 
@@ -412,32 +417,42 @@ Generate ONE different free-recall retest question.
 
 The retest must directly target the CURRENT REMAINING KNOWLEDGE GAP.
 
-The retest must test EVERY CURRENT REMAINING REQUIRED DIMENSION.
+The retest must test EXACTLY the CURRENT REMAINING REQUIRED DIMENSIONS.
+Do not test additional dimensions.
 
-The retest must preserve the same named concepts and entities required by the
-ORIGINAL QUESTION.
+The retest must preserve the same named concepts, entities, and comparison
+relationship required by the ORIGINAL QUESTION.
 
-Do not use the current question as the conceptual source for the retest.
 The ORIGINAL QUESTION is the authoritative conceptual anchor for the entire
 Review session.
 
+Do not use the current question as the conceptual source for the retest.
+
+A different retrieval angle means different wording, ordering, or recall
+framing of the SAME source-supported relationship.
+
 Do not introduce a new physiological setting, location, condition, mechanism,
-or contextual scenario that was not part of the ORIGINAL QUESTION or the
-CURRENT REMAINING KNOWLEDGE GAP.
+role, implication, or contextual scenario merely to make the retest different.
 
-Do not introduce an adjacent concept merely because it appears in the BRAIN
-MATERIAL.
+Do not introduce a broader category or adjacent concept merely because it
+appears elsewhere in the BRAIN MATERIAL.
 
-Every scientific claim and every piece of contextual framing must be
-explicitly supported by the BRAIN MATERIAL.
+Do not add context that is not necessary to test the CURRENT REMAINING
+REQUIRED DIMENSIONS.
 
-Do not add information merely to make the question sound more realistic.
+If the BRAIN MATERIAL supports only a narrow set of facts for the remaining
+gap, keep the retest narrow. A concise rephrasing of the same comparison is
+preferred over adding new context.
+
+Every scientific claim and every piece of contextual framing must be explicitly
+supported by the BRAIN MATERIAL AND directly relevant to the ORIGINAL QUESTION
+or CURRENT REMAINING KNOWLEDGE GAP.
 
 Do not turn a specific Brain-supported relationship into a broader scientific
 rule.
 
-The retest must be meaningfully different in wording or retrieval angle from
-previous retests while testing the same remaining knowledge gap.
+Do not invent a new retrieval context simply because the question must be
+different from a previous retest.
   
 Return ONLY valid JSON with exactly this shape:
 
@@ -506,18 +521,21 @@ does not test, and do not add dimensions that have already been resolved.`;
         continue;
       }
 
-     const verifierPrompt = `You are the final evidence and targeting verifier.
+        const verifierPrompt = `You are the final evidence and targeting verifier.
 
 BRAIN MATERIAL:
 ${file.content}
 
 ORIGINAL QUESTION:
-${question}
+${reviewState.originalQuestion}
 
-STUDENT KNOWLEDGE GAP:
+ORIGINAL REQUIRED DIMENSIONS:
+${JSON.stringify(reviewState.requiredDimensions)}
+
+CURRENT REMAINING KNOWLEDGE GAP:
 ${JSON.stringify(gradeResult.knowledgeGap)}
 
-REQUIRED RETEST DIMENSIONS:
+CURRENT REMAINING REQUIRED DIMENSIONS:
 ${JSON.stringify(gradeResult.requiredDimensions)}
 
 CANDIDATE RETEST QUESTION:
@@ -526,19 +544,50 @@ ${retest.question}
 CANDIDATE RETEST DIMENSIONS:
 ${JSON.stringify(retest.dimensions)}
 
-Verify BOTH conditions:
+Verify ALL of the following conditions.
 
-1. Every scientific condition, relationship, mechanism, descriptor, and piece
-   of context required by the candidate retest is explicitly supported by the
-   BRAIN MATERIAL.
+1. Every scientific claim, relationship, descriptor, and piece of contextual
+framing required by the candidate retest is explicitly supported by the BRAIN
+MATERIAL.
 
-2. The candidate retest directly tests EVERY required retest dimension and
-   targets the student's identified knowledge gap.
+2. The candidate retest tests EXACTLY the CURRENT REMAINING REQUIRED DIMENSIONS.
+It must not drop a required dimension and must not introduce an additional
+dimension.
 
-Do not use outside knowledge.
-Do not infer unstated scientific relationships.
-Do not approve an adjacent concept.
-Do not approve a question that drops even one required dimension.
+3. The candidate retest directly targets the CURRENT REMAINING KNOWLEDGE GAP.
+
+4. The candidate preserves the same named concepts, entities, and specific
+comparison relationship required by the ORIGINAL QUESTION.
+
+5. Every substantive part of the candidate question must be necessary to test
+the CURRENT REMAINING KNOWLEDGE GAP or to express the ORIGINAL QUESTION's
+specific comparison.
+
+6. A fact being present somewhere in the BRAIN MATERIAL is NOT sufficient
+reason to approve its inclusion. Reject a candidate that introduces an
+adjacent Brain fact, broader category, physiological setting, mechanism,
+context, role, implication, or scenario that is not required by the ORIGINAL
+QUESTION or CURRENT REMAINING KNOWLEDGE GAP.
+
+7. A different retrieval angle may change wording, ordering, or recall framing,
+but it must not introduce new scientific context merely to make the question
+different.
+
+8. If the BRAIN MATERIAL supports only a narrow set of facts for the remaining
+gap, a concise rephrasing of that narrow comparison is valid and preferred.
+Do not require the retest to introduce additional context.
+
+9. Do not use outside knowledge.
+
+10. Do not infer unstated scientific relationships.
+
+11. Do not transform a specific Brain-supported relationship into a broader
+scientific rule.
+
+12. Reject the candidate if it introduces wording such as a metabolic role,
+physiological setting, location, condition, mechanism, or implication unless
+that information is explicitly required by the ORIGINAL QUESTION or CURRENT
+REMAINING KNOWLEDGE GAP.
 
 Reply with exactly:
 
