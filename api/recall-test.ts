@@ -44,16 +44,27 @@ PFK-1 is activated by AMP and fructose-2,6-bisphosphate (F2,6BP).
 PFK-1 is inhibited by ATP and citrate.
 
 QUESTION:
-If a cell is experiencing a high-energy state characterized by an abundance
-of ATP and a surplus of citric acid cycle intermediates, how would the
-activity of the glycolysis pathway be modulated, and which specific enzyme
-serves as the control point for this regulation?
+A cell contains high levels of ATP and citrate. Based only on the source
+material, what happens to PFK-1, and what role does PFK-1 have in glycolysis?
 
-STUDENT ANSWER:
-Glycolysis would increase because the cell has lots of ATP available.
-PFK-1 is the main regulatory enzyme.
+STUDENT ANSWERS TO GRADE:
 
-GRADE USING THIS EXACT RUBRIC:
+ANSWER A:
+PFK-1 is inhibited by ATP and citrate. PFK-1 is the rate-limiting enzyme
+of glycolysis.
+
+ANSWER B:
+PFK-1 is inhibited.
+
+ANSWER C:
+PFK-1 is activated by ATP and citrate.
+
+ANSWER D:
+I'm not sure.
+
+Grade EACH answer independently using the exact rubric below.
+
+EXPECTED RUBRIC:
 
 MASTERED:
 All important claims required by the source-supported question are correct.
@@ -72,49 +83,28 @@ MISSING:
 The student provides no meaningful answer or insufficient information to
 evaluate the required concepts.
 
-Return exactly these sections:
+For EACH answer return:
+
+ANSWER:
+A, B, C, or D
 
 RESULT:
 Choose exactly one: MASTERED, PARTIAL, INCORRECT, or MISSING
 
 WHAT WAS RIGHT:
-List only correct claims supported explicitly by the source.
+Only source-supported correct components.
 
 WHAT WAS WRONG OR MISSING:
-Identify every required error or omission using only the source.
-
-WHY IT WAS WRONG:
-Explain the discrepancy between the student's answer and the source.
-Do not introduce outside mechanisms or facts.
+Only source-supported errors or omissions.
 
 REPAIR:
-Provide only the minimum source-supported information needed to correct
-the student's understanding.
+Only the minimum source-supported repair.
 
-RETEST QUESTION:
-Ask a different free-recall question testing the failed concept.
-
-STRICT RETEST GROUNDING:
-Every scientific condition, relationship, mechanism, descriptor, and
-context used in the retest question must be explicitly stated in the
-SOURCE MATERIAL.
-
-Do not infer or introduce contextual states such as "low energy,"
-"high energy," "fasting," "fed state," "energy demand," or similar
-interpretations unless that exact relationship is explicitly provided
-in the SOURCE MATERIAL.
-
-The retest may reorganize or combine source-supported facts, but it
-must not add scientific information.
-
-Before returning the retest question, verify that every fact needed
-to answer it can be directly pointed to in the SOURCE MATERIAL.
-
-Do not provide the answer.
+After grading all four answers return:
 
 GROUNDING CHECK:
-List any claim in your own evaluation that is NOT explicitly supported by
-the SOURCE MATERIAL. If there are none, write exactly: NONE`,
+List any scientific claim in your evaluation that is not explicitly
+supported by the SOURCE MATERIAL. If there are none, write exactly: NONE
            },
         ],
       }),
