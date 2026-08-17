@@ -351,6 +351,10 @@
     let token = "";
 let currentQuestion = "";
 let reviewState = null;
+let reviewScope =
+  new URLSearchParams(window.location.search)
+    .get("scope")
+    ?.trim() || "";
 let currentRetest = "";
 let questionCount = 0;
 
@@ -438,7 +442,10 @@ let questionCount = 0;
 
       try {
         const response = await fetch(
-          "/api/recall-read-test",
+    "/api/recall-read-test" +
+  (reviewScope
+    ? "?scope=" + encodeURIComponent(reviewScope)
+    : ""),
           {
             method: "GET",
             headers: {
@@ -515,10 +522,11 @@ questionCount += 1;
               Authorization: "Bearer " + token,
               "Content-Type": "application/json"
             },
-         body: JSON.stringify({
+body: JSON.stringify({
   question: currentQuestion,
   answer,
-  reviewState
+  reviewState,
+  reviewScope
 })
           }
         );
