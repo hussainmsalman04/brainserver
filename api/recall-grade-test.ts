@@ -70,7 +70,10 @@ type GradeResult = {
   whyItWasWrong: string;
   repair: string;
   knowledgeGap: string[];
-  testedDimensions: string[];
+  testedDimensions: {
+  id: string;
+  label: string;
+}[];
   requiredDimensions: string[];
 };
 
@@ -395,7 +398,12 @@ Return ONLY valid JSON with exactly this shape:
   "whyItWasWrong": "...",
   "repair": "...",
   "knowledgeGap": ["..."],
-  "testedDimensions": ["..."],
+  "testedDimensions": [
+  {
+    "id": "...",
+    "label": "..."
+  }
+],
   "requiredDimensions": ["..."]
 }
 
