@@ -257,8 +257,22 @@ Also determine whether the RETEST QUESTION directly targets the same failed
 or incomplete concept identified by the GRADER EVALUATION and required by
 the original QUESTION.
 
+CONCEPT LOCK:
+The retest must preserve the same named concepts, entities, and comparison
+dimensions required by the original QUESTION.
+
+If the original QUESTION compares specific entities, the retest must continue
+to compare those same entities.
+
+If the original QUESTION tests a specific relationship, the retest must test
+that same relationship from a different angle.
+
 The retest must test the student's actual knowledge gap, not merely another
 fact that happens to appear in the BRAIN MATERIAL.
+
+Do not replace a specific concept with a broader category.
+
+Do not transform a specific comparison into a universal scientific rule.
 
 Do not approve a retest that switches to an adjacent concept.
 
