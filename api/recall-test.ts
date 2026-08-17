@@ -39,29 +39,34 @@ If something may be scientifically true but is not explicitly supported by
 the SOURCE MATERIAL, do not use it in grading, explanation, repair, or retest.
 
 SOURCE MATERIAL:
-PFK-1 (phosphofructokinase-1) is the rate-limiting enzyme of glycolysis.
-PFK-1 is activated by AMP and fructose-2,6-bisphosphate (F2,6BP).
-PFK-1 is inhibited by ATP and citrate.
+Prokaryotic mRNA is polycistronic, meaning one mRNA can produce multiple protein products.
+Eukaryotic mRNA is monocistronic, meaning one mRNA produces one protein product.
+In prokaryotes, transcription and translation can occur simultaneously.
+In eukaryotes, transcription occurs in the nucleus and translation occurs in the cytoplasm.
+Eukaryotic pre-mRNA undergoes processing including 5' capping, 3' polyadenylation, and RNA splicing.
 
 QUESTION:
-A cell contains high levels of ATP and citrate. Based only on the source
-material, what happens to PFK-1, and what role does PFK-1 have in glycolysis?
+Compare prokaryotic and eukaryotic gene expression with respect to mRNA organization,
+the relationship between transcription and translation, and eukaryotic mRNA processing.
 
 STUDENT ANSWERS TO GRADE:
 
 ANSWER A:
-PFK-1 is inhibited by ATP and citrate. PFK-1 is the rate-limiting enzyme
-of glycolysis.
+Prokaryotic mRNA is polycistronic, while eukaryotic mRNA is monocistronic.
+Prokaryotes can perform transcription and translation simultaneously.
+In eukaryotes, transcription occurs in the nucleus and translation occurs in the cytoplasm.
+Eukaryotic pre-mRNA undergoes 5' capping, 3' polyadenylation, and RNA splicing.
 
 ANSWER B:
-PFK-1 is inhibited.
+Prokaryotic mRNA is polycistronic and eukaryotic mRNA is monocistronic.
+In prokaryotes transcription and translation can happen simultaneously.
 
 ANSWER C:
-PFK-1 is activated by ATP and citrate.
+Prokaryotic mRNA is monocistronic and eukaryotic mRNA is polycistronic.
+Eukaryotic transcription and translation occur simultaneously.
 
 ANSWER D:
-I'm not sure.
-
+I don't remember.
 Grade EACH answer independently using the exact rubric below.
 
 EXPECTED RUBRIC:
