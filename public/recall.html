@@ -584,7 +584,9 @@ body: JSON.stringify({
           currentRetest || "No retest returned.";
 
         const isMastered = evaluation.result === "MASTERED";
-
+        if (isMastered) {
+  reviewHistory.push(currentQuestion);
+}
         const wrongSection =
           document.getElementById("wrongText").parentElement;
 
