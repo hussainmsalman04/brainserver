@@ -162,12 +162,19 @@ RETEST QUESTION:
 Ask a different free-recall question that targets the same failed or
 incomplete concept from the original QUESTION.
 
-The retest must directly test the specific information or relationship that
-the student got wrong or failed to provide.
+CONCEPT LOCK:
+The retest must preserve the same named concepts, entities, and comparison
+dimensions that were required by the original QUESTION.
 
-The retest must preserve the same conceptual target as the original QUESTION.
-It may change the wording or structure, but it must require retrieval of the
-same missing or incorrect knowledge.
+If the original question compares specific entities, the retest must continue
+to compare those same entities.
+
+If the original question tests a specific relationship, the retest must test
+that same relationship from a different angle.
+
+Do not replace a specific concept with a broader category.
+
+Do not transform a specific comparison into a universal scientific rule.
 
 Do not switch to an adjacent concept merely because it appears elsewhere in
 the BRAIN MATERIAL.
