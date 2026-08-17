@@ -298,7 +298,10 @@
 
     <section id="resultCard" class="card hidden">
       <div id="resultBadge" class="result-badge"></div>
-
+<div class="review-section">
+  <div class="review-title">Question</div>
+  <div id="resultQuestion" class="review-text"></div>
+</div>
       <div class="review-section">
         <div class="review-title">Your answer</div>
         <div id="studentAnswer" class="review-text"></div>
@@ -592,7 +595,9 @@
 
         document.getElementById("resultBadge").textContent =
           parsed.result || "RESULT";
-
+        
+document.getElementById("resultQuestion").textContent =
+  currentQuestion;
         document.getElementById("studentAnswer").textContent =
           answer;
 
