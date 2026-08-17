@@ -2,6 +2,86 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { VaultClient } from "../lib/github.js";
 import { checkAuth } from "../lib/auth.js";
 
+const MODEL = "google/gemini-3.1-flash-lite";
+const GATEWAY_URL = "https://ai-gateway.vercel.sh/v1/chat/completions";
+const MAX_RETEST_ATTEMPTS = 3;
+
+type GradeResult = {
+  result: "MASTERED" | "PARTIAL" | "INCORRECT" | "MISSING";
+  whatWasRight: string[];
+  whatWasWrongOrMissing: string[];
+  whyItWasWrong: string;
+  repair: string;
+  knowledgeGap: string[];
+  requiredDimensions: string[];
+};
+
+type RetestCandidate = {
+  question: string;
+  dimensions: string[];
+};
+
+async function callGateway(apiKey: string, prompt: string) {
+  const response = await fetch(GATEWAY_URL, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: MODEL,
+      messages: [{ role: "user", content: prompt }],
+    }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data?.error?.message || "AI Gateway request failed"
+    );
+  }
+
+  const content = data?.choices?.[0]?.message?.content?.trim();
+
+  if (!content) {
+    throw new Error("AI Gateway returned no content");
+  }
+
+  return {
+    content,
+    usage: data?.usage ?? null,
+  };
+}
+
+function parseJsonObject<T>(text: string): T {
+  const cleaned = text
+    .replace(/^```json\s*/i, "")
+    .replace(/^```\s*/i, "")
+    .replace(/\s*```$/i, "")
+    .trim();
+
+  return JSON.parse(cleaned) as T;
+}
+
+function normalizeDimension(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function hasAllRequiredDimensions(
+  required: string[],
+  candidate: string[]
+): boolean {
+  const candidateSet = new Set(candidate.map(normalizeDimension));
+
+  return required.every((dimension) =>
+    candidateSet.has(normalizeDimension(dimension))
+  );
+}
+
 export default async function handler(
   req: VercelRequest,
   res: VercelResponse
@@ -74,30 +154,11 @@ export default async function handler(
       });
     }
 
-    const gradeResponse = await fetch(
-      "https://ai-gateway.vercel.sh/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${aiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-3.1-flash-lite",
-          messages: [
-            {
-              role: "user",
-              content: `You are an evidence-bound MCAT active-recall examiner.
+    const gradePrompt = `You are an evidence-bound MCAT active-recall examiner.
 
-STRICT GROUNDING RULE:
-The BRAIN MATERIAL below is the complete answer key for this evaluation.
-
-You may NOT introduce, infer, assume, or grade against any scientific fact,
-mechanism, relationship, terminology, or inverse relationship that is not
-explicitly supported by the BRAIN MATERIAL.
-
-If something may be scientifically true but is not explicitly supported by
-the BRAIN MATERIAL, do not use it in grading, explanation, repair, or retest.
+The BRAIN MATERIAL below is the complete source for this evaluation.
+Do not introduce or rely on scientific information that is not explicitly
+supported by the BRAIN MATERIAL.
 
 BRAIN MATERIAL:
 ${file.content}
@@ -108,249 +169,301 @@ ${question}
 STUDENT ANSWER:
 ${studentAnswer}
 
-GRADE USING THIS EXACT RUBRIC:
+Determine the student's result using this rubric:
 
-MASTERED:
-All important claims required by the source-supported question are correct.
-No material misconception is present.
+MASTERED = all important source-supported components are correct and no
+material misconception is present.
 
-PARTIAL:
-At least one important required component is correct, but another required
-component is incorrect or missing.
+PARTIAL = at least one important required component is correct, but another
+required component is incorrect or missing.
 
-INCORRECT:
-The response contains no substantively correct required component, or its
-overall reasoning demonstrates a fundamentally incorrect model without a
-correct required component.
+INCORRECT = no substantively correct required component is present, or the
+overall answer demonstrates a fundamentally incorrect model without a correct
+required component.
 
-MISSING:
-The student provides no meaningful answer or insufficient information to
-evaluate the required concepts.
+MISSING = no meaningful answer was provided.
 
-Return exactly these sections:
+Identify the specific knowledge gap.
 
-RESULT:
-Choose exactly one: MASTERED, PARTIAL, INCORRECT, or MISSING
+For requiredDimensions, list the concrete concepts or comparison dimensions
+that must be retrieved to fully answer the QUESTION and that the student did
+not successfully demonstrate.
 
-WHAT WAS RIGHT:
-List only correct claims explicitly supported by the BRAIN MATERIAL.
+Return ONLY valid JSON with exactly this shape:
 
-WHAT WAS WRONG OR MISSING:
-Identify every required error or omission using only the BRAIN MATERIAL.
+{
+  "result": "MASTERED | PARTIAL | INCORRECT | MISSING",
+  "whatWasRight": ["..."],
+  "whatWasWrongOrMissing": ["..."],
+  "whyItWasWrong": "...",
+  "repair": "...",
+  "knowledgeGap": ["..."],
+  "requiredDimensions": ["..."]
+}
 
-WHY IT WAS WRONG:
-Explain the discrepancy between the student's answer and the BRAIN MATERIAL.
-Do not introduce outside mechanisms or facts.
+Rules:
+- Every scientific claim must be supported by the BRAIN MATERIAL.
+- Repair must reconstruct the student's actual missing or incorrect knowledge.
+- Do not generalize a specific Brain relationship into a broader scientific
+  rule unless that broader rule is explicitly stated in the Brain.
+- requiredDimensions must contain only dimensions genuinely required by the
+  original QUESTION and not successfully demonstrated by the student.
+- If the student is MASTERED, requiredDimensions must be an empty array.
+- Do not generate a retest question yet.`;
 
-REPAIR:
-Reconstruct the answer to the QUESTION using only the BRAIN MATERIAL.
+    const grade = await callGateway(aiKey, gradePrompt);
+    const gradeResult = parseJsonObject<GradeResult>(grade.content);
 
-The repair must directly address every important component of the QUESTION
-that the student got wrong or missed.
+    const validResults = new Set([
+      "MASTERED",
+      "PARTIAL",
+      "INCORRECT",
+      "MISSING",
+    ]);
 
-Do not merely list isolated facts. State the relevant relationships between
-the facts when those relationships are explicitly supported by the
-BRAIN MATERIAL.
-
-Use source-specific wording. Do not convert a specific relationship in the
-BRAIN MATERIAL into a broader scientific rule or principle unless that broader
-rule is itself explicitly stated in the BRAIN MATERIAL.
-
-Keep the repair concise and focused on the student's actual knowledge gap.
-
-RETEST QUESTION:
-Ask a different free-recall question that targets the same failed or
-incomplete concept from the original QUESTION.
-
-CONCEPT LOCK:
-The retest must preserve the same named concepts, entities, and every
-comparison dimension required by the original QUESTION.
-
-If the original QUESTION requires multiple dimensions, the retest must
-continue to test all of those dimensions, unless a dimension was explicitly
-identified as already mastered by the student.
-
-Never silently drop a required comparison dimension.
-
-If the original question compares specific entities, the retest must continue
-to compare those same entities.
-
-If the original question tests a specific relationship, the retest must test
-that same relationship from a different angle.
-
-Do not replace a specific concept with a broader category.
-
-Do not transform a specific comparison into a universal scientific rule.
-
-Do not switch to an adjacent concept merely because it appears elsewhere in
-the BRAIN MATERIAL.
-
-Do not broaden the question beyond the original knowledge gap.
-
-STRICT RETEST GROUNDING:
-Every scientific condition, relationship, mechanism, descriptor, and piece of
-context used in the retest question must be explicitly supported by the
-BRAIN MATERIAL.
-
-The retest may reorganize or combine Brain-supported facts, but it must not
-add scientific information or introduce a new concept.
-
-Do not ask the student to derive or state a general scientific rule from a
-specific example or comparison unless that general rule is explicitly stated
-in the BRAIN MATERIAL.
-
-Do not provide the answer.
-The CONCEPT LOCK is an internal instruction for generating the retest.
-Never output the words "CONCEPT LOCK" or any internal grading instructions
-inside the RETEST QUESTION section.
-
-Under RETEST QUESTION, output only the actual question that the student
-should answer.
-
-GROUNDING CHECK:
-List any scientific claim in your evaluation that is NOT explicitly supported
-by the BRAIN MATERIAL. If there are none, write exactly: NONE`,
-            },
-          ],
-        }),
-      }
-    );
-
-      const gradeData = await gradeResponse.json();
-
-    if (!gradeResponse.ok) {
-      return res.status(gradeResponse.status).json({
-        error: "AI Gateway grading request failed",
-        details: gradeData,
+    if (!validResults.has(gradeResult.result)) {
+      return res.status(502).json({
+        error: "Grader returned an invalid result",
+        raw: grade.content,
       });
     }
 
-    const evaluation =
-      gradeData?.choices?.[0]?.message?.content?.trim();
-
-    if (!evaluation) {
-      return res.status(500).json({
-        error: "Grader returned no evaluation",
+    if (
+      !Array.isArray(gradeResult.requiredDimensions) ||
+      !Array.isArray(gradeResult.knowledgeGap)
+    ) {
+      return res.status(502).json({
+        error: "Grader returned invalid dimension data",
+        raw: grade.content,
       });
     }
 
-    const verifyResponse = await fetch(
-      "https://ai-gateway.vercel.sh/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${aiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-3.1-flash-lite",
-          messages: [
-            {
-              role: "user",
-              content: `You are a strict evidence verifier.
-
-BRAIN MATERIAL:
-${file.content}
-
-QUESTION:
-${question}
-
-STUDENT ANSWER:
-${studentAnswer}
-
-GRADER EVALUATION:
-${evaluation}
-
-Determine whether every scientific claim, correction, explanation, repair,
-and retest condition in the GRADER EVALUATION is explicitly supported by
-the BRAIN MATERIAL.
-
-Also determine whether the RETEST QUESTION directly targets the same failed
-or incomplete concept identified by the GRADER EVALUATION and required by
-the original QUESTION.
-
-CONCEPT LOCK:
-The retest must preserve the same named concepts, entities, and every
-comparison dimension required by the original QUESTION.
-
-If the original QUESTION requires multiple dimensions, identify each required
-dimension from the original QUESTION and verify that the RETEST QUESTION
-continues to test every one of them.
-
-A dimension may be omitted only if the GRADER EVALUATION explicitly identifies
-that dimension as already mastered by the student.
-
-Never silently drop a required comparison dimension.
-
-If the original QUESTION compares specific entities, the retest must continue
-to compare those same entities.
-
-If the original QUESTION tests a specific relationship, the retest must test
-that same relationship from a different angle.
-
-Do not replace a specific concept with a broader category.
-
-Do not transform a specific comparison into a universal scientific rule.
-
-Do not approve a retest that switches to an adjacent concept.
-
-Do not use outside knowledge.
-Do not infer unstated scientific relationships.
-
-The grader may identify that the student omitted, contradicted, or correctly
-stated information only when that judgment is supported by the BRAIN MATERIAL.
-
-If the entire evaluation is grounded in the BRAIN MATERIAL AND the retest
-directly targets the identified knowledge gap, reply exactly:
-SUPPORTED
-
-If any scientific claim, explanation, repair, or retest requires information
-not explicitly present in the BRAIN MATERIAL, or if the retest does not
-directly target the identified knowledge gap, reply:
-UNSUPPORTED: followed by a brief description of the problem.
-
-Return nothing else.`,
-            },
-          ],
-        }),
-      }
-    );
-
-    const verifyData = await verifyResponse.json();
-
-    if (!verifyResponse.ok) {
-      return res.status(verifyResponse.status).json({
-        error: "AI Gateway grading verification request failed",
-        details: verifyData,
-      });
-    }
-
-    const verification =
-      verifyData?.choices?.[0]?.message?.content?.trim() ?? "";
-
-    if (verification !== "SUPPORTED") {
-      return res.status(422).json({
-        success: false,
-        blocked: true,
+    if (gradeResult.result === "MASTERED") {
+      return res.status(200).json({
+        success: true,
         source: "study/mcat-bbfl.md",
         question,
         answer: studentAnswer,
-        evaluation,
-        verification,
-        gradingUsage: gradeData?.usage ?? null,
-        verificationUsage: verifyData?.usage ?? null,
+        evaluation: {
+          ...gradeResult,
+          retestQuestion: "",
+        },
+        verification: "SUPPORTED",
+        gradingUsage: grade.usage,
+        verificationUsage: null,
+        retestAttempts: 0,
       });
     }
 
-    return res.status(200).json({
-      success: true,
+    if (gradeResult.requiredDimensions.length === 0) {
+      return res.status(502).json({
+        error: "Grader did not identify a required knowledge gap",
+      });
+    }
+
+    const attempts: Array<{
+      attempt: number;
+      question: string;
+      dimensions: string[];
+      dimensionCheck: "PASS" | "FAIL";
+      verification: string;
+      generationUsage: unknown;
+      verificationUsage: unknown;
+    }> = [];
+
+    let totalVerificationUsage: unknown = null;
+
+    for (let attempt = 1; attempt <= MAX_RETEST_ATTEMPTS; attempt++) {
+      const retestPrompt = `You are an MCAT retest-question generator.
+
+BRAIN MATERIAL:
+${file.content}
+
+ORIGINAL QUESTION:
+${question}
+
+STUDENT KNOWLEDGE GAP:
+${JSON.stringify(gradeResult.knowledgeGap)}
+
+REQUIRED RETEST DIMENSIONS:
+${JSON.stringify(gradeResult.requiredDimensions)}
+
+Generate ONE different free-recall retest question.
+
+The retest must:
+- use the same named concepts and entities as the original question when
+  those concepts/entities are part of the required dimensions;
+- test EVERY required retest dimension;
+- target the student's actual knowledge gap;
+- use only information explicitly supported by the BRAIN MATERIAL;
+- not switch to an adjacent concept;
+- not turn a specific comparison into a universal scientific rule;
+- not add a new concept.
+
+Return ONLY valid JSON with exactly this shape:
+
+{
+  "question": "...",
+  "dimensions": ["...", "..."]
+}
+
+The dimensions array must list every required retest dimension that the
+question actually tests. Do not include dimensions that the question does not
+test.`;
+
+      let retest: RetestCandidate;
+      let generationUsage: unknown = null;
+
+      try {
+        const generated = await callGateway(aiKey, retestPrompt);
+        generationUsage = generated.usage;
+        retest = parseJsonObject<RetestCandidate>(generated.content);
+      } catch (error) {
+        attempts.push({
+          attempt,
+          question: "",
+          dimensions: [],
+          dimensionCheck: "FAIL",
+          verification:
+            error instanceof Error ? error.message : String(error),
+          generationUsage,
+          verificationUsage: null,
+        });
+        continue;
+      }
+
+      if (
+        typeof retest.question !== "string" ||
+        !retest.question.trim() ||
+        !Array.isArray(retest.dimensions)
+      ) {
+        attempts.push({
+          attempt,
+          question: "",
+          dimensions: [],
+          dimensionCheck: "FAIL",
+          verification: "Invalid retest structure",
+          generationUsage,
+          verificationUsage: null,
+        });
+        continue;
+      }
+
+      const dimensionCheck = hasAllRequiredDimensions(
+        gradeResult.requiredDimensions,
+        retest.dimensions
+      );
+
+      if (!dimensionCheck) {
+        attempts.push({
+          attempt,
+          question: retest.question,
+          dimensions: retest.dimensions,
+          dimensionCheck: "FAIL",
+          verification: "Required dimensions missing",
+          generationUsage,
+          verificationUsage: null,
+        });
+        continue;
+      }
+
+      const verifierPrompt = `You are the final evidence and targeting verifier.
+
+BRAIN MATERIAL:
+${file.content}
+
+ORIGINAL QUESTION:
+${question}
+
+STUDENT KNOWLEDGE GAP:
+${JSON.stringify(gradeResult.knowledgeGap)}
+
+REQUIRED RETEST DIMENSIONS:
+${JSON.stringify(gradeResult.requiredDimensions)}
+
+CANDIDATE RETEST QUESTION:
+${retest.question}
+
+CANDIDATE RETEST DIMENSIONS:
+${JSON.stringify(retest.dimensions)}
+
+Verify BOTH conditions:
+
+1. Every scientific condition, relationship, mechanism, descriptor, and piece
+   of context required by the candidate retest is explicitly supported by the
+   BRAIN MATERIAL.
+
+2. The candidate retest directly tests EVERY required retest dimension and
+   targets the student's identified knowledge gap.
+
+Do not use outside knowledge.
+Do not infer unstated scientific relationships.
+Do not approve an adjacent concept.
+Do not approve a question that drops even one required dimension.
+
+Reply with exactly:
+
+SUPPORTED
+
+or:
+
+UNSUPPORTED: followed by a brief reason.
+
+Return nothing else.`;
+
+      let verification = "";
+      let verificationUsage: unknown = null;
+
+      try {
+        const verified = await callGateway(aiKey, verifierPrompt);
+        verification = verified.content.trim();
+        verificationUsage = verified.usage;
+        totalVerificationUsage = verificationUsage;
+      } catch (error) {
+        verification =
+          error instanceof Error ? error.message : String(error);
+      }
+
+      attempts.push({
+        attempt,
+        question: retest.question,
+        dimensions: retest.dimensions,
+        dimensionCheck: "PASS",
+        verification,
+        generationUsage,
+        verificationUsage,
+      });
+
+      if (verification === "SUPPORTED") {
+        return res.status(200).json({
+          success: true,
+          source: "study/mcat-bbfl.md",
+          question,
+          answer: studentAnswer,
+          evaluation: {
+            ...gradeResult,
+            retestQuestion: retest.question,
+          },
+          verification: "SUPPORTED",
+          gradingUsage: grade.usage,
+          verificationUsage: totalVerificationUsage,
+          retestAttempts: attempt,
+          retestAudit: attempts,
+        });
+      }
+    }
+
+    return res.status(422).json({
+      success: false,
+      blocked: true,
       source: "study/mcat-bbfl.md",
       question,
       answer: studentAnswer,
-      evaluation,
-      verification: "SUPPORTED",
-      gradingUsage: gradeData?.usage ?? null,
-      verificationUsage: verifyData?.usage ?? null,
+      evaluation: gradeResult,
+      error:
+        "No retest passed dimension and grounding verification after 3 attempts",
+      retestAudit: attempts,
+      gradingUsage: grade.usage,
     });
   } catch (error) {
     return res.status(500).json({
