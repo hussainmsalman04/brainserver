@@ -4,14 +4,12 @@
  */
 
 const ALLOWED_DIRS = [
-  "00-Home",
-  "01-Career",
-  "02-Projects",
-  "03-Learning",
-  "04-Personal",
-  "05-Reference",
-  "06-Archive",
-  "_templates",
+  "medicine",
+  "study",
+  "projects",
+  "interests",
+  "ventures",
+  "people",
 ] as const;
 
 const PATH_RE = /^[A-Za-z0-9._/-]+\.md$/;
