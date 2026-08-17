@@ -52,7 +52,7 @@ function buildServer(vault: VaultClient): Server {
       {
         name: "list_vault_files",
         description:
-          "List all .md files inside a vault directory. Use this BEFORE planning saves so you know which topic files already exist.",
+  "List .md files inside a vault directory. Use this only when the destination file is unknown or you need to discover what files exist. Do not call it as a routine step before every save.",
         inputSchema: {
           type: "object",
           properties: {
@@ -64,7 +64,7 @@ function buildServer(vault: VaultClient): Server {
       {
         name: "read_vault_file",
         description:
-          "Read the current content of a vault file. Use this to dedup against existing entries BEFORE appending — never write a fact that's already there.",
+          "Read the current content of a vault file. Use this only when the existing note contents are needed for reasoning, comparison, integration, or answering the user's request. Do not read solely for duplicate checking before save_to_brain; save_to_brain handles that internally.",
         inputSchema: {
           type: "object",
           properties: {
@@ -76,7 +76,7 @@ function buildServer(vault: VaultClient): Server {
       {
         name: "save_to_brain",
         description:
-          "Safely save a new markdown memory to a KNOWN vault path in one call. The server reads the file itself, conservatively skips an effectively identical entry, and then appends with GitHub sha protection. Prefer this over read_vault_file + append_to_vault when you already know the destination path. It never moves, deletes, rewrites, or semantically merges existing notes. If you do NOT know the path, list files first rather than guessing.",
+         "Safely save an approved markdown memory to a KNOWN vault path in one call. The server privately reads the file, checks for an effectively identical entry, and appends only when needed. Prefer this when the destination path is already known. Do not call list_vault_files or read_vault_file first unless their information is genuinely needed.",
         inputSchema: {
           type: "object",
           properties: {
@@ -94,7 +94,7 @@ function buildServer(vault: VaultClient): Server {
       {
         name: "append_to_vault",
         description:
-          "Append a structured markdown entry to a vault file (creates the file if missing). The server reads-then-writes safely with the existing file's sha — you cannot accidentally overwrite. Always read_vault_file first to dedup.",
+       "Append a structured markdown entry to a vault file, creating the file if missing. This is a lower-level fallback tool. Prefer save_to_brain for normal approved saves.",
         inputSchema: {
           type: "object",
           properties: {
