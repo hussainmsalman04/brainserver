@@ -146,6 +146,10 @@ REPAIR:
 Provide only the minimum Brain-supported information needed to correct the
 student's understanding.
 
+Use source-specific wording. Do not convert a specific relationship in the
+BRAIN MATERIAL into a broader scientific rule or principle unless that broader
+rule is itself explicitly stated in the BRAIN MATERIAL.
+
 RETEST QUESTION:
 Ask a different free-recall question testing the failed or incomplete concept.
 
@@ -160,6 +164,9 @@ BRAIN MATERIAL.
 The retest may reorganize or combine Brain-supported facts, but it must not
 add scientific information.
 
+Do not ask the student to derive or state a general scientific rule from a
+specific example or comparison unless that general rule is explicitly stated
+in the BRAIN MATERIAL.
 Do not provide the answer.
 
 GROUNDING CHECK:
