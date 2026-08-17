@@ -22,7 +22,7 @@ export default async function handler(
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "inclusionai/ling-3.0-flash-free",
+          model: "google/gemini-3.1-flash-lite",
           messages: [
             {
               role: "user",
