@@ -104,7 +104,7 @@ After grading all four answers return:
 
 GROUNDING CHECK:
 List any scientific claim in your evaluation that is not explicitly
-supported by the SOURCE MATERIAL. If there are none, write exactly: NONE
+supported by the SOURCE MATERIAL. If there are none, write exactly: NONE`
            },
         ],
       }),
