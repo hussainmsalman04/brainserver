@@ -118,10 +118,27 @@ const scope =
     ? req.query.scope.trim()
     : "";
 
-const reviewHistory =
-  typeof req.query?.history === "string"
-    ? req.query.history.trim()
+const coveredDimensionsRaw =
+  typeof req.query?.coveredDimensions === "string"
+    ? req.query.coveredDimensions.trim()
     : "";
+
+let coveredDimensions: string[] = [];
+
+if (coveredDimensionsRaw) {
+  try {
+    const parsed = JSON.parse(coveredDimensionsRaw);
+
+    if (Array.isArray(parsed)) {
+      coveredDimensions = parsed.filter(
+        (dimension): dimension is string =>
+          typeof dimension === "string"
+      );
+    }
+  } catch {
+    coveredDimensions = [];
+  }
+}
 
 const brainMaterial = extractBrainSection(
   file.content,
@@ -164,17 +181,18 @@ ${brainMaterial}
 
 Generate ONE free-recall question using only the BRAIN MATERIAL.
 
-PREVIOUSLY TESTED IN THIS REVIEW:
-${reviewHistory || "None"}
+COVERED DIMENSIONS IN THIS REVIEW:
+${coveredDimensions.length ? JSON.stringify(coveredDimensions) : "None"}
 
-When selecting content for a NEW question, choose a materially different
-concept or relationship from the remaining BRAIN MATERIAL.
+When selecting content for a NEW question, choose one or two explicit facts
+or relationships from the BRAIN MATERIAL that are not already represented
+by the COVERED DIMENSIONS.
 
-Do not repeat a previously tested concept merely by changing the wording.
+Do not generate a new question that tests a covered dimension merely by
+changing the wording.
 
-A concept may be revisited only when it is being explicitly retested because
-the student previously failed or partially demonstrated that knowledge gap.
-
+Only revisit a covered dimension when the current task is an explicit
+retest of an unresolved knowledge gap.
 SELECT THE CONTENT FIRST:
 Choose one or two explicit facts or relationships that are directly stated
 in the BRAIN MATERIAL.
