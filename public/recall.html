@@ -423,7 +423,6 @@ let coveredDimensions = [];
 
       if (questionOverride) {
         currentQuestion = questionOverride;
-        questionCount += 1;
 
         document.getElementById("questionNumber").textContent =
           "Retest";
@@ -583,9 +582,15 @@ body: JSON.stringify({
         document.getElementById("retestText").textContent =
           currentRetest || "No retest returned.";
 
-        const isMastered = evaluation.result === "MASTERED";
-        if (isMastered) {
-  reviewHistory.push(currentQuestion);
+       const isMastered = evaluation.result === "MASTERED";
+
+if (isMastered) {
+  coveredDimensions = [
+    ...new Set([
+      ...coveredDimensions,
+      ...(evaluation.testedDimensions || [])
+    ])
+  ];
 }
         const wrongSection =
           document.getElementById("wrongText").parentElement;
