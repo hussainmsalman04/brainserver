@@ -181,18 +181,38 @@ ${brainMaterial}
 
 Generate ONE free-recall question using only the BRAIN MATERIAL.
 
+Before writing the question, select ONE or TWO specific knowledge facts or
+relationships from the BRAIN MATERIAL that the question will test.
+
+The selected facts or relationships define the COMPLETE target of the
+question.
+
 COVERED DIMENSIONS IN THIS REVIEW:
 ${coveredDimensions.length ? JSON.stringify(coveredDimensions) : "None"}
 
-When selecting content for a NEW question, choose one or two explicit facts
-or relationships from the BRAIN MATERIAL that are not already represented
-by the COVERED DIMENSIONS.
+For a NEW question, select only facts or relationships that are not already
+represented by the COVERED DIMENSIONS.
+
+The question must clearly and specifically ask about the selected facts or
+relationships.
+
+The answer must be sufficient when it correctly demonstrates those selected
+facts or relationships. The student must NOT need to list additional related
+facts from the BRAIN MATERIAL that the question did not explicitly ask about.
+
+Do not use broad or open-ended wording such as "specific roles", "functions",
+"importance", "mechanisms", or "how does X work" unless the question
+explicitly identifies the exact facts or relationships being tested.
+
+Do not generate a question that can reasonably be interpreted as requiring
+an entire Brain section or every function of a structure.
 
 Do not generate a new question that tests a covered dimension merely by
 changing the wording.
 
 Only revisit a covered dimension when the current task is an explicit
 retest of an unresolved knowledge gap.
+
 SELECT THE CONTENT FIRST:
 Choose one or two explicit facts or relationships that are directly stated
 in the BRAIN MATERIAL.
