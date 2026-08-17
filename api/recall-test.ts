@@ -23,10 +23,20 @@ export default async function handler(
         },
         body: JSON.stringify({
           model: "google/gemini-3.1-flash-lite",
-        messages: [
+      messages: [
   {
     role: "user",
-    content: `You are an MCAT active-recall examiner.
+    content: `You are an evidence-bound MCAT active-recall examiner.
+
+STRICT GROUNDING RULE:
+The SOURCE MATERIAL below is the complete answer key for this evaluation.
+
+You may NOT introduce, infer, assume, or grade against any scientific fact,
+mechanism, relationship, terminology, or inverse relationship that is not
+explicitly stated in the SOURCE MATERIAL.
+
+If something may be scientifically true but is not explicitly supported by
+the SOURCE MATERIAL, do not use it in grading, explanation, repair, or retest.
 
 SOURCE MATERIAL:
 PFK-1 (phosphofructokinase-1) is the rate-limiting enzyme of glycolysis.
@@ -34,34 +44,63 @@ PFK-1 is activated by AMP and fructose-2,6-bisphosphate (F2,6BP).
 PFK-1 is inhibited by ATP and citrate.
 
 QUESTION:
-If a cell is experiencing a high-energy state characterized by an abundance of ATP and a surplus of citric acid cycle intermediates, how would the activity of the glycolysis pathway be modulated, and which specific enzyme serves as the control point for this regulation?
+If a cell is experiencing a high-energy state characterized by an abundance
+of ATP and a surplus of citric acid cycle intermediates, how would the
+activity of the glycolysis pathway be modulated, and which specific enzyme
+serves as the control point for this regulation?
 
 STUDENT ANSWER:
-Glycolysis would increase because the cell has lots of ATP available. PFK-1 is the main regulatory enzyme.
+Glycolysis would increase because the cell has lots of ATP available.
+PFK-1 is the main regulatory enzyme.
 
-Grade the student's answer using ONLY the source material.
+GRADE USING THIS EXACT RUBRIC:
 
-Return these sections:
+MASTERED:
+All important claims required by the source-supported question are correct.
+No material misconception is present.
+
+PARTIAL:
+At least one important required component is correct, but another required
+component is incorrect or missing.
+
+INCORRECT:
+The response contains no substantively correct required component, or its
+overall reasoning demonstrates a fundamentally incorrect model without a
+correct required component.
+
+MISSING:
+The student provides no meaningful answer or insufficient information to
+evaluate the required concepts.
+
+Return exactly these sections:
 
 RESULT:
 Choose exactly one: MASTERED, PARTIAL, INCORRECT, or MISSING
 
 WHAT WAS RIGHT:
-Identify the correct parts of the student's answer.
+List only correct claims supported explicitly by the source.
 
 WHAT WAS WRONG OR MISSING:
-Identify every important error or omission.
+Identify every required error or omission using only the source.
 
 WHY IT WAS WRONG:
-Explain the conceptual reason for the error, not merely the correct answer.
+Explain the discrepancy between the student's answer and the source.
+Do not introduce outside mechanisms or facts.
 
 REPAIR:
-Give the minimum information necessary to repair the student's understanding.
+Provide only the minimum source-supported information needed to correct
+the student's understanding.
 
 RETEST QUESTION:
-Ask a different free-recall question testing the same weakness. Do not provide the answer to the retest question.`,
+Ask a different free-recall question testing the failed concept.
+The answer must be fully derivable from the SOURCE MATERIAL.
+Do not provide the answer.
+
+GROUNDING CHECK:
+List any claim in your own evaluation that is NOT explicitly supported by
+the SOURCE MATERIAL. If there are none, write exactly: NONE`,
   },
-],
+],-
         }),
       }
     );
