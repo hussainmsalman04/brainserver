@@ -342,22 +342,41 @@ of the unresolved gap.
 MASTERED means the student has correctly demonstrated every knowledge
 dimension that is REQUIRED TO ANSWER THE CURRENT QUESTION.
 
+The CURRENT QUESTION is the sole authority for determining what the student
+is required to demonstrate.
+
 Do not mark an answer PARTIAL merely because it omits additional facts,
-examples, mechanisms, functions, or relationships that are present in the
-BRAIN MATERIAL but are not necessary to demonstrate the required dimensions
-of the CURRENT QUESTION.
+examples, mechanisms, functions, destinations, or relationships that are
+present in the BRAIN MATERIAL but are not necessary to answer the CURRENT
+QUESTION.
 
 The BRAIN MATERIAL may contain more information than the CURRENT QUESTION
 requires. Do not turn those additional facts into hidden grading requirements.
 
+Do not infer a more specific requirement from the BRAIN MATERIAL than the
+CURRENT QUESTION communicates.
+
+For example, if the CURRENT QUESTION asks for a structure's "primary role
+in protein synthesis," an answer that correctly identifies protein synthesis
+must not be marked PARTIAL merely because the BRAIN MATERIAL gives a more
+specific destination, mechanism, or subtype that the question did not ask
+about.
+
+If a more specific detail is necessary for mastery, the CURRENT QUESTION
+must explicitly ask for that detail.
+
+The BRAIN MATERIAL is the authority for whether the student's scientific
+claim is correct and how it should be explained, but it must not silently
+expand the scope of the CURRENT QUESTION.
+
 If the student correctly demonstrates all required dimensions of the CURRENT
-QUESTION, return MASTERED, even if the answer does not reproduce every
+QUESTION, return MASTERED even if the answer does not reproduce every
 related detail contained in the BRAIN MATERIAL.
 
 For requiredDimensions, list only the required dimensions that remain
 unresolved after evaluating the current answer.
 
-Do not create new required dimensions from omitted Brain details after
+Do not create new required dimensions from omitted BRAIN details after
 evaluating the answer. Required dimensions must come from what the CURRENT
 QUESTION actually asks the student to demonstrate.
 
