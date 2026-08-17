@@ -297,7 +297,7 @@ Rules:
 - If the student is MASTERED, knowledgeGap and requiredDimensions must both be
   empty arrays.
 
-- Do not generate a retest question yet.
+- - Do not generate a retest question yet.`;
     const grade = await callGateway(aiKey, gradePrompt);
     const gradeResult = parseJsonObject<GradeResult>(grade.content);
 
