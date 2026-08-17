@@ -118,11 +118,16 @@ const scope =
     ? req.query.scope.trim()
     : "";
 
+const reviewHistory =
+  typeof req.query?.history === "string"
+    ? req.query.history.trim()
+    : "";
+
 const brainMaterial = extractBrainSection(
   file.content,
   scope
 );
-
+    
 if (!brainMaterial) {
   return res.status(404).json({
     error: `Review scope was not found in the Brain: ${scope}`,
@@ -158,6 +163,17 @@ BRAIN MATERIAL:
 ${brainMaterial}
 
 Generate ONE free-recall question using only the BRAIN MATERIAL.
+
+PREVIOUSLY TESTED IN THIS REVIEW:
+${reviewHistory || "None"}
+
+When selecting content for a NEW question, choose a materially different
+concept or relationship from the remaining BRAIN MATERIAL.
+
+Do not repeat a previously tested concept merely by changing the wording.
+
+A concept may be revisited only when it is being explicitly retested because
+the student previously failed or partially demonstrated that knowledge gap.
 
 SELECT THE CONTENT FIRST:
 Choose one or two explicit facts or relationships that are directly stated
