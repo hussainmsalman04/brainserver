@@ -240,7 +240,7 @@
 <body>
   <main class="shell">
     <div class="eyebrow">MCAT Brain</div>
-    <h1>Recall</h1>
+   <h1>Review</h1>
     <p class="subtitle">
       Retrieve from memory first. The Brain supplies the source;
       the Recall Engine tests, verifies, diagnoses, repairs, and retests.
@@ -537,7 +537,7 @@
           );
         }
 
-        currentRetest = evaluation.retestQuestion || "";
+           currentRetest = evaluation.retestQuestion || "";
 
         document.getElementById("resultBadge").textContent =
           evaluation.result || "RESULT";
@@ -563,7 +563,27 @@
         document.getElementById("retestText").textContent =
           currentRetest || "No retest returned.";
 
-        retestButton.disabled = !currentRetest;
+        const isMastered = evaluation.result === "MASTERED";
+
+        const wrongSection =
+          document.getElementById("wrongText").parentElement;
+
+        const whySection =
+          document.getElementById("whyText").parentElement;
+
+        const repairSection =
+          document.getElementById("repairText").parentElement;
+
+        const retestSection =
+          document.getElementById("retestText").parentElement;
+
+        wrongSection.classList.toggle("hidden", isMastered);
+        whySection.classList.toggle("hidden", isMastered);
+        repairSection.classList.toggle("hidden", isMastered);
+        retestSection.classList.toggle("hidden", isMastered);
+
+        retestButton.disabled =
+          isMastered || !currentRetest;
 
         const gradingCost =
           data.gradingUsage?.cost ?? 0;
