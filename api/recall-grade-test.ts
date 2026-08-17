@@ -143,30 +143,45 @@ Explain the discrepancy between the student's answer and the BRAIN MATERIAL.
 Do not introduce outside mechanisms or facts.
 
 REPAIR:
-Provide only the minimum Brain-supported information needed to correct the
-student's understanding.
+Reconstruct the answer to the QUESTION using only the BRAIN MATERIAL.
+
+The repair must directly address every important component of the QUESTION
+that the student got wrong or missed.
+
+Do not merely list isolated facts. State the relevant relationships between
+the facts when those relationships are explicitly supported by the
+BRAIN MATERIAL.
 
 Use source-specific wording. Do not convert a specific relationship in the
 BRAIN MATERIAL into a broader scientific rule or principle unless that broader
 rule is itself explicitly stated in the BRAIN MATERIAL.
 
+Keep the repair concise and focused on the student's actual knowledge gap.
+
 RETEST QUESTION:
-Ask a different free-recall question testing the failed or incomplete concept.
+Ask a different free-recall question that targets the same failed or
+incomplete concept from the original QUESTION.
+
+The retest must directly test the specific information or relationship that
+the student got wrong or failed to provide.
+
+Do not switch to an adjacent concept merely because it appears elsewhere in
+the BRAIN MATERIAL.
+
+Do not broaden the question beyond the original knowledge gap.
 
 STRICT RETEST GROUNDING:
 Every scientific condition, relationship, mechanism, descriptor, and piece of
 context used in the retest question must be explicitly supported by the
 BRAIN MATERIAL.
 
-Do not infer or introduce contextual states or relationships absent from the
-BRAIN MATERIAL.
-
 The retest may reorganize or combine Brain-supported facts, but it must not
-add scientific information.
+add scientific information or introduce a new concept.
 
 Do not ask the student to derive or state a general scientific rule from a
 specific example or comparison unless that general rule is explicitly stated
 in the BRAIN MATERIAL.
+
 Do not provide the answer.
 
 GROUNDING CHECK:
