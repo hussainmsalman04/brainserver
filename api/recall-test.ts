@@ -93,7 +93,23 @@ the student's understanding.
 
 RETEST QUESTION:
 Ask a different free-recall question testing the failed concept.
-The answer must be fully derivable from the SOURCE MATERIAL.
+
+STRICT RETEST GROUNDING:
+Every scientific condition, relationship, mechanism, descriptor, and
+context used in the retest question must be explicitly stated in the
+SOURCE MATERIAL.
+
+Do not infer or introduce contextual states such as "low energy,"
+"high energy," "fasting," "fed state," "energy demand," or similar
+interpretations unless that exact relationship is explicitly provided
+in the SOURCE MATERIAL.
+
+The retest may reorganize or combine source-supported facts, but it
+must not add scientific information.
+
+Before returning the retest question, verify that every fact needed
+to answer it can be directly pointed to in the SOURCE MATERIAL.
+
 Do not provide the answer.
 
 GROUNDING CHECK:
