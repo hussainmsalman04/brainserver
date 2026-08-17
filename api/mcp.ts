@@ -9,6 +9,7 @@
  *   - list_vault_files
  *   - read_vault_file
  *   - append_to_vault
+ *   - save_to_brain
  *
  * Auth: Bearer token in Authorization header, validated against MCP_BEARER_TOKEN.
  * Storage: GitHub Contents API on the configured repo + branch.
@@ -36,6 +37,7 @@ const AppendInput = z.object({
   entry: z.string(),
   commit_message: z.string().optional(),
 });
+const SaveInput = AppendInput;
 
 // ---------- Build MCP server ----------
 
@@ -69,6 +71,24 @@ function buildServer(vault: VaultClient): Server {
             path: { type: "string", description: "Vault path like `01-Career/Job-Search-State.md`." },
           },
           required: ["path"],
+        },
+      },
+      {
+        name: "save_to_brain",
+        description:
+          "Safely save a new markdown memory to a KNOWN vault path in one call. The server reads the file itself, conservatively skips an effectively identical entry, and then appends with GitHub sha protection. Prefer this over read_vault_file + append_to_vault when you already know the destination path. It never moves, deletes, rewrites, or semantically merges existing notes. If you do NOT know the path, list files first rather than guessing.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            path: { type: "string", description: "Existing or intended vault path like `study/Biology.md`. Do not guess an uncertain path." },
+            entry: {
+              type: "string",
+              description:
+                "Markdown memory to append. Keep it self-contained and structured. The server only skips effectively identical entries; it does not make risky semantic merge decisions.",
+            },
+            commit_message: { type: "string", description: "Optional git commit message." },
+          },
+          required: ["path", "entry"],
         },
       },
       {
@@ -113,6 +133,21 @@ function buildServer(vault: VaultClient): Server {
         const file = await vault.readFile(path);
         if (!file) return toolText(`(file does not exist: ${path})`);
         return toolText(file.content);
+      }
+
+      if (name === "save_to_brain") {
+        const { path, entry, commit_message } = SaveInput.parse(args);
+        const err = validateVaultPath(path);
+        if (err) return toolError(err);
+        if (entry.length > 50_000) return toolError("entry too long (max 50000 chars)");
+        const message = commit_message ?? `memory: safe save to ${path} (claude.ai)`;
+        const { commitSha, created, skippedDuplicate } = await vault.saveIfNew(path, entry, message);
+        if (skippedDuplicate) {
+          return toolText(`No change: an effectively identical entry is already present in ${path}.`);
+        }
+        return toolText(
+          `${created ? "Created and wrote" : "Safely appended to"} ${path}. Commit ${commitSha.slice(0, 7)}.`
+        );
       }
 
       if (name === "append_to_vault") {
