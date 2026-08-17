@@ -165,6 +165,10 @@ incomplete concept from the original QUESTION.
 The retest must directly test the specific information or relationship that
 the student got wrong or failed to provide.
 
+The retest must preserve the same conceptual target as the original QUESTION.
+It may change the wording or structure, but it must require retrieval of the
+same missing or incorrect knowledge.
+
 Do not switch to an adjacent concept merely because it appears elsewhere in
 the BRAIN MATERIAL.
 
@@ -242,18 +246,29 @@ Determine whether every scientific claim, correction, explanation, repair,
 and retest condition in the GRADER EVALUATION is explicitly supported by
 the BRAIN MATERIAL.
 
+Also determine whether the RETEST QUESTION directly targets the same failed
+or incomplete concept identified by the GRADER EVALUATION and required by
+the original QUESTION.
+
+The retest must test the student's actual knowledge gap, not merely another
+fact that happens to appear in the BRAIN MATERIAL.
+
+Do not approve a retest that switches to an adjacent concept.
+
 Do not use outside knowledge.
 Do not infer unstated scientific relationships.
 
 The grader may identify that the student omitted, contradicted, or correctly
 stated information only when that judgment is supported by the BRAIN MATERIAL.
 
-If the entire evaluation is grounded in the BRAIN MATERIAL, reply exactly:
+If the entire evaluation is grounded in the BRAIN MATERIAL AND the retest
+directly targets the identified knowledge gap, reply exactly:
 SUPPORTED
 
 If any scientific claim, explanation, repair, or retest requires information
-not explicitly present in the BRAIN MATERIAL, reply:
-UNSUPPORTED: followed by a brief description of the unsupported information.
+not explicitly present in the BRAIN MATERIAL, or if the retest does not
+directly target the identified knowledge gap, reply:
+UNSUPPORTED: followed by a brief description of the problem.
 
 Return nothing else.`,
             },
