@@ -101,8 +101,7 @@ List any claim in your own evaluation that is NOT explicitly supported by
 the SOURCE MATERIAL. If there are none, write exactly: NONE`,
   },
 ],-
-        }),
-      }
+
     );
 
     const data = await response.json();
