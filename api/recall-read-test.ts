@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { VaultClient } from "../lib/github.js";
+import { checkAuth } from "../lib/auth.js";
 
 export default async function handler(
   req: VercelRequest,
@@ -10,7 +11,22 @@ export default async function handler(
       error: "Method not allowed",
     });
   }
+const authRequest = new Request("https://brainserver.local", {
+  headers: {
+    authorization:
+      typeof req.headers.authorization === "string"
+        ? req.headers.authorization
+        : "",
+  },
+});
 
+const auth = checkAuth(authRequest);
+
+if (!auth.ok) {
+  return res.status(401).json({
+    error: auth.reason,
+  });
+}
   const aiKey = process.env.AI_GATEWAY_API_KEY;
   const githubToken = process.env.GITHUB_TOKEN;
   const owner = process.env.GITHUB_REPO_OWNER;
@@ -24,12 +40,11 @@ export default async function handler(
   }
 
   try {
-    const vault = new VaultClient({
-      owner,
-      repo,
-      branch,
-      token: githubToken,
-    });
+    const vault = new VaultClient(githubToken, {
+  owner,
+  repo,
+  branch,
+});
 
     const file = await vault.readFile("study/mcat-bbfl.md");
 
