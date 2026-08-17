@@ -349,9 +349,10 @@
 
   <script>
     let token = "";
-    let currentQuestion = "";
-    let currentRetest = "";
-    let questionCount = 0;
+let currentQuestion = "";
+let reviewState = null;
+let currentRetest = "";
+let questionCount = 0;
 
     const authCard = document.getElementById("authCard");
     const questionCard = document.getElementById("questionCard");
@@ -455,9 +456,11 @@
             "Could not generate a question."
           );
         }
+reviewState = null;
+currentRetest = "";
 
-        currentQuestion = data.question;
-        questionCount += 1;
+currentQuestion = data.question;
+questionCount += 1;
 
         document.getElementById("questionNumber").textContent =
           "Question " + questionCount;
@@ -512,10 +515,11 @@
               Authorization: "Bearer " + token,
               "Content-Type": "application/json"
             },
-            body: JSON.stringify({
-              question: currentQuestion,
-              answer
-            })
+         body: JSON.stringify({
+  question: currentQuestion,
+  answer,
+  reviewState
+})
           }
         );
 
@@ -528,7 +532,9 @@
             "The grading card was blocked."
           );
         }
-
+        if (data.reviewState) {
+          reviewState = data.reviewState;
+        }
                 const evaluation = data.evaluation;
 
         if (!evaluation) {
