@@ -339,11 +339,27 @@ knowledgeGap.
 Do not re-add a concept that was already demonstrated and is no longer part
 of the unresolved gap.
 
-If the student has successfully demonstrated every unresolved component,
-return MASTERED and an empty knowledgeGap and requiredDimensions array.
+MASTERED means the student has correctly demonstrated every knowledge
+dimension that is REQUIRED TO ANSWER THE CURRENT QUESTION.
 
-For requiredDimensions, list only the dimensions that remain unresolved after
-evaluating the current answer.
+Do not mark an answer PARTIAL merely because it omits additional facts,
+examples, mechanisms, functions, or relationships that are present in the
+BRAIN MATERIAL but are not necessary to demonstrate the required dimensions
+of the CURRENT QUESTION.
+
+The BRAIN MATERIAL may contain more information than the CURRENT QUESTION
+requires. Do not turn those additional facts into hidden grading requirements.
+
+If the student correctly demonstrates all required dimensions of the CURRENT
+QUESTION, return MASTERED, even if the answer does not reproduce every
+related detail contained in the BRAIN MATERIAL.
+
+For requiredDimensions, list only the required dimensions that remain
+unresolved after evaluating the current answer.
+
+Do not create new required dimensions from omitted Brain details after
+evaluating the answer. Required dimensions must come from what the CURRENT
+QUESTION actually asks the student to demonstrate.
 
 For testedDimensions, list every knowledge dimension actually tested by the
 CURRENT QUESTION. These dimensions must be reported whether the student
