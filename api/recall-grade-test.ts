@@ -302,7 +302,7 @@ Rules:
 - If the student is MASTERED, knowledgeGap and requiredDimensions must both be
   empty arrays.
 
-- - Do not generate a retest question yet.`;
+- Do not generate a retest question yet.`;
     const grade = await callGateway(aiKey, gradePrompt);
     const gradeResult = parseJsonObject<GradeResult>(grade.content);
 
@@ -354,23 +354,30 @@ Rules:
         });
       }
 
-      if (reviewState.retestNumber >= 3) {
-        return res.status(422).json({
-          success: false,
-          blocked: true,
+           if (reviewState.retestNumber >= 3) {
+        return res.status(200).json({
+          success: true,
           source: "study/mcat-bbfl.md",
           question,
           answer: studentAnswer,
-          evaluation: gradeResult,
-          error: "Review reached the maximum of 3 retests.",
+          evaluation: {
+            ...gradeResult,
+            retestQuestion: "",
+          },
+          verification: "SUPPORTED",
+          gradingUsage: grade.usage,
+          verificationUsage: null,
+          retestAttempts: 0,
           reviewState: {
             originalQuestion: reviewState.originalQuestion,
             requiredDimensions: gradeResult.requiredDimensions,
             knowledgeGap: gradeResult.knowledgeGap,
             retestNumber: reviewState.retestNumber,
             mastered: false,
+            unresolved: true,
           },
-          gradingUsage: grade.usage,
+          reviewComplete: true,
+          reviewOutcome: "UNRESOLVED",
         });
       }
 
