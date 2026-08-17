@@ -443,9 +443,14 @@ let reviewHistory = [];
 
       try {
         const response = await fetch(
-    "/api/recall-read-test" +
+   "/api/recall-read-test" +
   (reviewScope
     ? "?scope=" + encodeURIComponent(reviewScope)
+    : "") +
+  (reviewHistory.length
+    ? (reviewScope ? "&" : "?") +
+      "history=" +
+      encodeURIComponent(JSON.stringify(reviewHistory))
     : ""),
           {
             method: "GET",
