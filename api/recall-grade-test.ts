@@ -163,8 +163,14 @@ Ask a different free-recall question that targets the same failed or
 incomplete concept from the original QUESTION.
 
 CONCEPT LOCK:
-The retest must preserve the same named concepts, entities, and comparison
-dimensions that were required by the original QUESTION.
+The retest must preserve the same named concepts, entities, and every
+comparison dimension required by the original QUESTION.
+
+If the original QUESTION requires multiple dimensions, the retest must
+continue to test all of those dimensions, unless a dimension was explicitly
+identified as already mastered by the student.
+
+Never silently drop a required comparison dimension.
 
 If the original question compares specific entities, the retest must continue
 to compare those same entities.
@@ -194,6 +200,12 @@ specific example or comparison unless that general rule is explicitly stated
 in the BRAIN MATERIAL.
 
 Do not provide the answer.
+The CONCEPT LOCK is an internal instruction for generating the retest.
+Never output the words "CONCEPT LOCK" or any internal grading instructions
+inside the RETEST QUESTION section.
+
+Under RETEST QUESTION, output only the actual question that the student
+should answer.
 
 GROUNDING CHECK:
 List any scientific claim in your evaluation that is NOT explicitly supported
