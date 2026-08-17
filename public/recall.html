@@ -396,73 +396,13 @@
         .replace(/^[-*]\s*/gm, "");
     }
 
-    function parseEvaluation(text) {
-      return {
-        result: extractSection(
-          text,
-          "RESULT",
-          [
-            "WHAT WAS RIGHT",
-            "WHAT WAS WRONG OR MISSING",
-            "WHY IT WAS WRONG",
-            "REPAIR",
-            "RETEST QUESTION",
-            "GROUNDING CHECK"
-          ]
-        ),
+    function formatList(items) {
+  if (!Array.isArray(items) || items.length === 0) {
+    return "—";
+  }
 
-        right: extractSection(
-          text,
-          "WHAT WAS RIGHT",
-          [
-            "WHAT WAS WRONG OR MISSING",
-            "WHY IT WAS WRONG",
-            "REPAIR",
-            "RETEST QUESTION",
-            "GROUNDING CHECK"
-          ]
-        ),
-
-        wrong: extractSection(
-          text,
-          "WHAT WAS WRONG OR MISSING",
-          [
-            "WHY IT WAS WRONG",
-            "REPAIR",
-            "RETEST QUESTION",
-            "GROUNDING CHECK"
-          ]
-        ),
-
-        why: extractSection(
-          text,
-          "WHY IT WAS WRONG",
-          [
-            "REPAIR",
-            "RETEST QUESTION",
-            "GROUNDING CHECK"
-          ]
-        ),
-
-        repair: extractSection(
-          text,
-          "REPAIR",
-          [
-            "RETEST QUESTION",
-            "GROUNDING CHECK"
-          ]
-        ),
-
-        retest: extractSection(
-          text,
-          "RETEST QUESTION",
-          [
-            "GROUNDING CHECK"
-          ]
-        )
-      };
-    }
-
+  return items.map((item) => "• " + item).join("\n");
+}
     async function loadQuestion(questionOverride = "") {
       const questionError =
         document.getElementById("questionError");
@@ -589,34 +529,41 @@
           );
         }
 
-        const parsed = parseEvaluation(data.evaluation);
+                const evaluation = data.evaluation;
 
-        currentRetest = parsed.retest;
+        if (!evaluation) {
+          throw new Error(
+            "The grading response contained no evaluation."
+          );
+        }
+
+        currentRetest = evaluation.retestQuestion || "";
 
         document.getElementById("resultBadge").textContent =
-          parsed.result || "RESULT";
-        
-document.getElementById("resultQuestion").textContent =
-  currentQuestion;
+          evaluation.result || "RESULT";
+
+        document.getElementById("resultQuestion").textContent =
+          currentQuestion;
+
         document.getElementById("studentAnswer").textContent =
           answer;
 
         document.getElementById("rightText").textContent =
-          parsed.right || "—";
+          formatList(evaluation.whatWasRight);
 
         document.getElementById("wrongText").textContent =
-          parsed.wrong || "—";
+          formatList(evaluation.whatWasWrongOrMissing);
 
         document.getElementById("whyText").textContent =
-          parsed.why || "—";
+          evaluation.whyItWasWrong || "—";
 
         document.getElementById("repairText").textContent =
-          parsed.repair || "—";
+          evaluation.repair || "—";
 
         document.getElementById("retestText").textContent =
-          parsed.retest || "No retest returned.";
+          currentRetest || "No retest returned.";
 
-        retestButton.disabled = !parsed.retest;
+        retestButton.disabled = !currentRetest;
 
         const gradingCost =
           data.gradingUsage?.cost ?? 0;
@@ -635,6 +582,7 @@ document.getElementById("resultQuestion").textContent =
 
         questionCard.classList.add("hidden");
         resultCard.classList.remove("hidden");
+        
       } catch (error) {
         document.getElementById("questionStatus").textContent = "";
 
