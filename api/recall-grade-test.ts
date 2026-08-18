@@ -59,11 +59,100 @@ function extractBrainSection(
     .trim();
 }
 
+const MODEL = "google/gemini-3.1-flash-lite";
+const GATEWAY_URL = "https://ai-gateway.vercel.sh/v1/chat/completions";
+const MAX_RETEST_ATTEMPTS = 3;
+
+type GradeResult = {
+  result: "MASTERED" | "PARTIAL" | "INCORRECT" | "MISSING";
+  whatWasRight: string[];
+  whatWasWrongOrMissing: string[];
+  whyItWasWrong: string;
+  repair: string;
+  knowledgeGap: string[];
+  testedDimensions: {
+  id: string;
+  label: string;
+}[];
+  requiredDimensions: string[];
+};
+
+type RetestCandidate = {
+  question: string;
+  dimensions: string[];
+};
+
+async function callGateway(apiKey: string, prompt: string) {
+  const response = await fetch(GATEWAY_URL, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: MODEL,
+      messages: [{ role: "user", content: prompt }],
+    }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data?.error?.message || "AI Gateway request failed"
+    );
+  }
+
+  const content = data?.choices?.[0]?.message?.content?.trim();
+
+  if (!content) {
+    throw new Error("AI Gateway returned no content");
+  }
+
+  return {
+    content,
+    usage: data?.usage ?? null,
+  };
+}
+
+function parseJsonObject<T>(text: string): T {
+  const cleaned = text
+    .replace(/^```json\s*/i, "")
+    .replace(/^```\s*/i, "")
+    .replace(/\s*```$/i, "")
+    .trim();
+
+  return JSON.parse(cleaned) as T;
+}
+
+function normalizeDimension(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function hasAllRequiredDimensions(
+  required: string[],
+  candidate: string[]
+): boolean {
+  const requiredSet = new Set(required.map(normalizeDimension));
+  const candidateSet = new Set(candidate.map(normalizeDimension));
+
+  if (requiredSet.size !== candidateSet.size) {
+    return false;
+  }
+
+  return [...requiredSet].every((dimension) =>
+    candidateSet.has(dimension)
+  );
+}
+
 export default async function handler(
   req: VercelRequest,
   res: VercelResponse
 ) {
-  if (req.method !== "GET") {
+  if (req.method !== "POST") {
     return res.status(405).json({
       error: "Method not allowed",
     });
@@ -98,6 +187,62 @@ export default async function handler(
     });
   }
 
+        const question =
+        typeof req.body?.question === "string"
+          ? req.body.question.trim()
+          : "";
+
+      const studentAnswer =
+        typeof req.body?.answer === "string"
+          ? req.body.answer.trim()
+          : "";
+
+      const incomingReviewState =
+        req.body?.reviewState &&
+        typeof req.body.reviewState === "object"
+          ? req.body.reviewState
+          : null;
+
+      const reviewState = {
+        originalQuestion:
+          typeof incomingReviewState?.originalQuestion === "string"
+            ? incomingReviewState.originalQuestion.trim()
+            : question,
+
+        requiredDimensions:
+          Array.isArray(incomingReviewState?.requiredDimensions)
+            ? incomingReviewState.requiredDimensions.filter(
+                (item: unknown): item is string =>
+                  typeof item === "string" && item.trim().length > 0
+              )
+            : [],
+
+        knowledgeGap:
+          Array.isArray(incomingReviewState?.knowledgeGap)
+            ? incomingReviewState.knowledgeGap.filter(
+                (item: unknown): item is string =>
+                  typeof item === "string" && item.trim().length > 0
+              )
+            : [],
+
+        retestNumber:
+          typeof incomingReviewState?.retestNumber === "number" &&
+          Number.isInteger(incomingReviewState.retestNumber)
+            ? incomingReviewState.retestNumber
+            : 0,
+      };
+  if (!question) {
+    return res.status(400).json({
+      error: "question is required",
+    });
+  }
+
+  if (!studentAnswer) {
+    return res.status(400).json({
+      error: "answer is required",
+    });
+  }
+
   try {
     const vault = new VaultClient(githubToken, {
       owner,
@@ -105,7 +250,7 @@ export default async function handler(
       branch,
     });
 
-    const file = await vault.readFile("study/mcat-bbfl.md");
+  const file = await vault.readFile("study/mcat-bbfl.md");
 
 if (!file) {
   return res.status(404).json({
@@ -113,294 +258,545 @@ if (!file) {
   });
 }
 
-const scope =
-  typeof req.query?.scope === "string"
-    ? req.query.scope.trim()
+const reviewScope =
+  typeof req.body?.reviewScope === "string"
+    ? req.body.reviewScope.trim()
     : "";
-
-const coveredDimensionsRaw =
-  typeof req.query?.coveredDimensions === "string"
-    ? req.query.coveredDimensions.trim()
-    : "";
-
-let coveredDimensions: string[] = [];
-
-if (coveredDimensionsRaw) {
-  try {
-    const parsed = JSON.parse(coveredDimensionsRaw);
-
-    if (Array.isArray(parsed)) {
-      coveredDimensions = parsed.filter(
-        (dimension): dimension is string =>
-          typeof dimension === "string"
-      );
-    }
-  } catch {
-    coveredDimensions = [];
-  }
-}
 
 const brainMaterial = extractBrainSection(
   file.content,
-  scope
+  reviewScope
 );
-    
+
 if (!brainMaterial) {
   return res.status(404).json({
-    error: `Review scope was not found in the Brain: ${scope}`,
+    error: `Review scope was not found in the Brain: ${reviewScope}`,
   });
 }
 
-    const MAX_ATTEMPTS = 3;
-    const attempts = [];
+    const gradePrompt = `You are an evidence-bound MCAT active-recall examiner.
 
-    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-      const generationResponse = await fetch(
-        "https://ai-gateway.vercel.sh/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${aiKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "google/gemini-3.1-flash-lite",
-            messages: [
-              {
-                role: "user",
-                content: `You are an evidence-bound MCAT active-recall examiner.
-
-STRICT GROUNDING RULE:
-The BRAIN MATERIAL below is the complete source for this task.
-
-Do not introduce, infer, assume, or use scientific information that is not
-explicitly supported by the BRAIN MATERIAL.
+The BRAIN MATERIAL below is the complete source for this evaluation.
+Do not introduce or rely on scientific information that is not explicitly
+supported by the BRAIN MATERIAL.
 
 BRAIN MATERIAL:
 ${brainMaterial}
 
-Generate ONE free-recall question using only the BRAIN MATERIAL.
+QUESTION:
+${question}
 
-Before writing the question, select ONE or TWO specific knowledge facts or
-relationships from the BRAIN MATERIAL that the question will test.
+STUDENT ANSWER:
+${studentAnswer}
 
-The selected facts or relationships define the COMPLETE target of the
-question.
+REVIEW SESSION:
+This may be either a new review or a continuation of an existing review
+session.
 
-COVERED DIMENSIONS IN THIS REVIEW:
-${coveredDimensions.length ? JSON.stringify(coveredDimensions) : "None"}
+ORIGINAL QUESTION:
+${reviewState.originalQuestion}
 
-For a NEW question, select only facts or relationships that are not already
-represented by the COVERED DIMENSIONS.
+REQUIRED DIMENSIONS FROM THE ORIGINAL REVIEW:
+${JSON.stringify(reviewState.requiredDimensions)}
 
-The question must clearly and specifically ask about the selected facts or
-relationships.
+PREVIOUS KNOWLEDGE GAP:
+${JSON.stringify(reviewState.knowledgeGap)}
 
-The answer must be sufficient when it correctly demonstrates those selected
-facts or relationships. The student must NOT need to list additional related
-facts from the BRAIN MATERIAL that the question did not explicitly ask about.
+CURRENT RETEST NUMBER:
+${reviewState.retestNumber}
 
-Do not use broad or open-ended wording such as "specific roles", "functions",
-"importance", "mechanisms", or "how does X work" unless the question
-explicitly identifies the exact facts or relationships being tested.
+Determine the student's result using this rubric:
 
-Do not generate a question that can reasonably be interpreted as requiring
-an entire Brain section or every function of a structure.
+MASTERED = all important source-supported components are correct and no
+material misconception is present.
 
-Do not generate a new question that tests a covered dimension merely by
-changing the wording.
+PARTIAL = at least one important required component is correct, but another
+required component is incorrect or missing.
 
-Only revisit a covered dimension when the current task is an explicit
-retest of an unresolved knowledge gap.
+INCORRECT = no substantively correct required component is present, or the
+overall answer demonstrates a fundamentally incorrect model without a correct
+required component.
 
-SELECT THE CONTENT FIRST:
-Choose one or two explicit facts or relationships that are directly stated
-in the BRAIN MATERIAL.
+MISSING = no meaningful answer was provided.
 
-QUESTION CONSTRAINT:
-The answer to the question must be reconstructable directly from the selected
-facts or relationships.
+Identify the student's current unresolved knowledge gap.
 
-Do not invent or add:
-- physiological scenarios
-- locations or organs
-- purposes or functions
-- causal explanations
-- "why" relationships
-- applications
-- implications
-- contextual conditions
-unless they are explicitly stated in the BRAIN MATERIAL.
+If CURRENT RETEST NUMBER is 0, identify the complete set of required concepts
+or comparison dimensions from the QUESTION that the student did not
+successfully demonstrate.
 
-You may combine two explicitly stated facts into one question.
+If CURRENT RETEST NUMBER is greater than 0, treat PREVIOUS KNOWLEDGE GAP as
+the authoritative starting point for the current evaluation.
 
-Prefer questions such as:
-- What is the relationship between X and Y?
-- How does X differ from Y?
-- What happens to X when Y is present?
-- Which molecule/enzyme/process has the stated property?
+For a retest, do not restart the knowledge-gap analysis from scratch.
 
-Do not ask questions that require the student to infer information beyond
-what the BRAIN MATERIAL explicitly states.
+Evaluate whether the student has now demonstrated each item in the PREVIOUS
+KNOWLEDGE GAP.
 
-Do not provide the answer.
+If the student successfully demonstrates an item from the PREVIOUS KNOWLEDGE
+GAP, remove that item from the new knowledgeGap.
+
+If the student still fails to demonstrate an item, keep that item in the new
+knowledgeGap.
+
+Do not re-add a concept that was already demonstrated and is no longer part
+of the unresolved gap.
+
+MASTERED means the student has correctly demonstrated every knowledge
+dimension that is REQUIRED TO ANSWER THE CURRENT QUESTION.
+
+The CURRENT QUESTION is the sole authority for determining what the student
+is required to demonstrate.
+
+Do not mark an answer PARTIAL merely because it omits additional facts,
+examples, mechanisms, functions, destinations, or relationships that are
+present in the BRAIN MATERIAL but are not necessary to answer the CURRENT
+QUESTION.
+
+The BRAIN MATERIAL may contain more information than the CURRENT QUESTION
+requires. Do not turn those additional facts into hidden grading requirements.
+
+Do not infer a more specific requirement from the BRAIN MATERIAL than the
+CURRENT QUESTION communicates.
+
+For example, if the CURRENT QUESTION asks for a structure's "primary role
+in protein synthesis," an answer that correctly identifies protein synthesis
+must not be marked PARTIAL merely because the BRAIN MATERIAL gives a more
+specific destination, mechanism, or subtype that the question did not ask
+about.
+
+If a more specific detail is necessary for mastery, the CURRENT QUESTION
+must explicitly ask for that detail.
+
+The BRAIN MATERIAL is the authority for whether the student's scientific
+claim is correct and how it should be explained, but it must not silently
+expand the scope of the CURRENT QUESTION.
+
+If the student correctly demonstrates all required dimensions of the CURRENT
+QUESTION, return MASTERED even if the answer does not reproduce every
+related detail contained in the BRAIN MATERIAL.
+
+For requiredDimensions, list only the required dimensions that remain
+unresolved after evaluating the current answer.
+
+Do not create new required dimensions from omitted BRAIN details after
+evaluating the answer. Required dimensions must come from what the CURRENT
+QUESTION actually asks the student to demonstrate.
+
+For testedDimensions, list every knowledge dimension actually tested by the
+CURRENT QUESTION. These dimensions must be reported whether the student
+MASTERED, PARTIALLY demonstrated, INCORRECTLY answered, or was MISSING.
+Do not omit a tested dimension because the student answered it correctly.
+Do not include dimensions that the CURRENT QUESTION did not test.
 
 Return ONLY valid JSON with exactly this shape:
 
 {
-  "question": "...",
-  "dimensionId": "...",
-  "dimensionLabel": "..."
+  "result": "MASTERED | PARTIAL | INCORRECT | MISSING",
+  "whatWasRight": ["..."],
+  "whatWasWrongOrMissing": ["..."],
+  "whyItWasWrong": "...",
+  "repair": "...",
+  "knowledgeGap": ["..."],
+  "testedDimensions": [
+  {
+    "id": "...",
+    "label": "..."
+  }
+],
+  "requiredDimensions": ["..."]
 }
 
-The dimensionId must be a stable, concise identifier for the specific
-knowledge dimension tested by this question.
+Rules:
+- Every scientific claim must be supported by the BRAIN MATERIAL.
+- Repair must reconstruct the student's actual missing or incorrect knowledge.
+- Do not generalize a specific Brain relationship into a broader scientific
+  rule unless that broader rule is explicitly stated in the Brain.
+- On a new review where CURRENT RETEST NUMBER is 0, requiredDimensions must
+  contain the required dimensions from the original QUESTION that the student
+  did not successfully demonstrate.
 
-Use lowercase snake_case.
+- On a retest where CURRENT RETEST NUMBER is greater than 0,
+  requiredDimensions must contain only the dimensions that remain unresolved
+  from the PREVIOUS KNOWLEDGE GAP.
 
-The dimensionLabel must briefly describe the exact knowledge dimension
-tested by the question.
+- Never restore a previously resolved dimension merely because it was part of
+  the original QUESTION.
 
-If a semantically identical dimension already appears in the COVERED
-DIMENSIONS, do not select it for a NEW question.
+- If the student is MASTERED, knowledgeGap and requiredDimensions must both be
+  empty arrays.
 
-If a dimension is not covered, use the same dimensionId consistently for that
-dimension whenever it is referenced again.
-              },
-            ],
-          }),
-        }
-      );
+- Do not generate a retest question yet.`;
+    const grade = await callGateway(aiKey, gradePrompt);
+    const gradeResult = parseJsonObject<GradeResult>(grade.content);
 
-      const generationData = await generationResponse.json();
+    const validResults = new Set([
+      "MASTERED",
+      "PARTIAL",
+      "INCORRECT",
+      "MISSING",
+    ]);
 
-      if (!generationResponse.ok) {
-        return res.status(generationResponse.status).json({
-          error: "AI Gateway generation request failed",
-          details: generationData,
-        });
-      }
-
-     const generatedContent =
-  generationData?.choices?.[0]?.message?.content?.trim();
-
-let generatedQuestion: {
-  question: string;
-  dimensionId: string;
-  dimensionLabel: string;
-} | null = null;
-
-try {
-  const parsed = JSON.parse(generatedContent ?? "");
+    if (!validResults.has(gradeResult.result)) {
+      return res.status(502).json({
+        error: "Grader returned an invalid result",
+        raw: grade.content,
+      });
+    }
 
   if (
-    typeof parsed?.question === "string" &&
-    typeof parsed?.dimensionId === "string" &&
-    typeof parsed?.dimensionLabel === "string"
-  ) {
-    generatedQuestion = parsed;
-  }
-} catch {
-  generatedQuestion = null;
-}
+  !Array.isArray(gradeResult.requiredDimensions) ||
+  !Array.isArray(gradeResult.knowledgeGap) ||
+  !Array.isArray(gradeResult.testedDimensions)
+    ) {
+      return res.status(502).json({
+        error: "Grader returned invalid dimension data",
+        raw: grade.content,
+      });
+    }
 
-const question = generatedQuestion?.question?.trim() ?? "";
-const dimensionId = generatedQuestion?.dimensionId?.trim() ?? "";
-const dimensionLabel = generatedQuestion?.dimensionLabel?.trim() ?? "";
-
-     if (!question || !dimensionId || !dimensionLabel) {
-        attempts.push({
-          attempt,
-          result: "NO_QUESTION",
-          generationUsage: generationData?.usage ?? null,
+         if (gradeResult.result === "MASTERED") {
+        return res.status(200).json({
+          success: true,
+          source: "study/mcat-bbfl.md",
+          question,
+          answer: studentAnswer,
+          evaluation: {
+            ...gradeResult,
+            retestQuestion: "",
+          },
+          verification: "SUPPORTED",
+          gradingUsage: grade.usage,
+          verificationUsage: null,
+          retestAttempts: 0,
+          reviewState: {
+            originalQuestion: reviewState.originalQuestion,
+            requiredDimensions: [],
+            knowledgeGap: [],
+            retestNumber: reviewState.retestNumber,
+            mastered: true,
+          },
         });
-
-        continue;
       }
 
-      const verifyResponse = await fetch(
-        "https://ai-gateway.vercel.sh/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${aiKey}`,
-            "Content-Type": "application/json",
+           if (reviewState.retestNumber >= 3) {
+        return res.status(200).json({
+          success: true,
+          source: "study/mcat-bbfl.md",
+          question,
+          answer: studentAnswer,
+          evaluation: {
+            ...gradeResult,
+            retestQuestion: "",
           },
-          body: JSON.stringify({
-            model: "google/gemini-3.1-flash-lite",
-            messages: [
-              {
-                role: "user",
-                content: `You are a strict evidence verifier.
+          verification: "SUPPORTED",
+          gradingUsage: grade.usage,
+          verificationUsage: null,
+          retestAttempts: 0,
+          reviewState: {
+            originalQuestion: reviewState.originalQuestion,
+            requiredDimensions: gradeResult.requiredDimensions,
+            knowledgeGap: gradeResult.knowledgeGap,
+            retestNumber: reviewState.retestNumber,
+            mastered: false,
+            unresolved: true,
+          },
+          reviewComplete: true,
+          reviewOutcome: "UNRESOLVED",
+        });
+      }
+
+      if (gradeResult.requiredDimensions.length === 0) {
+        return res.status(502).json({
+          error: "Grader did not identify a required knowledge gap",
+        });
+      }
+      
+    const attempts: Array<{
+      attempt: number;
+      question: string;
+      dimensions: string[];
+      dimensionCheck: "PASS" | "FAIL";
+      verification: string;
+      generationUsage: unknown;
+      verificationUsage: unknown;
+    }> = [];
+
+    let totalVerificationUsage: unknown = null;
+
+    for (let attempt = 1; attempt <= MAX_RETEST_ATTEMPTS; attempt++) {
+      const retestPrompt = `You are an MCAT retest-question generator.
 
 BRAIN MATERIAL:
 ${brainMaterial}
 
-CANDIDATE QUESTION:
-${question}
+ORIGINAL QUESTION:
+${reviewState.originalQuestion}
 
-Determine whether every scientific condition, relationship, assumption,
-descriptor, and piece of context required by the CANDIDATE QUESTION is
-explicitly supported by the BRAIN MATERIAL.
+ORIGINAL REQUIRED DIMENSIONS:
+${JSON.stringify(reviewState.requiredDimensions)}
 
-Do not use outside knowledge.
-Do not infer unstated scientific relationships.
+CURRENT RETEST NUMBER:
+${reviewState.retestNumber}
 
-If the question is completely supported, reply exactly:
-SUPPORTED
+CURRENT REMAINING KNOWLEDGE GAP:
+${JSON.stringify(gradeResult.knowledgeGap)}
 
-If any part requires information not explicitly present in the BRAIN MATERIAL,
-reply:
-UNSUPPORTED: followed by a brief description of the unsupported information.
+CURRENT REMAINING REQUIRED DIMENSIONS:
+${JSON.stringify(gradeResult.requiredDimensions)}
 
-Return nothing else.`,
-              },
-            ],
-          }),
-        }
-      );
+Generate ONE different free-recall retest question.
 
-      const verifyData = await verifyResponse.json();
+The retest must directly target the CURRENT REMAINING KNOWLEDGE GAP.
 
-      if (!verifyResponse.ok) {
-        return res.status(verifyResponse.status).json({
-          error: "AI Gateway verification request failed",
-          details: verifyData,
+The retest must test EXACTLY the CURRENT REMAINING REQUIRED DIMENSIONS.
+Do not test additional dimensions.
+
+The retest must preserve the same named concepts, entities, and comparison
+relationship required by the ORIGINAL QUESTION.
+
+The ORIGINAL QUESTION is the authoritative conceptual anchor for the entire
+Review session.
+
+Do not use the current question as the conceptual source for the retest.
+
+A different retrieval angle means different wording, ordering, or recall
+framing of the SAME source-supported relationship.
+
+Do not introduce a new physiological setting, location, condition, mechanism,
+role, implication, or contextual scenario merely to make the retest different.
+
+Do not introduce a broader category or adjacent concept merely because it
+appears elsewhere in the BRAIN MATERIAL.
+
+Do not add context that is not necessary to test the CURRENT REMAINING
+REQUIRED DIMENSIONS.
+
+If the BRAIN MATERIAL supports only a narrow set of facts for the remaining
+gap, keep the retest narrow. A concise rephrasing of the same comparison is
+preferred over adding new context.
+
+Every scientific claim and every piece of contextual framing must be explicitly
+supported by the BRAIN MATERIAL AND directly relevant to the ORIGINAL QUESTION
+or CURRENT REMAINING KNOWLEDGE GAP.
+
+Do not turn a specific Brain-supported relationship into a broader scientific
+rule.
+
+Do not invent a new retrieval context simply because the question must be
+different from a previous retest.
+  
+Return ONLY valid JSON with exactly this shape:
+
+{
+  "question": "...",
+  "dimensions": ["...", "..."]
+}
+
+The dimensions array must list every CURRENT REMAINING REQUIRED DIMENSION
+that the question actually tests. Do not include dimensions that the question
+does not test, and do not add dimensions that have already been resolved.`;
+
+      let retest: RetestCandidate;
+      let generationUsage: unknown = null;
+
+      try {
+        const generated = await callGateway(aiKey, retestPrompt);
+        generationUsage = generated.usage;
+        retest = parseJsonObject<RetestCandidate>(generated.content);
+      } catch (error) {
+        attempts.push({
+          attempt,
+          question: "",
+          dimensions: [],
+          dimensionCheck: "FAIL",
+          verification:
+            error instanceof Error ? error.message : String(error),
+          generationUsage,
+          verificationUsage: null,
         });
+        continue;
       }
 
-      const verification =
-        verifyData?.choices?.[0]?.message?.content?.trim() ?? "";
+      if (
+        typeof retest.question !== "string" ||
+        !retest.question.trim() ||
+        !Array.isArray(retest.dimensions)
+      ) {
+        attempts.push({
+          attempt,
+          question: "",
+          dimensions: [],
+          dimensionCheck: "FAIL",
+          verification: "Invalid retest structure",
+          generationUsage,
+          verificationUsage: null,
+        });
+        continue;
+      }
+
+      const dimensionCheck = hasAllRequiredDimensions(
+        gradeResult.requiredDimensions,
+        retest.dimensions
+      );
+
+      if (!dimensionCheck) {
+        attempts.push({
+          attempt,
+          question: retest.question,
+          dimensions: retest.dimensions,
+          dimensionCheck: "FAIL",
+          verification: "Required dimensions missing",
+          generationUsage,
+          verificationUsage: null,
+        });
+        continue;
+      }
+
+        const verifierPrompt = `You are the final evidence and targeting verifier.
+
+BRAIN MATERIAL:
+${brainMaterial}
+
+ORIGINAL QUESTION:
+${reviewState.originalQuestion}
+
+ORIGINAL REQUIRED DIMENSIONS:
+${JSON.stringify(reviewState.requiredDimensions)}
+
+CURRENT REMAINING KNOWLEDGE GAP:
+${JSON.stringify(gradeResult.knowledgeGap)}
+
+CURRENT REMAINING REQUIRED DIMENSIONS:
+${JSON.stringify(gradeResult.requiredDimensions)}
+
+CANDIDATE RETEST QUESTION:
+${retest.question}
+
+CANDIDATE RETEST DIMENSIONS:
+${JSON.stringify(retest.dimensions)}
+
+Verify ALL of the following conditions.
+
+1. Every scientific claim, relationship, descriptor, and piece of contextual
+framing required by the candidate retest is explicitly supported by the BRAIN
+MATERIAL.
+
+2. The candidate retest tests EXACTLY the CURRENT REMAINING REQUIRED DIMENSIONS.
+It must not drop a required dimension and must not introduce an additional
+dimension.
+
+3. The candidate retest directly targets the CURRENT REMAINING KNOWLEDGE GAP.
+
+4. The candidate preserves the same named concepts, entities, and specific
+comparison relationship required by the ORIGINAL QUESTION.
+
+5. Every substantive part of the candidate question must be necessary to test
+the CURRENT REMAINING KNOWLEDGE GAP or to express the ORIGINAL QUESTION's
+specific comparison.
+
+6. A fact being present somewhere in the BRAIN MATERIAL is NOT sufficient
+reason to approve its inclusion. Reject a candidate that introduces an
+adjacent Brain fact, broader category, physiological setting, mechanism,
+context, role, implication, or scenario that is not required by the ORIGINAL
+QUESTION or CURRENT REMAINING KNOWLEDGE GAP.
+
+7. A different retrieval angle may change wording, ordering, or recall framing,
+but it must not introduce new scientific context merely to make the question
+different.
+
+8. If the BRAIN MATERIAL supports only a narrow set of facts for the remaining
+gap, a concise rephrasing of that narrow comparison is valid and preferred.
+Do not require the retest to introduce additional context.
+
+9. Do not use outside knowledge.
+
+10. Do not infer unstated scientific relationships.
+
+11. Do not transform a specific Brain-supported relationship into a broader
+scientific rule.
+
+12. Reject the candidate if it introduces wording such as a metabolic role,
+physiological setting, location, condition, mechanism, or implication unless
+that information is explicitly required by the ORIGINAL QUESTION or CURRENT
+REMAINING KNOWLEDGE GAP.
+
+Reply with exactly:
+
+SUPPORTED
+
+or:
+
+UNSUPPORTED: followed by a brief reason.
+
+Return nothing else.`;
+
+      let verification = "";
+      let verificationUsage: unknown = null;
+
+      try {
+        const verified = await callGateway(aiKey, verifierPrompt);
+        verification = verified.content.trim();
+        verificationUsage = verified.usage;
+        totalVerificationUsage = verificationUsage;
+      } catch (error) {
+        verification =
+          error instanceof Error ? error.message : String(error);
+      }
 
       attempts.push({
         attempt,
-        question,
+        question: retest.question,
+        dimensions: retest.dimensions,
+        dimensionCheck: "PASS",
         verification,
-        generationUsage: generationData?.usage ?? null,
-        verificationUsage: verifyData?.usage ?? null,
+        generationUsage,
+        verificationUsage,
       });
 
-      if (verification === "SUPPORTED") {
+          if (verification === "SUPPORTED") {
+        const nextRetestNumber =
+          reviewState.retestNumber + 1;
+
         return res.status(200).json({
           success: true,
           source: "study/mcat-bbfl.md",
-          reviewScope: scope || null,
           question,
-          dimensionId,
-          dimensionLabel,
+          answer: studentAnswer,
+          evaluation: {
+            ...gradeResult,
+            retestQuestion: retest.question,
+          },
           verification: "SUPPORTED",
-          attempt,
-          attempts,
+          gradingUsage: grade.usage,
+          verificationUsage: totalVerificationUsage,
+          retestAttempts: attempt,
+          retestAudit: attempts,
+          reviewState: {
+            originalQuestion: reviewState.originalQuestion,
+            requiredDimensions:
+              gradeResult.requiredDimensions,
+            knowledgeGap:
+              gradeResult.knowledgeGap,
+            retestNumber: nextRetestNumber,
+            mastered: false,
+          },
         });
-      }
+     }
+
     }
 
     return res.status(422).json({
       success: false,
       blocked: true,
       source: "study/mcat-bbfl.md",
-      error: "No grounded question passed verification after 3 attempts",
-      attempts,
+      question,
+      answer: studentAnswer,
+      evaluation: gradeResult,
+      error:
+        "No retest passed dimension and grounding verification after 3 attempts",
+      retestAudit: attempts,
+      gradingUsage: grade.usage,
     });
   } catch (error) {
     return res.status(500).json({
