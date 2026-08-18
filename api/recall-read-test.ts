@@ -59,6 +59,112 @@ function extractBrainSection(
     .trim();
 }
 
+// --- Covered-dimension collision gate ---------------------------------------
+// Prevents a NEW question from re-testing a knowledge dimension the student has
+// already mastered. Two layers: a cheap deterministic keyword pre-check, then a
+// single yes/no model backstop for paraphrase the keyword check would miss.
+
+const DIMENSION_STOPWORDS = new Set([
+  "the", "and", "of", "a", "an", "to", "in", "on", "for", "with", "its",
+  "is", "are", "was", "were", "be", "by", "as", "at", "or", "that", "this",
+  "which", "what", "how", "does", "do", "between", "into", "from", "their",
+  "role", "roles", "function", "functions", "type", "types", "context",
+  "specific", "component", "components", "relationship", "relationships",
+]);
+
+function dimensionTokens(text: string): Set<string> {
+  return new Set(
+    text
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, " ")
+      .split(" ")
+      .filter((t) => t.length > 2 && !DIMENSION_STOPWORDS.has(t))
+  );
+}
+
+// True when the candidate shares enough significant tokens with any covered
+// dimension to be considered the same cluster.
+function keywordCollision(
+  candidateLabel: string,
+  covered: string[]
+): boolean {
+  const cand = dimensionTokens(candidateLabel);
+  if (cand.size === 0) return false;
+
+  for (const entry of covered) {
+    const prev = dimensionTokens(entry);
+    if (prev.size === 0) continue;
+
+    let shared = 0;
+    for (const t of cand) if (prev.has(t)) shared++;
+
+    const smaller = Math.min(cand.size, prev.size);
+    // Same cluster if the majority of the smaller token set overlaps.
+    if (smaller > 0 && shared / smaller >= 0.5) return true;
+  }
+
+  return false;
+}
+
+// Model backstop: asks the model whether the candidate tests the same cluster
+// as any covered dimension. Returns true on COVERED, false on NEW. On any
+// error or ambiguous reply it returns false (fail-open — never dead-end a
+// session over a dedup check).
+async function modelCollision(
+  aiKey: string,
+  candidateLabel: string,
+  candidateQuestion: string,
+  covered: string[]
+): Promise<boolean> {
+  const prompt = `You are a knowledge-dimension deduplication check.
+
+COVERED DIMENSIONS (already mastered by the student):
+${JSON.stringify(covered)}
+
+CANDIDATE QUESTION:
+${candidateQuestion}
+
+CANDIDATE DIMENSION LABEL:
+${candidateLabel}
+
+Decide whether the CANDIDATE tests the SAME underlying knowledge cluster as any
+COVERED DIMENSION — i.e. the same facts or relationship, even if the wording,
+ordering, or framing differs.
+
+Testing the same cluster from a different angle still counts as COVERED.
+Only reply NEW if the candidate tests a genuinely different fact or
+relationship not represented in the covered list.
+
+Reply with exactly one word: COVERED or NEW. Return nothing else.`;
+
+  try {
+    const response = await fetch(
+      "https://ai-gateway.vercel.sh/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${aiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-3.1-flash-lite",
+          messages: [{ role: "user", content: prompt }],
+        }),
+      }
+    );
+
+    if (!response.ok) return false;
+
+    const data = await response.json();
+    const reply =
+      data?.choices?.[0]?.message?.content?.trim().toUpperCase() ?? "";
+
+    return reply.startsWith("COVERED");
+  } catch {
+    return false;
+  }
+}
+
 export default async function handler(
   req: VercelRequest,
   res: VercelResponse
@@ -153,6 +259,15 @@ if (!brainMaterial) {
 
     const MAX_ATTEMPTS = 3;
     const attempts = [];
+
+    let lastSupported:
+      | {
+          question: string;
+          dimensionId: string;
+          dimensionLabel: string;
+          attempt: number;
+        }
+      | null = null;
 
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
       const generationResponse = await fetch(
@@ -381,6 +496,37 @@ Return nothing else.`,
       });
 
       if (verification === "SUPPORTED") {
+        // Collision gate: reject a supported question that re-tests an
+        // already-mastered dimension. Only runs when something is covered.
+        if (coveredDimensions.length > 0) {
+          const collided =
+            keywordCollision(dimensionLabel, coveredDimensions) ||
+            (await modelCollision(
+              aiKey,
+              dimensionLabel,
+              question,
+              coveredDimensions
+            ));
+
+          if (collided) {
+            // Remember it as a graceful fallback, then regenerate.
+            lastSupported = {
+              question,
+              dimensionId,
+              dimensionLabel,
+              attempt,
+            };
+            attempts.push({
+              attempt,
+              question,
+              verification: "SUPPORTED_BUT_COVERED",
+              generationUsage: generationData?.usage ?? null,
+              verificationUsage: verifyData?.usage ?? null,
+            });
+            continue;
+          }
+        }
+
         return res.status(200).json({
           success: true,
           source: "study/mcat-bbfl.md",
@@ -393,6 +539,24 @@ Return nothing else.`,
           attempts,
         });
       }
+    }
+
+    // Every attempt either failed verification or collided with a covered
+    // dimension. If at least one was grounded-but-covered, surface it rather
+    // than dead-ending the session (repeats are better than a hard stop).
+    if (lastSupported) {
+      return res.status(200).json({
+        success: true,
+        source: "study/mcat-bbfl.md",
+        reviewScope: scope || null,
+        question: lastSupported.question,
+        dimensionId: lastSupported.dimensionId,
+        dimensionLabel: lastSupported.dimensionLabel,
+        verification: "SUPPORTED",
+        coveredFallback: true,
+        attempt: lastSupported.attempt,
+        attempts,
+      });
     }
 
     return res.status(422).json({
