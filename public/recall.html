@@ -360,6 +360,7 @@ let reviewScope =
 let currentRetest = "";
 let questionCount = 0;
 let coveredDimensions = [];
+let askedSubtopics = [];
 
     const authCard = document.getElementById("authCard");
     const questionCard = document.getElementById("questionCard");
@@ -443,16 +444,24 @@ let coveredDimensions = [];
         "Generating and verifying a Brain-grounded question...";
 
       try {
+        const params = new URLSearchParams();
+        if (reviewScope) params.set("scope", reviewScope);
+        if (coveredDimensions.length) {
+          params.set(
+            "coveredDimensions",
+            JSON.stringify(coveredDimensions)
+          );
+        }
+        if (askedSubtopics.length) {
+          params.set(
+            "askedSubtopics",
+            JSON.stringify(askedSubtopics)
+          );
+        }
+
         const response = await fetch(
-   "/api/recall-read-test" +
-  (reviewScope
-    ? "?scope=" + encodeURIComponent(reviewScope)
-    : "") +
-(coveredDimensions.length
-  ? (reviewScope ? "&" : "?") +
-    "coveredDimensions=" +
-    encodeURIComponent(JSON.stringify(coveredDimensions))
-  : ""),
+          "/api/recall-read-test" +
+            (params.toString() ? "?" + params.toString() : ""),
           {
             method: "GET",
             headers: {
@@ -473,11 +482,44 @@ let coveredDimensions = [];
 reviewState = null;
 currentRetest = "";
 
+        // Finite review: every subtopic in this scope has been covered.
+        if (data.sectionComplete) {
+          const total = Array.isArray(data.subtopics)
+            ? data.subtopics.length
+            : askedSubtopics.length;
+
+          document.getElementById("questionNumber").textContent =
+            "Review complete";
+
+          document.getElementById("questionText").textContent =
+            "You've covered all " + total +
+            " subtopics in this scope. Section complete — move on to the next lesson.";
+
+          document.getElementById("questionStatus").textContent = "";
+
+          submitButton.disabled = true;
+          nextButton.disabled = true;
+          return;
+        }
+
 currentQuestion = data.question;
 questionCount += 1;
 
 currentDimensionId = data.dimensionId || "";
 currentDimensionLabel = data.dimensionLabel || "";
+
+        // Record the subtopic this question covered so the next request
+        // targets a different one.
+        if (
+          data.targetSubtopic &&
+          !askedSubtopics.includes(data.targetSubtopic)
+        ) {
+          askedSubtopics.push(data.targetSubtopic);
+        }
+
+        const totalSubtopics = Array.isArray(data.subtopics)
+          ? data.subtopics.length
+          : 0;
 
         document.getElementById("questionNumber").textContent =
           "Question " + questionCount;
@@ -486,6 +528,12 @@ currentDimensionLabel = data.dimensionLabel || "";
           currentQuestion;
 
         document.getElementById("questionStatus").textContent =
+          (totalSubtopics
+            ? "Subtopic " + askedSubtopics.length + " of " +
+              totalSubtopics +
+              (data.targetSubtopic ? " — " + data.targetSubtopic : "") +
+              " · "
+            : "") +
           "Verified against study/mcat-bbfl.md";
 
         submitButton.disabled = false;
