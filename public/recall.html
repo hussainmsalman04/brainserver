@@ -473,8 +473,11 @@ let coveredDimensions = [];
 reviewState = null;
 currentRetest = "";
 
-currentDimensionId = data.dimensionId;
-currentDimensionLabel = data.dimensionLabel;
+currentQuestion = data.question;
+questionCount += 1;
+
+currentDimensionId = data.dimensionId || "";
+currentDimensionLabel = data.dimensionLabel || "";
 
         document.getElementById("questionNumber").textContent =
           "Question " + questionCount;
