@@ -217,6 +217,85 @@
       white-space: pre-wrap;
     }
 
+    .completion-card {
+      padding: 28px;
+    }
+
+    .completion-heading {
+      margin: 0 0 8px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(28px, 4vw, 38px);
+      letter-spacing: -0.02em;
+    }
+
+    .completion-summary {
+      color: #a7a7a7;
+      margin-bottom: 24px;
+    }
+
+    .history-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .history-item {
+      border: 1px solid #303030;
+      border-radius: 16px;
+      overflow: hidden;
+      background: #141414;
+    }
+
+    .history-item summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 16px 18px;
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .history-item summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .history-label {
+      font-weight: 650;
+    }
+
+    .history-status {
+      color: #aaa;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .history-body {
+      padding: 0 18px 18px;
+      border-top: 1px solid #292929;
+    }
+
+    .history-retest {
+      margin-top: 18px;
+      padding: 16px;
+      border-left: 2px solid #555;
+      background: #191919;
+      border-radius: 0 12px 12px 0;
+    }
+
+    .history-retest-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 4px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
     @media (max-width: 650px) {
       .auth-row {
         grid-template-columns: 1fr;
@@ -345,6 +424,13 @@
       <div id="resultMeta" class="meta"></div>
       <div id="resultError" class="error hidden"></div>
     </section>
+
+    <section id="completionCard" class="card completion-card hidden">
+      <div class="question-number">Review complete</div>
+      <h2 class="completion-heading">Lesson review complete.</h2>
+      <div id="completionSummary" class="completion-summary"></div>
+      <div id="historyList" class="history-list"></div>
+    </section>
   </main>
 
   <script>
@@ -361,10 +447,14 @@ let currentRetest = "";
 let questionCount = 0;
 let coveredDimensions = [];
 let askedSubtopics = [];
+let sessionHistory = [];
+let currentHistoryIndex = -1;
+let isRetestQuestion = false;
 
     const authCard = document.getElementById("authCard");
     const questionCard = document.getElementById("questionCard");
     const resultCard = document.getElementById("resultCard");
+    const completionCard = document.getElementById("completionCard");
 
     const tokenInput = document.getElementById("token");
     const startButton = document.getElementById("startButton");
@@ -412,6 +502,91 @@ let askedSubtopics = [];
 
   return items.map((item) => "• " + item).join("\n");
 }
+    function addHistorySection(parent, title, text) {
+      if (!text || text === "—") return;
+
+      const section = document.createElement("div");
+      section.className = "review-section";
+
+      const heading = document.createElement("div");
+      heading.className = "review-title";
+      heading.textContent = title;
+
+      const body = document.createElement("div");
+      body.className = "review-text";
+      body.textContent = text;
+
+      section.append(heading, body);
+      parent.appendChild(section);
+    }
+
+    function renderCompletion(total) {
+      questionCard.classList.add("hidden");
+      resultCard.classList.add("hidden");
+      completionCard.classList.remove("hidden");
+
+      document.getElementById("completionSummary").textContent =
+        "You've covered all " + total +
+        " subtopics in this scope. Here's everything that happened in this Review.";
+
+      const historyList = document.getElementById("historyList");
+      historyList.replaceChildren();
+
+      sessionHistory.forEach((item, index) => {
+        const details = document.createElement("details");
+        details.className = "history-item";
+
+        const summary = document.createElement("summary");
+        const label = document.createElement("span");
+        label.className = "history-label";
+        label.textContent =
+          "Question " + (index + 1) +
+          (item.dimensionLabel ? " — " + item.dimensionLabel : "");
+
+        const status = document.createElement("span");
+        status.className = "history-status";
+        status.textContent = item.result || "Reviewed";
+        summary.append(label, status);
+
+        const body = document.createElement("div");
+        body.className = "history-body";
+        addHistorySection(body, "Question", item.question);
+        addHistorySection(body, "Your answer", item.answer);
+        addHistorySection(body, "What you got right", item.right);
+        addHistorySection(body, "What was wrong or missing", item.wrong);
+        addHistorySection(body, "Why", item.why);
+        addHistorySection(body, "Repair", item.repair);
+
+        if (item.retest) {
+          const retest = document.createElement("div");
+          retest.className = "history-retest";
+
+          const retestTitle = document.createElement("div");
+          retestTitle.className = "history-retest-title";
+          const retestName = document.createElement("span");
+          retestName.textContent = "Retest";
+          const retestStatus = document.createElement("span");
+          retestStatus.textContent =
+            item.retest.result === "MASTERED"
+              ? "CORRECT"
+              : (item.retest.result || "Reviewed");
+          retestTitle.append(retestName, retestStatus);
+          retest.appendChild(retestTitle);
+
+          addHistorySection(retest, "Question", item.retest.question);
+          addHistorySection(retest, "Your answer", item.retest.answer);
+          addHistorySection(retest, "What you got right", item.retest.right);
+          addHistorySection(retest, "What was wrong or missing", item.retest.wrong);
+          addHistorySection(retest, "Why", item.retest.why);
+          addHistorySection(retest, "Repair", item.retest.repair);
+          body.appendChild(retest);
+        }
+
+        details.append(summary, body);
+        historyList.appendChild(details);
+      });
+    }
+
     async function loadQuestion(questionOverride = "") {
       const questionError =
         document.getElementById("questionError");
@@ -420,11 +595,13 @@ let askedSubtopics = [];
 
       questionCard.classList.remove("hidden");
       resultCard.classList.add("hidden");
+      completionCard.classList.add("hidden");
 
       submitButton.disabled = true;
       document.getElementById("answer").value = "";
 
       if (questionOverride) {
+        isRetestQuestion = true;
         currentQuestion = questionOverride;
 
         document.getElementById("questionNumber").textContent =
@@ -439,6 +616,8 @@ let askedSubtopics = [];
         submitButton.disabled = false;
         return;
       }
+
+      isRetestQuestion = false;
 
       document.getElementById("questionStatus").textContent =
         "Generating and verifying a Brain-grounded question...";
@@ -488,15 +667,7 @@ currentRetest = "";
             ? data.subtopics.length
             : askedSubtopics.length;
 
-          document.getElementById("questionNumber").textContent =
-            "Review complete";
-
-          document.getElementById("questionText").textContent =
-            "You've covered all " + total +
-            " subtopics in this scope. Section complete — move on to the next lesson.";
-
-          document.getElementById("questionStatus").textContent = "";
-
+          renderCompletion(total);
           submitButton.disabled = true;
           nextButton.disabled = true;
           return;
@@ -507,6 +678,18 @@ questionCount += 1;
 
 currentDimensionId = data.dimensionId || "";
 currentDimensionLabel = data.dimensionLabel || "";
+currentHistoryIndex = sessionHistory.length;
+sessionHistory.push({
+  question: currentQuestion,
+  dimensionLabel: currentDimensionLabel || data.targetSubtopic || "",
+  result: "",
+  answer: "",
+  right: "",
+  wrong: "",
+  why: "",
+  repair: "",
+  retest: null
+});
 
         // Record the subtopic this question covered so the next request
         // targets a different one.
@@ -612,6 +795,22 @@ body: JSON.stringify({
         }
 
            currentRetest = evaluation.retestQuestion || "";
+
+        const historyEvaluation = {
+          question: currentQuestion,
+          result: evaluation.result || "REVIEWED",
+          answer,
+          right: formatList(evaluation.whatWasRight),
+          wrong: formatList(evaluation.whatWasWrongOrMissing),
+          why: evaluation.whyItWasWrong || "",
+          repair: evaluation.repair || ""
+        };
+
+        if (isRetestQuestion && currentHistoryIndex >= 0) {
+          sessionHistory[currentHistoryIndex].retest = historyEvaluation;
+        } else if (currentHistoryIndex >= 0) {
+          Object.assign(sessionHistory[currentHistoryIndex], historyEvaluation);
+        }
 
         document.getElementById("resultBadge").textContent =
           evaluation.result || "RESULT";
