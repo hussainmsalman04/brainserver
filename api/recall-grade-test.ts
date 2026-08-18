@@ -196,7 +196,20 @@ export default async function handler(
         typeof req.body?.answer === "string"
           ? req.body.answer.trim()
           : "";
+  const dimensionId =
+  typeof req.body?.dimensionId === "string"
+    ? req.body.dimensionId.trim()
+    : "";
 
+const dimensionLabel =
+  typeof req.body?.dimensionLabel === "string"
+    ? req.body.dimensionLabel.trim()
+    : "";
+if (!dimensionId || !dimensionLabel) {
+  return res.status(400).json({
+    error: "Canonical question dimension is missing",
+  });
+}
       const incomingReviewState =
         req.body?.reviewState &&
         typeof req.body.reviewState === "object"
@@ -382,6 +395,23 @@ unresolved after evaluating the current answer.
 Do not create new required dimensions from omitted BRAIN details after
 evaluating the answer. Required dimensions must come from what the CURRENT
 QUESTION actually asks the student to demonstrate.
+CANONICAL QUESTION DIMENSION:
+
+ID: ${dimensionId}
+LABEL: ${dimensionLabel}
+
+The CURRENT QUESTION was generated specifically to test this canonical
+dimension.
+
+For testedDimensions, use the supplied canonical dimensionId exactly.
+Do not invent, rename, paraphrase, or substitute a different ID for this
+dimension.
+
+If the CURRENT QUESTION tests this dimension, include an object using exactly
+this id and the supplied label.
+
+Do not create additional tested dimension IDs from related Brain details
+unless the CURRENT QUESTION explicitly tests those additional dimensions.
 
 For testedDimensions, list every knowledge dimension actually tested by the
 CURRENT QUESTION. These dimensions must be reported whether the student
@@ -429,7 +459,13 @@ Rules:
 - Do not generate a retest question yet.`;
     const grade = await callGateway(aiKey, gradePrompt);
     const gradeResult = parseJsonObject<GradeResult>(grade.content);
-
+gradeResult.testedDimensions = [
+  {
+    id: dimensionId,
+    label: dimensionLabel,
+  },
+];
+    
     const validResults = new Set([
       "MASTERED",
       "PARTIAL",
