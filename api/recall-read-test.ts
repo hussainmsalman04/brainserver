@@ -265,7 +265,7 @@ If a semantically identical dimension already appears in the COVERED
 DIMENSIONS, do not select it for a NEW question.
 
 If a dimension is not covered, use the same dimensionId consistently for that
-dimension whenever it is referenced again.
+dimension whenever it is referenced again.`,
               },
             ],
           }),
