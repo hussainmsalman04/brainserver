@@ -148,6 +148,28 @@ function extractBrainSection(
   return matchedBlocks.join("\n\n").trim();
 }
 
+// --- Even-coverage subtopics ------------------------------------------------
+// Detect subtopic headers within the material: line-leading bold headers that
+// end in a colon, e.g. "**Nucleus:**", "**RER vs. SER:**". Inline emphasis
+// like "**actin**" is skipped (not line-leading, no trailing colon). Returns
+// labels in note order, de-duplicated. Empty when the note has no such headers
+// (in which case generation stays unconstrained — back-compat).
+function detectSubtopics(material: string): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const line of material.split(/\r?\n/)) {
+    const m = line.match(/^\s*\*\*(.+?):\*\*/);
+    if (m) {
+      const label = m[1].trim();
+      if (label && !seen.has(label)) {
+        seen.add(label);
+        out.push(label);
+      }
+    }
+  }
+  return out;
+}
+
 // --- Covered-dimension collision gate ---------------------------------------
 // Prevents a NEW question from re-testing a knowledge dimension the student has
 // already mastered. Two layers: a cheap deterministic keyword pre-check, then a
@@ -346,6 +368,51 @@ if (!brainMaterial) {
   });
 }
 
+const askedSubtopicsRaw =
+  typeof req.query?.askedSubtopics === "string"
+    ? req.query.askedSubtopics.trim()
+    : "";
+
+let askedSubtopics: string[] = [];
+
+if (askedSubtopicsRaw) {
+  try {
+    const parsed = JSON.parse(askedSubtopicsRaw);
+    if (Array.isArray(parsed)) {
+      askedSubtopics = parsed.filter(
+        (s): s is string => typeof s === "string"
+      );
+    }
+  } catch {
+    askedSubtopics = [];
+  }
+}
+
+const subtopics = detectSubtopics(brainMaterial);
+const remaining = subtopics.filter((s) => !askedSubtopics.includes(s));
+
+// If the note has detectable subtopics and every one has been asked, the
+// review for this scope is finished — stop instead of generating repeats.
+if (subtopics.length > 0 && remaining.length === 0) {
+  return res.status(200).json({
+    success: true,
+    sectionComplete: true,
+    source: "study/mcat-bbfl.md",
+    reviewScope: scope || null,
+    subtopics,
+    askedCount: askedSubtopics.length,
+  });
+}
+
+// Target the next uncovered subtopic (note order). Null when the note has no
+// detectable subtopics — generation then stays unconstrained.
+const targetSubtopic: string | null =
+  remaining.length > 0 ? remaining[0] : null;
+
+const targetBlock = targetSubtopic
+  ? `\nTARGET SUBTOPIC:\nFocus this question specifically on the subtopic "${targetSubtopic}". Select your one or two facts from within that subtopic's content in the BRAIN MATERIAL. Do not draw the question from a different subtopic.\n`
+  : "";
+
     const MAX_ATTEMPTS = 3;
     const attempts = [];
 
@@ -382,7 +449,7 @@ explicitly supported by the BRAIN MATERIAL.
 
 BRAIN MATERIAL:
 ${brainMaterial}
-
+${targetBlock}
 Generate ONE free-recall question using only the BRAIN MATERIAL.
 
 Before writing the question, select ONE or TWO specific knowledge facts or
@@ -624,6 +691,9 @@ Return nothing else.`,
           dimensionId,
           dimensionLabel,
           verification: "SUPPORTED",
+          targetSubtopic,
+          subtopics,
+          askedCount: askedSubtopics.length,
           attempt,
           attempts,
         });
@@ -643,6 +713,9 @@ Return nothing else.`,
         dimensionLabel: lastSupported.dimensionLabel,
         verification: "SUPPORTED",
         coveredFallback: true,
+        targetSubtopic,
+        subtopics,
+        askedCount: askedSubtopics.length,
         attempt: lastSupported.attempt,
         attempts,
       });
