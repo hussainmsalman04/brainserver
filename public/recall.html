@@ -591,11 +591,16 @@ body: JSON.stringify({
 
        const isMastered = evaluation.result === "MASTERED";
 
-if (isMastered) {
+if (isMastered && currentDimensionId) {
+  const masteredDimension =
+    currentDimensionLabel
+      ? `${currentDimensionId}: ${currentDimensionLabel}`
+      : currentDimensionId;
+
   coveredDimensions = [
     ...new Set([
       ...coveredDimensions,
-      ...(evaluation.testedDimensions || [])
+      masteredDimension
     ])
   ];
 }
