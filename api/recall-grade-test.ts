@@ -368,6 +368,29 @@ about.
 If a more specific detail is necessary for mastery, the CURRENT QUESTION
 must explicitly ask for that detail.
 
+IMPORTANT GRADING CLARIFICATIONS:
+
+Evaluate semantic meaning, not merely surface wording or grammatical form.
+Logically equivalent statements must receive the same credit. In particular,
+active and passive descriptions of the same directional relationship are
+equivalent. For example, "A engulfs B" and "B is engulfed by A" describe the
+same direction and must not be treated as opposites.
+
+Do not penalize the student for failing to repeat information already supplied
+by the CURRENT QUESTION unless the question explicitly asks the student to
+state, explain, or reproduce that information. Grade what the question actually
+requires the student to provide.
+
+Minor terminology or naming errors should not prevent MASTERY when the student's
+answer unambiguously identifies the intended concept and demonstrates the
+required knowledge. Mention the terminology correction in feedback when useful,
+but do not mark the answer PARTIAL solely for a minor naming slip.
+
+This tolerance does NOT apply when the omitted information is itself explicitly
+requested by the CURRENT QUESTION. If the question asks for multiple components,
+a comparison, structural arrangement, mechanism, relationship, or other required
+parts, missing an important requested component may still result in PARTIAL.
+
 The BRAIN MATERIAL is the authority for whether the student's scientific
 claim is correct and how it should be explained, but it must not silently
 expand the scope of the CURRENT QUESTION.
