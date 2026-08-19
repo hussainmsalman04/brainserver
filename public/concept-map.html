@@ -49,42 +49,136 @@
     .overview-note{position:absolute;z-index:4;left:24px;bottom:22px;color:#707070;font-size:12px;line-height:1.45;max-width:320px}
     .bottom-card{margin-top:16px;border:1px solid #2f2f2f;border-radius:22px;background:#151515;padding:18px 20px;display:flex;align-items:flex-start;justify-content:space-between;gap:20px}
     .bottom-card h2{margin:0 0 6px;font-size:18px}.bottom-card p{margin:0;color:#999;line-height:1.55;font-size:13px;max-width:760px}
+
+    .drawer-backdrop{
+      position:fixed;inset:0;background:rgba(0,0,0,.58);
+      opacity:0;pointer-events:none;transition:opacity .25s ease;z-index:30
+    }
+    .drawer-backdrop.open{opacity:1;pointer-events:auto}
+
+    .notes-drawer{
+      position:fixed;top:0;right:0;width:min(430px,92vw);height:100vh;
+      background:#111;border-left:1px solid #303030;
+      box-shadow:-30px 0 80px rgba(0,0,0,.48);
+      transform:translateX(102%);
+      transition:transform .32s cubic-bezier(.16,.84,.22,1);
+      z-index:31;display:flex;flex-direction:column
+    }
+    .notes-drawer.open{transform:translateX(0)}
+
+    .drawer-head{
+      display:flex;justify-content:space-between;gap:16px;
+      align-items:flex-start;padding:22px 22px 18px;
+      border-bottom:1px solid #292929
+    }
+    .drawer-title{
+      font-size:25px;font-weight:800;
+      letter-spacing:-.03em;line-height:1.05
+    }
+    .drawer-source{
+      margin-top:7px;color:var(--bio);
+      font-size:12px;font-weight:750
+    }
+    .drawer-close{
+      appearance:none;border:1px solid #353535;
+      background:#1c1c1c;color:#eee;
+      width:36px;height:36px;border-radius:50%;
+      font-size:20px;cursor:pointer
+    }
+
+    .drawer-body{padding:22px;overflow:auto}
+    .drawer-section{margin-bottom:24px}
+    .drawer-label{
+      font-size:10px;letter-spacing:.14em;
+      text-transform:uppercase;color:#777;margin-bottom:9px
+    }
+    .drawer-desc{color:#b0b0b0;font-size:13px;line-height:1.55}
+
+    .note-list{
+      margin:0;padding:0;list-style:none;
+      display:grid;gap:9px
+    }
+    .note-list li{
+      position:relative;padding:11px 12px 11px 31px;
+      border:1px solid #2d2d2d;border-radius:14px;
+      background:#171717;color:#dedede;
+      font-size:13px;line-height:1.4
+    }
+    .note-list li:before{
+      content:'•';position:absolute;left:13px;top:8px;
+      color:var(--bio);font-size:19px
+    }
+
+    .drawer-foot{
+      margin-top:auto;padding:17px 22px;
+      border-top:1px solid #292929;color:#777;
+      font-size:11px;line-height:1.5
+    }
+
     @media(max-width:860px){
-      .topbar{display:block}.legend{justify-content:flex-start;margin-top:16px}.toolbar{align-items:flex-start;flex-direction:column}.viewport{height:610px}.scope-popover{width:235px}.bottom-card{display:block}
+      .topbar{display:block}
+      .legend{justify-content:flex-start;margin-top:16px}
+      .toolbar{align-items:flex-start;flex-direction:column}
+      .viewport{height:610px}
+      .scope-popover{width:235px}
+      .bottom-card{display:block}
     }
   </style>
 </head>
+
 <body>
 <main class="shell">
   <div class="topbar">
     <div>
       <div class="eyebrow">MCAT Brain</div>
       <h1>Concept Map</h1>
-      <p class="subtitle">Explore your learned MCAT knowledge by literally zooming from broad ideas into specific concepts. Only material you have actually learned is shown.</p>
+      <p class="subtitle">
+        Explore your learned MCAT knowledge by literally zooming from broad ideas into specific concepts.
+        Only material you have actually learned is shown.
+      </p>
     </div>
+
     <div>
-      <div class="legend"><span><span class="bio">●</span> Biology</span><span>✓ Mastered</span><span>◐ Developing</span></div>
-      <div class="nav" style="margin-top:12px;justify-content:flex-end"><a class="btn secondary" href="/lesson-reviews.html">Lesson Reviews</a></div>
+      <div class="legend">
+        <span><span class="bio">●</span> Biology</span>
+        <span>✓ Mastered</span>
+        <span>◐ Developing</span>
+      </div>
+
+      <div class="nav" style="margin-top:12px;justify-content:flex-end">
+        <a class="btn secondary" href="/lesson-reviews.html">Lesson Reviews</a>
+      </div>
     </div>
   </div>
 
   <section class="map-card">
     <div class="toolbar">
       <div class="crumbs" id="crumbs"></div>
-      <div class="nav"><button class="btn ghost" id="backBtn">← Zoom out</button><button class="btn secondary" id="homeBtn">Reset map</button></div>
+
+      <div class="nav">
+        <button class="btn ghost" id="backBtn">← Zoom out</button>
+        <button class="btn secondary" id="homeBtn">Reset map</button>
+      </div>
     </div>
+
     <div class="viewport" id="viewport">
       <div class="world" id="world"></div>
+
       <div class="scope-popover" id="scopePopover">
         <div class="scope-kicker">Current scope</div>
         <div class="scope-title" id="scopeTitle"></div>
         <div class="scope-desc" id="scopeDesc"></div>
+
         <div class="scope-actions">
           <button class="btn" id="review2Btn">Start Review2</button>
           <button class="btn secondary" id="notesBtn">Brain Notes</button>
         </div>
       </div>
-      <div class="overview-note" id="overviewNote">Click a node or the branch leading to it. The map will move inward with you; zooming back out reconstructs the larger structure.</div>
+
+      <div class="overview-note" id="overviewNote">
+        Click a node or the branch leading to it. The map will move inward with you;
+        zooming back out reconstructs the larger structure.
+      </div>
     </div>
   </section>
 
@@ -92,62 +186,477 @@
     <div>
       <div class="eyebrow" style="margin-bottom:5px">Map behavior</div>
       <h2>Broad branches become specific as you move inward.</h2>
-      <p>The home view is intentionally spatial and organic. Once you enter a branch, the layout becomes cleaner so you can navigate the knowledge underneath it without the full MCAT graph becoming a wall of labels.</p>
+      <p>
+        The home view is intentionally spatial and organic.
+        Once you enter a branch, the layout becomes cleaner so you can navigate
+        the knowledge underneath it without the full MCAT graph becoming a wall of labels.
+      </p>
     </div>
   </section>
 </main>
 
+<div class="drawer-backdrop" id="drawerBackdrop"></div>
+
+<aside class="notes-drawer" id="notesDrawer" aria-hidden="true">
+  <div class="drawer-head">
+    <div>
+      <div class="eyebrow" style="margin-bottom:6px">Brain Notes</div>
+      <div class="drawer-title" id="drawerTitle">Concept</div>
+      <div class="drawer-source" id="drawerSource"></div>
+    </div>
+
+    <button class="drawer-close" id="drawerClose" aria-label="Close notes">×</button>
+  </div>
+
+  <div class="drawer-body">
+    <section class="drawer-section">
+      <div class="drawer-label">What this scope means</div>
+      <div class="drawer-desc" id="drawerDesc"></div>
+    </section>
+
+    <section class="drawer-section">
+      <div class="drawer-label">Approved knowledge represented here</div>
+      <ul class="note-list" id="drawerNotes"></ul>
+    </section>
+  </div>
+
+  <div class="drawer-foot">
+    This drawer currently shows the approved concept summaries encoded in the Concept Map.
+    A later version can fetch the full Brain note live without cluttering the map itself.
+  </div>
+</aside>
+
 <script>
 const data={
-  mcat:{title:'MCAT',parent:null,source:'',status:'',desc:'Everything you have learned so far across the MCAT.',learned:['Living Systems is currently the illuminated region'],children:['living']},
-  living:{title:'Living Systems',parent:'mcat',source:'BIO 1.1–1.2',status:'',desc:'The biological systems and structures you have learned so far.',learned:['Foundations of Life','Cells','Tissues'],children:['foundations','cells','tissues']},
-  foundations:{title:'Foundations of Life',parent:'living',source:'BIO 1.1',status:'',desc:'Foundational ideas about cells and what counts as independent cellular life.',learned:['Cell Theory','Boundary of Life / viruses'],children:['cell-theory','life-boundary']},
-  'cell-theory':{title:'Cell Theory',parent:'foundations',source:'BIO 1.1',status:'mastered',desc:'Core principles defining cells as the functional units of living systems.',learned:['Cells are the basic functional unit of life','Cells arise from preexisting cells','Cells carry genetic information'],children:[]},
-  'life-boundary':{title:'Boundary of Life',parent:'foundations',source:'BIO 1.1',status:'',desc:'The distinction between cellular life and entities such as viruses.',learned:['Viruses contain genetic material','Viruses cannot reproduce independently','Viruses are not considered living cells'],children:[]},
-  cells:{title:'Cells',parent:'living',source:'BIO 1.1 · 1.2',status:'',desc:'Integrated cell-biology scope across boundaries, internal organization, and cellular structure.',learned:['Plasma Membrane','Internal Organization','Structure & Movement'],children:['membrane','internal','cytoskeleton']},
-  membrane:{title:'Plasma Membrane',parent:'cells',source:'BIO 1.2',status:'mastered',desc:'The membrane knowledge currently approved in your Brain.',learned:['Phospholipid bilayer','Hydrophilic surfaces face aqueous environments','Hydrophobic interior'],children:[]},
-  internal:{title:'Internal Organization',parent:'cells',source:'BIO 1.2',status:'',desc:'Internal structures and compartments of eukaryotic cells.',learned:['Nucleus','Mitochondria','Lysosomes','Endoplasmic Reticulum','Golgi Apparatus','Peroxisomes'],children:['nucleus','mitochondria','lysosome','er','golgi','peroxisome']},
-  nucleus:{title:'Nucleus',parent:'internal',source:'BIO 1.2',status:'mastered',desc:'Nuclear structure and nucleolar function.',learned:['Membrane-bound nucleus','Nuclear envelope / pores','Nucleolus','rRNA synthesis and ribosome assembly'],children:[]},
-  mitochondria:{title:'Mitochondria',parent:'internal',source:'BIO 1.2',status:'mastered',desc:'Mitochondrial structure, energetics, endosymbiosis, and apoptosis from what you have learned so far.',learned:['Outer / inner membrane','Cristae, matrix, intermembrane space','Proton gradient','ATP synthase','Endosymbiotic theory','Cytochrome c / apoptosis'],children:[]},
-  lysosome:{title:'Lysosomes',parent:'internal',source:'BIO 1.2',status:'mastered',desc:'Lysosomal digestion and autolysis.',learned:['Hydrolytic enzymes','Acidic interior','Autolysis after membrane rupture'],children:[]},
-  er:{title:'Endoplasmic Reticulum',parent:'internal',source:'BIO 1.2',status:'mastered',desc:'Rough and smooth ER structure and function.',learned:['RER and ribosomes','Secretory / membrane proteins','SER','Lipid and steroid synthesis','Detoxification'],children:[]},
-  golgi:{title:'Golgi Apparatus',parent:'internal',source:'BIO 1.2',status:'mastered',desc:'Modification, targeting, sorting, and packaging of cellular products.',learned:['Carbohydrate modification','Phosphorylation','Sulfation','Targeting signals','Packaging / sorting'],children:[]},
-  peroxisome:{title:'Peroxisomes',parent:'internal',source:'BIO 1.2',status:'mastered',desc:'Oxidative metabolism and hydrogen-peroxide handling.',learned:['β-oxidation','Hydrogen peroxide','Catalase'],children:[]},
-  cytoskeleton:{title:'Structure & Movement',parent:'cells',source:'BIO 1.2',status:'developing',desc:'The cytoskeleton and structures that depend on it.',learned:['Microfilaments / actin','Microtubules / tubulin','Intermediate filaments','Kinesin / dynein','Centrioles 9+0','Cilia / flagella 9+2'],children:['microfilaments','microtubules','intermediate']},
-  microfilaments:{title:'Microfilaments',parent:'cytoskeleton',source:'BIO 1.2',status:'mastered',desc:'Solid actin-based cytoskeletal rods and their learned functions.',learned:['Actin','Solid rods','Myosin','Cleavage furrow'],children:[]},
-  microtubules:{title:'Microtubules',parent:'cytoskeleton',source:'BIO 1.2',status:'developing',desc:'Hollow tubulin structures used for transport, division, and motility structures.',learned:['Tubulin','Hollow tubes','Kinesin / dynein','Mitotic spindle','Centrioles','Cilia / flagella'],children:['centrioles','motility']},
-  centrioles:{title:'Centrioles',parent:'microtubules',source:'BIO 1.2',status:'developing',desc:'Microtubule-organizing structures with a 9+0 arrangement.',learned:['9 triplets','Hollow center','9+0 shorthand'],children:[]},
-  motility:{title:'Cilia / Flagella',parent:'microtubules',source:'BIO 1.2',status:'developing',desc:'Motility structures with the 9+2 microtubule arrangement.',learned:['9 doublets','2 central singlets','9+2 shorthand'],children:[]},
-  intermediate:{title:'Intermediate Filaments',parent:'cytoskeleton',source:'BIO 1.2',status:'',desc:'Structural cytoskeletal proteins learned in Lesson 1.2.',learned:['Keratin','Desmin','Vimentin','Lamins'],children:[]},
-  tissues:{title:'Tissues',parent:'living',source:'BIO 1.2',status:'',desc:'Tissue organization learned so far.',learned:['Epithelial Tissue','Connective Tissue','Parenchyma vs. Stroma'],children:['epithelial','connective']},
-  epithelial:{title:'Epithelial Tissue',parent:'tissues',source:'BIO 1.2',status:'mastered',desc:'Epithelial structure, organization, and function.',learned:['Protection','Absorption','Secretion','Sensation','Parenchyma','Simple / stratified / pseudostratified'],children:[]},
-  connective:{title:'Connective Tissue',parent:'tissues',source:'BIO 1.2',status:'mastered',desc:'Connective-tissue roles and examples.',learned:['Support','Stroma','Bone','Cartilage','Tendons / ligaments','Adipose','Blood'],children:[]}
+  mcat:{
+    title:'MCAT',
+    parent:null,
+    source:'',
+    status:'',
+    desc:'Everything you have learned so far across the MCAT.',
+    learned:['Living Systems is currently the illuminated region'],
+    children:['living']
+  },
+
+  living:{
+    title:'Living Systems',
+    parent:'mcat',
+    source:'BIO 1.1–1.2',
+    status:'',
+    desc:'The biological systems and structures you have learned so far.',
+    learned:['Foundations of Life','Cells','Tissues'],
+    children:['foundations','cells','tissues']
+  },
+
+  foundations:{
+    title:'Foundations of Life',
+    parent:'living',
+    source:'BIO 1.1',
+    status:'',
+    desc:'Foundational ideas about cells and what counts as independent cellular life.',
+    learned:['Cell Theory','Boundary of Life / viruses'],
+    children:['cell-theory','life-boundary']
+  },
+
+  'cell-theory':{
+    title:'Cell Theory',
+    parent:'foundations',
+    source:'BIO 1.1',
+    status:'mastered',
+    desc:'Core principles defining cells as the functional units of living systems.',
+    learned:[
+      'Cells are the basic functional unit of life',
+      'Cells arise from preexisting cells',
+      'Cells carry genetic information'
+    ],
+    children:[]
+  },
+
+  'life-boundary':{
+    title:'Boundary of Life',
+    parent:'foundations',
+    source:'BIO 1.1',
+    status:'',
+    desc:'The distinction between cellular life and entities such as viruses.',
+    learned:[
+      'Viruses contain genetic material',
+      'Viruses cannot reproduce independently',
+      'Viruses are not considered living cells'
+    ],
+    children:[]
+  },
+
+  cells:{
+    title:'Cells',
+    parent:'living',
+    source:'BIO 1.1 · 1.2',
+    status:'',
+    desc:'Integrated cell-biology scope across boundaries, internal organization, and cellular structure.',
+    learned:[
+      'Plasma Membrane',
+      'Internal Organization',
+      'Structure & Movement'
+    ],
+    children:['membrane','internal','cytoskeleton']
+  },
+
+  membrane:{
+    title:'Plasma Membrane',
+    parent:'cells',
+    source:'BIO 1.2',
+    status:'mastered',
+    desc:'The membrane knowledge currently approved in your Brain.',
+    learned:[
+      'Phospholipid bilayer',
+      'Hydrophilic surfaces face aqueous environments',
+      'Hydrophobic interior'
+    ],
+    children:[]
+  },
+
+  internal:{
+    title:'Internal Organization',
+    parent:'cells',
+    source:'BIO 1.2',
+    status:'',
+    desc:'Internal structures and compartments of eukaryotic cells.',
+    learned:[
+      'Nucleus',
+      'Mitochondria',
+      'Lysosomes',
+      'Endoplasmic Reticulum',
+      'Golgi Apparatus',
+      'Peroxisomes'
+    ],
+    children:['nucleus','mitochondria','lysosome','er','golgi','peroxisome']
+  },
+
+  nucleus:{
+    title:'Nucleus',
+    parent:'internal',
+    source:'BIO 1.2',
+    status:'mastered',
+    desc:'Nuclear structure and nucleolar function.',
+    learned:[
+      'Membrane-bound nucleus',
+      'Nuclear envelope / pores',
+      'Nucleolus',
+      'rRNA synthesis and ribosome assembly'
+    ],
+    children:[]
+  },
+
+  mitochondria:{
+    title:'Mitochondria',
+    parent:'internal',
+    source:'BIO 1.2',
+    status:'mastered',
+    desc:'Mitochondrial structure, energetics, endosymbiosis, and apoptosis from what you have learned so far.',
+    learned:[
+      'Outer / inner membrane',
+      'Cristae, matrix, intermembrane space',
+      'Proton gradient',
+      'ATP synthase',
+      'Endosymbiotic theory',
+      'Cytochrome c / apoptosis'
+    ],
+    children:[]
+  },
+
+  lysosome:{
+    title:'Lysosomes',
+    parent:'internal',
+    source:'BIO 1.2',
+    status:'mastered',
+    desc:'Lysosomal digestion and autolysis.',
+    learned:[
+      'Hydrolytic enzymes',
+      'Acidic interior',
+      'Autolysis after membrane rupture'
+    ],
+    children:[]
+  },
+
+  er:{
+    title:'Endoplasmic Reticulum',
+    parent:'internal',
+    source:'BIO 1.2',
+    status:'mastered',
+    desc:'Rough and smooth ER structure and function.',
+    learned:[
+      'RER and ribosomes',
+      'Secretory / membrane proteins',
+      'SER',
+      'Lipid and steroid synthesis',
+      'Detoxification'
+    ],
+    children:[]
+  },
+
+  golgi:{
+    title:'Golgi Apparatus',
+    parent:'internal',
+    source:'BIO 1.2',
+    status:'mastered',
+    desc:'Modification, targeting, sorting, and packaging of cellular products.',
+    learned:[
+      'Carbohydrate modification',
+      'Phosphorylation',
+      'Sulfation',
+      'Targeting signals',
+      'Packaging / sorting'
+    ],
+    children:[]
+  },
+
+  peroxisome:{
+    title:'Peroxisomes',
+    parent:'internal',
+    source:'BIO 1.2',
+    status:'mastered',
+    desc:'Oxidative metabolism and hydrogen-peroxide handling.',
+    learned:[
+      'β-oxidation',
+      'Hydrogen peroxide',
+      'Catalase'
+    ],
+    children:[]
+  },
+
+  cytoskeleton:{
+    title:'Structure & Movement',
+    parent:'cells',
+    source:'BIO 1.2',
+    status:'developing',
+    desc:'The cytoskeleton and structures that depend on it.',
+    learned:[
+      'Microfilaments / actin',
+      'Microtubules / tubulin',
+      'Intermediate filaments',
+      'Kinesin / dynein',
+      'Centrioles 9+0',
+      'Cilia / flagella 9+2'
+    ],
+    children:['microfilaments','microtubules','intermediate']
+  },
+
+  microfilaments:{
+    title:'Microfilaments',
+    parent:'cytoskeleton',
+    source:'BIO 1.2',
+    status:'mastered',
+    desc:'Solid actin-based cytoskeletal rods and their learned functions.',
+    learned:[
+      'Actin',
+      'Solid rods',
+      'Myosin',
+      'Cleavage furrow'
+    ],
+    children:[]
+  },
+
+  microtubules:{
+    title:'Microtubules',
+    parent:'cytoskeleton',
+    source:'BIO 1.2',
+    status:'developing',
+    desc:'Hollow tubulin structures used for transport, division, and motility structures.',
+    learned:[
+      'Tubulin',
+      'Hollow tubes',
+      'Kinesin / dynein',
+      'Mitotic spindle',
+      'Centrioles',
+      'Cilia / flagella'
+    ],
+    children:['centrioles','motility']
+  },
+
+  centrioles:{
+    title:'Centrioles',
+    parent:'microtubules',
+    source:'BIO 1.2',
+    status:'developing',
+    desc:'Microtubule-organizing structures with a 9+0 arrangement.',
+    learned:[
+      '9 triplets',
+      'Hollow center',
+      '9+0 shorthand'
+    ],
+    children:[]
+  },
+
+  motility:{
+    title:'Cilia / Flagella',
+    parent:'microtubules',
+    source:'BIO 1.2',
+    status:'developing',
+    desc:'Motility structures with the 9+2 microtubule arrangement.',
+    learned:[
+      '9 doublets',
+      '2 central singlets',
+      '9+2 shorthand'
+    ],
+    children:[]
+  },
+
+  intermediate:{
+    title:'Intermediate Filaments',
+    parent:'cytoskeleton',
+    source:'BIO 1.2',
+    status:'',
+    desc:'Structural cytoskeletal proteins learned in Lesson 1.2.',
+    learned:[
+      'Keratin',
+      'Desmin',
+      'Vimentin',
+      'Lamins'
+    ],
+    children:[]
+  },
+
+  tissues:{
+    title:'Tissues',
+    parent:'living',
+    source:'BIO 1.2',
+    status:'',
+    desc:'Tissue organization learned so far.',
+    learned:[
+      'Epithelial Tissue',
+      'Connective Tissue',
+      'Parenchyma vs. Stroma'
+    ],
+    children:['epithelial','connective']
+  },
+
+  epithelial:{
+    title:'Epithelial Tissue',
+    parent:'tissues',
+    source:'BIO 1.2',
+    status:'mastered',
+    desc:'Epithelial structure, organization, and function.',
+    learned:[
+      'Protection',
+      'Absorption',
+      'Secretion',
+      'Sensation',
+      'Parenchyma',
+      'Simple / stratified / pseudostratified'
+    ],
+    children:[]
+  },
+
+  connective:{
+    title:'Connective Tissue',
+    parent:'tissues',
+    source:'BIO 1.2',
+    status:'mastered',
+    desc:'Connective-tissue roles and examples.',
+    learned:[
+      'Support',
+      'Stroma',
+      'Bone',
+      'Cartilage',
+      'Tendons / ligaments',
+      'Adipose',
+      'Blood'
+    ],
+    children:[]
+  }
 };
 
 let focus='living';
+
 const world=document.getElementById('world');
 const viewport=document.getElementById('viewport');
 const crumbs=document.getElementById('crumbs');
+
 const scopePopover=document.getElementById('scopePopover');
 const scopeTitle=document.getElementById('scopeTitle');
 const scopeDesc=document.getElementById('scopeDesc');
 
-function ancestors(key){const a=[];let k=key;while(k){a.unshift(k);k=data[k].parent}return a}
-function statusHTML(d){return d.status==='mastered'?'<span class="mastered">✓</span>':d.status==='developing'?'<span class="developing">◐</span>':''}
+const notesDrawer=document.getElementById('notesDrawer');
+const drawerBackdrop=document.getElementById('drawerBackdrop');
+const drawerTitle=document.getElementById('drawerTitle');
+const drawerSource=document.getElementById('drawerSource');
+const drawerDesc=document.getElementById('drawerDesc');
+const drawerNotes=document.getElementById('drawerNotes');
+
+function ancestors(key){
+  const a=[];
+  let k=key;
+
+  while(k){
+    a.unshift(k);
+    k=data[k].parent;
+  }
+
+  return a;
+}
+
+function statusHTML(d){
+  return d.status==='mastered'
+    ? '<span class="mastered">✓</span>'
+    : d.status==='developing'
+    ? '<span class="developing">◐</span>'
+    : '';
+}
+
 function nodeHTML(key,x,y,big=false,focused=false){
   const d=data[key];
-  return `<div class="node ${big?'big':''} ${key==='mcat'?'root':''} ${focused?'focused':''}" data-key="${key}" style="left:${x}%;top:${y}%"><div class="node-title">${d.title}</div><div class="meta">${d.source?`<span class="source">● ${d.source}</span>`:''} ${statusHTML(d)}</div></div>`
+
+  return `
+    <div
+      class="node ${big?'big':''} ${key==='mcat'?'root':''} ${focused?'focused':''}"
+      data-key="${key}"
+      style="left:${x}%;top:${y}%"
+    >
+      <div class="node-title">${d.title}</div>
+
+      <div class="meta">
+        ${d.source ? `<span class="source">● ${d.source}</span>` : ''}
+        ${statusHTML(d)}
+      </div>
+    </div>
+  `;
 }
+
 function curvePath(x1,y1,x2,y2,bend=0){
-  const w=viewport.clientWidth,h=viewport.clientHeight;
-  const ax=x1/100*w,ay=y1/100*h,bx=x2/100*w,by=y2/100*h;
+  const w=viewport.clientWidth;
+  const h=viewport.clientHeight;
+
+  const ax=x1/100*w;
+  const ay=y1/100*h;
+  const bx=x2/100*w;
+  const by=y2/100*h;
+
   const midY=(ay+by)/2;
-  const c1x=ax+bend,c2x=bx-bend;
+  const c1x=ax+bend;
+  const c2x=bx-bend;
+
   return `M ${ax} ${ay} C ${c1x} ${midY}, ${c2x} ${midY}, ${bx} ${by}`;
 }
+
 function branchSVG(paths){
-  return `<svg class="branch-svg" aria-hidden="true">${paths.map(p=>`<g class="branch-group" data-key="${p.key}"><path class="branch-visible ${p.major?'major':''}" d="${p.d}"></path><path class="branch-hit" d="${p.d}"></path></g>`).join('')}</svg>`
+  return `
+    <svg class="branch-svg" aria-hidden="true">
+      ${paths.map(p=>`
+        <g class="branch-group" data-key="${p.key}">
+          <path
+            class="branch-visible ${p.major?'major':''}"
+            d="${p.d}"
+          ></path>
+
+          <path
+            class="branch-hit"
+            d="${p.d}"
+          ></path>
+        </g>
+      `).join('')}
+    </svg>
+  `;
 }
+
 function organicOverview(){
   const nodes=[
     ['mcat',49,15,true,false],
@@ -156,78 +665,318 @@ function organicOverview(){
     ['cells',50,75,false,false],
     ['tissues',79,68,false,false]
   ];
+
   const paths=[
-    {key:'living',major:true,d:curvePath(49,20,49,32,0)},
-    {key:'foundations',d:curvePath(48,43,23,66,-90)},
-    {key:'cells',d:curvePath(50,44,50,69,20)},
-    {key:'tissues',d:curvePath(52,43,79,62,105)}
+    {
+      key:'living',
+      major:true,
+      d:curvePath(49,20,49,32,0)
+    },
+    {
+      key:'foundations',
+      d:curvePath(48,43,23,66,-90)
+    },
+    {
+      key:'cells',
+      d:curvePath(50,44,50,69,20)
+    },
+    {
+      key:'tissues',
+      d:curvePath(52,43,79,62,105)
+    }
   ];
-  world.innerHTML=branchSVG(paths)+nodes.map(n=>nodeHTML(...n)).join('');
+
+  world.innerHTML=
+    branchSVG(paths)+
+    nodes.map(n=>nodeHTML(...n)).join('');
 }
+
 function focusedLayout(){
-  const d=data[focus],kids=d.children,parent=d.parent;
-  let html='',paths=[];
+  const d=data[focus];
+  const kids=d.children;
+  const parent=d.parent;
+
+  let html='';
+  let paths=[];
+
   if(parent){
     html+=nodeHTML(parent,50,13,true,false);
-    paths.push({key:focus,major:true,d:curvePath(50,18,50,32,0)});
+
+    paths.push({
+      key:focus,
+      major:true,
+      d:curvePath(50,18,50,32,0)
+    });
   }
+
   html+=nodeHTML(focus,50,38,true,true);
+
   const positions=[];
-  if(kids.length===1) positions.push([50,72]);
-  else if(kids.length===2) positions.push([34,72],[66,72]);
-  else if(kids.length===3) positions.push([23,72],[50,76],[77,70]);
-  else if(kids.length===4) positions.push([16,70],[38,78],[62,76],[84,68]);
-  else if(kids.length===5) positions.push([12,68],[31,78],[50,82],[69,76],[88,66]);
-  else if(kids.length>=6){
-    const top=Math.ceil(kids.length/2),row1=kids.slice(0,top),row2=kids.slice(top);
-    row1.forEach((_,i)=>positions.push([18+(64*(row1.length===1?.5:i/(row1.length-1))),64]));
-    row2.forEach((_,i)=>positions.push([24+(52*(row2.length===1?.5:i/(row2.length-1))),84]));
+
+  if(kids.length===1){
+    positions.push([50,72]);
   }
+  else if(kids.length===2){
+    positions.push([34,72],[66,72]);
+  }
+  else if(kids.length===3){
+    positions.push([23,72],[50,76],[77,70]);
+  }
+  else if(kids.length===4){
+    positions.push([16,70],[38,78],[62,76],[84,68]);
+  }
+  else if(kids.length===5){
+    positions.push([12,68],[31,78],[50,82],[69,76],[88,66]);
+  }
+  else if(kids.length>=6){
+    const top=Math.ceil(kids.length/2);
+    const row1=kids.slice(0,top);
+    const row2=kids.slice(top);
+
+    row1.forEach((_,i)=>{
+      positions.push([
+        18+(64*(row1.length===1?.5:i/(row1.length-1))),
+        64
+      ]);
+    });
+
+    row2.forEach((_,i)=>{
+      positions.push([
+        24+(52*(row2.length===1?.5:i/(row2.length-1))),
+        84
+      ]);
+    });
+  }
+
   kids.forEach((k,i)=>{
     const [x,y]=positions[i];
     const bend=(x-50)*3.2;
-    paths.push({key:k,major:false,d:curvePath(50,44,x,y-6,bend)});
+
+    paths.push({
+      key:k,
+      major:false,
+      d:curvePath(50,44,x,y-6,bend)
+    });
+
     html+=nodeHTML(k,x,y,false,false);
   });
-  if(!kids.length) html+=`<div style="position:absolute;left:50%;top:72%;transform:translate(-50%,-50%);color:#707070;font-size:13px;text-align:center;z-index:2">This is currently the deepest learned branch here.</div>`;
-  world.innerHTML=branchSVG(paths)+html;
+
+  if(!kids.length){
+    html+=`
+      <div
+        style="
+          position:absolute;
+          left:50%;
+          top:72%;
+          transform:translate(-50%,-50%);
+          color:#707070;
+          font-size:13px;
+          text-align:center;
+          z-index:2
+        "
+      >
+        This is currently the deepest learned branch here.
+      </div>
+    `;
+  }
+
+  world.innerHTML=
+    branchSVG(paths)+
+    html;
 }
+
 function placeScopePopover(){
-  const focusNode=world.querySelector(`.node[data-key="${focus}"]`);
+  const focusNode=
+    world.querySelector(`.node[data-key="${focus}"]`);
+
   if(!focusNode)return;
-  const vp=viewport.getBoundingClientRect(),n=focusNode.getBoundingClientRect();
+
+  const vp=viewport.getBoundingClientRect();
+  const n=focusNode.getBoundingClientRect();
+
   let left=n.right-vp.left+22;
   let top=n.top-vp.top-5;
+
   const width=scopePopover.offsetWidth||280;
-  if(left+width>vp.width-18) left=n.left-vp.left-width-22;
-  if(left<18) left=Math.max(18,(vp.width-width)/2);
-  top=Math.max(18,Math.min(top,vp.height-(scopePopover.offsetHeight||150)-18));
+
+  if(left+width>vp.width-18){
+    left=n.left-vp.left-width-22;
+  }
+
+  if(left<18){
+    left=Math.max(18,(vp.width-width)/2);
+  }
+
+  top=Math.max(
+    18,
+    Math.min(
+      top,
+      vp.height-(scopePopover.offsetHeight||150)-18
+    )
+  );
+
   scopePopover.style.left=`${left}px`;
   scopePopover.style.top=`${top}px`;
 }
+
 function render(){
-  if(focus==='living') organicOverview(); else focusedLayout();
-  world.querySelectorAll('.node,.branch-group').forEach(el=>el.addEventListener('click',e=>{e.stopPropagation();zoomTo(el.dataset.key)}));
+  if(focus==='living'){
+    organicOverview();
+  }
+  else{
+    focusedLayout();
+  }
+
+  world.querySelectorAll('.node,.branch-group')
+    .forEach(el=>{
+      el.addEventListener('click',e=>{
+        e.stopPropagation();
+        zoomTo(el.dataset.key);
+      });
+    });
+
   updateUI();
+
   world.style.transform='scale(.94)';
-  requestAnimationFrame(()=>requestAnimationFrame(()=>world.style.transform='scale(1)'));
+
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      world.style.transform='scale(1)';
+    });
+  });
+
   requestAnimationFrame(placeScopePopover);
 }
-function zoomTo(key){if(!data[key])return;focus=key;render()}
+
+function zoomTo(key){
+  if(!data[key])return;
+
+  focus=key;
+  render();
+}
+
 function updateUI(){
-  const d=data[focus],path=ancestors(focus);
-  crumbs.innerHTML=path.map((k,i)=>`<span class="crumb ${i===path.length-1?'current':''}" data-key="${k}">${data[k].title}</span>${i<path.length-1?'<span>›</span>':''}`).join('');
-  crumbs.querySelectorAll('.crumb').forEach(c=>c.addEventListener('click',()=>zoomTo(c.dataset.key)));
+  const d=data[focus];
+  const path=ancestors(focus);
+
+  crumbs.innerHTML=path.map((k,i)=>`
+    <span
+      class="crumb ${i===path.length-1?'current':''}"
+      data-key="${k}"
+    >
+      ${data[k].title}
+    </span>
+    ${i<path.length-1?'<span>›</span>':''}
+  `).join('');
+
+  crumbs.querySelectorAll('.crumb')
+    .forEach(c=>{
+      c.addEventListener(
+        'click',
+        ()=>zoomTo(c.dataset.key)
+      );
+    });
+
   scopeTitle.textContent=d.title;
   scopeDesc.textContent=d.desc;
+
   document.getElementById('backBtn').disabled=!d.parent;
-  document.getElementById('backBtn').style.opacity=d.parent?'1':'.35';
+
+  document.getElementById('backBtn').style.opacity=
+    d.parent?'1':'.35';
 }
-document.getElementById('backBtn').addEventListener('click',()=>{const p=data[focus].parent;if(p)zoomTo(p)});
-document.getElementById('homeBtn').addEventListener('click',()=>zoomTo('living'));
-document.getElementById('review2Btn').addEventListener('click',()=>alert(`Review2 will eventually launch using this scope:\n\n${ancestors(focus).map(k=>data[k].title).join(' → ')}\n\nNot wired yet.`));
-document.getElementById('notesBtn').addEventListener('click',()=>alert(`Brain Notes for ${data[focus].title} will eventually open as a side panel. The full approved notes stay in the Brain; the map only shows structure and scope.`));
-window.addEventListener('resize',()=>{render()});
+
+function openNotes(){
+  const d=data[focus];
+
+  drawerTitle.textContent=d.title;
+
+  drawerSource.textContent=
+    d.source
+      ? `● ${d.source}`
+      : 'Current learned MCAT scope';
+
+  drawerDesc.textContent=d.desc;
+
+  const notes=
+    d.learned && d.learned.length
+      ? d.learned
+      : ['No detailed notes have been attached to this scope yet.'];
+
+  drawerNotes.innerHTML=
+    notes
+      .map(item=>`<li>${item}</li>`)
+      .join('');
+
+  notesDrawer.classList.add('open');
+  drawerBackdrop.classList.add('open');
+
+  notesDrawer.setAttribute(
+    'aria-hidden',
+    'false'
+  );
+}
+
+function closeNotes(){
+  notesDrawer.classList.remove('open');
+  drawerBackdrop.classList.remove('open');
+
+  notesDrawer.setAttribute(
+    'aria-hidden',
+    'true'
+  );
+}
+
+document.getElementById('backBtn')
+  .addEventListener('click',()=>{
+    const p=data[focus].parent;
+
+    if(p)zoomTo(p);
+  });
+
+document.getElementById('homeBtn')
+  .addEventListener('click',()=>{
+    zoomTo('living');
+  });
+
+document.getElementById('review2Btn')
+  .addEventListener('click',()=>{
+    alert(
+      `Review2 will eventually launch using this scope:
+
+${ancestors(focus).map(k=>data[k].title).join(' → ')}
+
+Not wired yet.`
+    );
+  });
+
+document.getElementById('notesBtn')
+  .addEventListener(
+    'click',
+    openNotes
+  );
+
+document.getElementById('drawerClose')
+  .addEventListener(
+    'click',
+    closeNotes
+  );
+
+drawerBackdrop.addEventListener(
+  'click',
+  closeNotes
+);
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    closeNotes();
+  }
+});
+
+window.addEventListener('resize',()=>{
+  render();
+});
+
 render();
 </script>
 </body>
