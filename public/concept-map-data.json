@@ -1,0 +1,596 @@
+{
+  "mcat": {
+    "title": "MCAT",
+    "parent": null,
+    "source": "",
+    "status": "",
+    "desc": "Everything you have learned so far across the MCAT.",
+    "children": ["living"],
+    "notes": [
+      {
+        "type": "bullets",
+        "title": "Learned regions",
+        "items": ["Living Systems"]
+      }
+    ]
+  },
+
+  "living": {
+    "title": "Living Systems",
+    "parent": "mcat",
+    "source": "BIO 1.1–1.2",
+    "status": "",
+    "desc": "The biological systems and structures you have learned so far.",
+    "children": ["foundations", "cells", "tissues"],
+    "notes": [
+      {
+        "type": "bullets",
+        "title": "Current branches",
+        "items": [
+          "Foundations of Life",
+          "Cells",
+          "Tissues"
+        ]
+      }
+    ]
+  },
+
+  "foundations": {
+    "title": "Foundations of Life",
+    "parent": "living",
+    "source": "BIO 1.1",
+    "status": "",
+    "desc": "Foundational ideas about cells and the boundary between cellular life and viruses.",
+    "children": [
+      "cell-theory",
+      "life-boundary"
+    ],
+    "notes": [
+      {
+        "type": "bullets",
+        "title": "Foundations",
+        "items": [
+          "Cell Theory",
+          "Boundary of Life / viruses"
+        ]
+      }
+    ]
+  },
+
+  "cell-theory": {
+    "title": "Cell Theory",
+    "parent": "foundations",
+    "source": "BIO 1.1",
+    "status": "mastered",
+    "desc": "Core principles defining cells as the functional units of living systems.",
+    "children": [],
+    "notes": [
+      {
+        "type": "bullets",
+        "title": "Core principles",
+        "items": [
+          "Cells are the basic functional unit of life",
+          "Cells arise from preexisting cells",
+          "Cells carry genetic information"
+        ]
+      }
+    ]
+  },
+
+  "life-boundary": {
+    "title": "Boundary of Life",
+    "parent": "foundations",
+    "source": "BIO 1.1",
+    "status": "",
+    "desc": "The distinction between cellular life and entities such as viruses.",
+    "children": [],
+    "notes": [
+      {
+        "type": "bullets",
+        "title": "Viruses",
+        "items": [
+          "Contain genetic material",
+          "Cannot reproduce independently",
+          "Are not considered living cells"
+        ]
+      }
+    ]
+  },
+
+  "cells": {
+    "title": "Cells",
+    "parent": "living",
+    "source": "BIO 1.1 · 1.2",
+    "status": "",
+    "desc": "Cell boundaries, internal organization, and structural systems.",
+    "children": [
+      "membrane",
+      "internal",
+      "cytoskeleton"
+    ],
+    "notes": [
+      {
+        "type": "bullets",
+        "title": "Cell branches",
+        "items": [
+          "Plasma Membrane",
+          "Internal Organization",
+          "Structure & Movement"
+        ]
+      }
+    ]
+  },
+
+  "membrane": {
+    "title": "Plasma Membrane",
+    "parent": "cells",
+    "source": "BIO 1.2",
+    "status": "mastered",
+    "desc": "The phospholipid boundary separating cellular environments.",
+    "children": [],
+    "notes": [
+      {
+        "type": "bullets",
+        "title": "Structure",
+        "items": [
+          "Phospholipid bilayer",
+          "Hydrophilic surfaces face aqueous environments",
+          "Hydrophobic interior"
+        ]
+      }
+    ]
+  },
+
+  "internal": {
+    "title": "Internal Organization",
+    "parent": "cells",
+    "source": "BIO 1.2",
+    "status": "",
+    "desc": "Internal structures and compartments of eukaryotic cells.",
+    "children": [
+      "nucleus",
+      "mitochondria",
+      "lysosome",
+      "er",
+      "golgi",
+      "peroxisome"
+    ],
+    "notes": [
+      {
+        "type": "bullets",
+        "title": "Organelles",
+        "items": [
+          "Nucleus",
+          "Mitochondria",
+          "Lysosomes",
+          "Endoplasmic Reticulum",
+          "Golgi Apparatus",
+          "Peroxisomes"
+        ]
+      }
+    ]
+  },
+
+  "nucleus": {
+    "title": "Nucleus",
+    "parent": "internal",
+    "source": "BIO 1.2",
+    "status": "mastered",
+    "desc": "Nuclear structure, genetic organization, and nucleolar function.",
+    "children": [],
+    "notes": [
+      {
+        "type": "bullets",
+        "title": "Structure",
+        "items": [
+          "Membrane-bound nucleus",
+          "Nuclear envelope and pores",
+          "Nucleolus"
+        ]
+      },
+      {
+        "type": "path",
+        "title": "Nucleolus",
+        "steps": [
+          "Nucleolus",
+          "rRNA synthesis",
+          "ribosome assembly"
+        ]
+      }
+    ]
+  },
+
+  "mitochondria": {
+    "title": "Mitochondria",
+    "parent": "internal",
+    "source": "BIO 1.2",
+    "status": "mastered",
+    "desc": "Structure, energetics, endosymbiosis, and apoptosis from what you have learned so far.",
+    "children": [],
+    "notes": [
+      {
+        "type": "bullets",
+        "title": "Structure",
+        "items": [
+          "Outer membrane",
+          "Inner membrane / cristae",
+          "Intermembrane space",
+          "Matrix"
+        ]
+      },
+      {
+        "type": "path",
+        "title": "Energy",
+        "steps": [
+          "H⁺ gradient",
+          "ATP synthase",
+          "ATP"
+        ]
+      },
+      {
+        "type": "bullets",
+        "title": "Semi-autonomy",
+        "items": [
+          "Own circular DNA",
+          "Replicates by binary fission"
+        ]
+      },
+      {
+        "type": "path",
+        "title": "Endosymbiotic origin",
+        "steps": [
+          "Anaerobic prokaryote",
+          "engulfs aerobic prokaryote",
+          "mitochondrion"
+        ]
+      },
+      {
+        "type": "path",
+        "title": "Apoptosis",
+        "steps": [
+          "Mitochondria",
+          "releases cytochrome c / ETC enzymes",
+          "apoptosis"
+        ]
+      }
+    ]
+  },
+
+  "lysosome": {
+    "title": "Lysosomes",
+    "parent": "internal",
+    "source": "BIO 1.2",
+    "status": "mastered",
+    "desc": "Acidic organelles containing hydrolytic enzymes.",
+    "children": [],
+    "notes": [
+      {
+        "type": "bullets",
+        "title": "Properties",
+        "items": [
+          "Hydrolytic enzymes",
+          "Acidic interior"
+        ]
+      },
+      {
+        "type": "path",
+        "title": "Membrane rupture",
+        "steps": [
+          "Lysosomal rupture",
+          "hydrolytic enzymes released",
+          "autolysis"
+        ]
+      }
+    ]
+  },
+
+  "er": {
+    "title": "Endoplasmic Reticulum",
+    "parent": "internal",
+    "source": "BIO 1.2",
+    "status": "mastered",
+    "desc": "Rough and smooth ER structure and function.",
+    "children": [],
+    "notes": [
+      {
+        "type": "bullets",
+        "title": "Rough ER",
+        "items": [
+          "Contains ribosomes",
+          "Secretory and membrane proteins"
+        ]
+      },
+      {
+        "type": "bullets",
+        "title": "Smooth ER",
+        "items": [
+          "No ribosomes",
+          "Lipid and steroid synthesis",
+          "Detoxification"
+        ]
+      }
+    ]
+  },
+
+  "golgi": {
+    "title": "Golgi Apparatus",
+    "parent": "internal",
+    "source": "BIO 1.2",
+    "status": "mastered",
+    "desc": "Modification, targeting, sorting, and packaging of cellular products.",
+    "children": [],
+    "notes": [
+      {
+        "type": "bullets",
+        "title": "Functions",
+        "items": [
+          "Carbohydrate modification",
+          "Phosphorylation",
+          "Sulfation",
+          "Targeting signals",
+          "Packaging and sorting"
+        ]
+      }
+    ]
+  },
+
+  "peroxisome": {
+    "title": "Peroxisomes",
+    "parent": "internal",
+    "source": "BIO 1.2",
+    "status": "mastered",
+    "desc": "Oxidative metabolism and hydrogen-peroxide handling.",
+    "children": [],
+    "notes": [
+      {
+        "type": "bullets",
+        "title": "Functions",
+        "items": [
+          "β-oxidation",
+          "Hydrogen peroxide management"
+        ]
+      },
+      {
+        "type": "path",
+        "title": "Hydrogen peroxide",
+        "steps": [
+          "H₂O₂",
+          "catalase",
+          "managed / broken down"
+        ]
+      }
+    ]
+  },
+
+  "cytoskeleton": {
+    "title": "Structure & Movement",
+    "parent": "cells",
+    "source": "BIO 1.2",
+    "status": "developing",
+    "desc": "The cytoskeleton and structures that depend on it.",
+    "children": [
+      "microfilaments",
+      "microtubules",
+      "intermediate"
+    ],
+    "notes": [
+      {
+        "type": "bullets",
+        "title": "Components",
+        "items": [
+          "Microfilaments / actin",
+          "Microtubules / tubulin",
+          "Intermediate filaments"
+        ]
+      }
+    ]
+  },
+
+  "microfilaments": {
+    "title": "Microfilaments",
+    "parent": "cytoskeleton",
+    "source": "BIO 1.2",
+    "status": "mastered",
+    "desc": "Solid actin-based cytoskeletal rods.",
+    "children": [],
+    "notes": [
+      {
+        "type": "bullets",
+        "title": "Properties",
+        "items": [
+          "Actin",
+          "Solid rods",
+          "Myosin",
+          "Cleavage furrow"
+        ]
+      }
+    ]
+  },
+
+  "microtubules": {
+    "title": "Microtubules",
+    "parent": "cytoskeleton",
+    "source": "BIO 1.2",
+    "status": "developing",
+    "desc": "Hollow tubulin structures involved in transport, division, and motility.",
+    "children": [
+      "centrioles",
+      "motility"
+    ],
+    "notes": [
+      {
+        "type": "bullets",
+        "title": "Properties",
+        "items": [
+          "Tubulin",
+          "Hollow tubes",
+          "Mitotic spindle"
+        ]
+      },
+      {
+        "type": "path",
+        "title": "Transport",
+        "steps": [
+          "Microtubules",
+          "kinesin / dynein",
+          "intracellular transport"
+        ]
+      }
+    ]
+  },
+
+  "centrioles": {
+    "title": "Centrioles",
+    "parent": "microtubules",
+    "source": "BIO 1.2",
+    "status": "developing",
+    "desc": "Microtubule-organizing structures with a 9+0 arrangement.",
+    "children": [],
+    "notes": [
+      {
+        "type": "bullets",
+        "title": "Arrangement",
+        "items": [
+          "9 triplets",
+          "Hollow center",
+          "9+0"
+        ]
+      }
+    ]
+  },
+
+  "motility": {
+    "title": "Cilia / Flagella",
+    "parent": "microtubules",
+    "source": "BIO 1.2",
+    "status": "developing",
+    "desc": "Motility structures with a 9+2 microtubule arrangement.",
+    "children": [],
+    "notes": [
+      {
+        "type": "bullets",
+        "title": "Arrangement",
+        "items": [
+          "9 doublets",
+          "2 central singlets",
+          "9+2"
+        ]
+      }
+    ]
+  },
+
+  "intermediate": {
+    "title": "Intermediate Filaments",
+    "parent": "cytoskeleton",
+    "source": "BIO 1.2",
+    "status": "",
+    "desc": "Structural cytoskeletal proteins.",
+    "children": [],
+    "notes": [
+      {
+        "type": "bullets",
+        "title": "Examples",
+        "items": [
+          "Keratin",
+          "Desmin",
+          "Vimentin",
+          "Lamins"
+        ]
+      }
+    ]
+  },
+
+  "tissues": {
+    "title": "Tissues",
+    "parent": "living",
+    "source": "BIO 1.2",
+    "status": "",
+    "desc": "Tissue organization learned so far.",
+    "children": [
+      "epithelial",
+      "connective"
+    ],
+    "notes": [
+      {
+        "type": "path",
+        "title": "Functional tissue",
+        "steps": [
+          "Epithelial tissue",
+          "parenchyma"
+        ]
+      },
+      {
+        "type": "path",
+        "title": "Support tissue",
+        "steps": [
+          "Connective tissue",
+          "stroma"
+        ]
+      }
+    ]
+  },
+
+  "epithelial": {
+    "title": "Epithelial Tissue",
+    "parent": "tissues",
+    "source": "BIO 1.2",
+    "status": "mastered",
+    "desc": "Epithelial structure, organization, and function.",
+    "children": [],
+    "notes": [
+      {
+        "type": "bullets",
+        "title": "Functions",
+        "items": [
+          "Protection",
+          "Absorption",
+          "Secretion",
+          "Sensation"
+        ]
+      },
+      {
+        "type": "bullets",
+        "title": "Organization",
+        "items": [
+          "Simple",
+          "Stratified",
+          "Pseudostratified",
+          "Squamous",
+          "Cuboidal",
+          "Columnar"
+        ]
+      }
+    ]
+  },
+
+  "connective": {
+    "title": "Connective Tissue",
+    "parent": "tissues",
+    "source": "BIO 1.2",
+    "status": "mastered",
+    "desc": "Supportive tissue and structural framework.",
+    "children": [],
+    "notes": [
+      {
+        "type": "path",
+        "title": "Role",
+        "steps": [
+          "Connective tissue",
+          "support / framework",
+          "stroma"
+        ]
+      },
+      {
+        "type": "bullets",
+        "title": "Examples",
+        "items": [
+          "Bone",
+          "Cartilage",
+          "Tendons / ligaments",
+          "Adipose",
+          "Blood"
+        ]
+      }
+    ]
+  }
+}
