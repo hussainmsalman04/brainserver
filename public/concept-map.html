@@ -536,20 +536,6 @@ html,body{
 
     <div class="top-actions">
 
-      <button
-        class="btn ghost home"
-        id="homeBtn"
-      >
-        Home
-      </button>
-
-      <button
-        class="btn ghost"
-        id="backBtn"
-      >
-        ← Zoom out
-      </button>
-
       <a
         class="btn secondary"
         href="/lesson-reviews.html"
@@ -1577,19 +1563,6 @@ function updateBreadcrumbs(){
       }
     );
 
-  const back=
-    document.getElementById(
-      'backBtn'
-    );
-
-  back.disabled=
-    !data[focus].parent;
-
-  back.style.opacity=
-    data[focus].parent
-    ? '1'
-    : '.35';
-
 }
 
 /* =========================
@@ -1658,43 +1631,6 @@ document
     enterMap
   );
 
-document
-  .getElementById(
-    'homeBtn'
-  )
-  .addEventListener(
-    'click',
-    goHome
-  );
-
-document
-  .getElementById(
-    'backBtn'
-  )
-  .addEventListener(
-    'click',
-    ()=>{
-
-      const parent=
-        data[focus].parent;
-
-      if(!parent){
-        return;
-      }
-
-      if(parent === 'mcat'){
-
-        goHome();
-
-        return;
-      }
-
-      zoomTo(
-        parent
-      );
-
-    }
-  );
 
 window
   .addEventListener(
