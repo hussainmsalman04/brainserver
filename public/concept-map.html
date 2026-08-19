@@ -1596,21 +1596,42 @@ function updateBreadcrumbs(){
    APP CONTROLS
 ========================= */
 
-function enterMap(){
+async function enterMap(){
 
-  entrance
-    .classList
-    .add('hidden');
+  try{
 
-  app
-    .classList
-    .add('visible');
+    if(!data || Object.keys(data).length === 0){
 
-  focus='living';
+      await loadConceptMapData();
 
-  notesOpen=false;
+    }
 
-  render();
+    focus='living';
+    notesOpen=false;
+
+    entrance
+      .classList
+      .add('hidden');
+
+    app
+      .classList
+      .add('visible');
+
+    render();
+
+  }
+  catch(error){
+
+    console.error(
+      'Could not enter Concept Map:',
+      error
+    );
+
+    alert(
+      'The Concept Map data could not be loaded.'
+    );
+
+  }
 
 }
 
