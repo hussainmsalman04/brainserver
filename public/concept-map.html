@@ -2127,15 +2127,22 @@ function updateBreadcrumbs(){
       crumb=>{
 
         crumb.addEventListener(
-          'click',
-          ()=>{
+  'click',
+  ()=>{
 
-            zoomTo(
-              crumb.dataset.key
-            );
+    if(crumb.dataset.key === 'mcat'){
 
-          }
-        );
+      goHome();
+
+      return;
+    }
+
+    zoomTo(
+      crumb.dataset.key
+    );
+
+  }
+);
 
       }
     );
@@ -2220,13 +2227,23 @@ document
       const parent=
         data[focus].parent;
 
-      if(parent){
-
-        zoomTo(
-          parent
-        );
-
+      if(!parent){
+        return;
       }
+
+      if(parent === 'mcat'){
+
+        goHome();
+
+        return;
+      }
+
+      zoomTo(
+        parent
+      );
+
+    }
+  );
 
     }
   );
