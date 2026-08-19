@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>MCAT Brain</title>
 
 <style>
@@ -10,21 +10,20 @@
 
 :root{
   --bg:#050505;
-  --panel:#121212;
-  --panel2:#181818;
-  --line:#4a4a4a;
+  --panel:#151515;
+  --panel2:#1b1b1b;
   --text:#f4f4f4;
-  --muted:#999;
+  --muted:#929292;
   --bio:#62dc8b;
   --master:#8fe7ad;
   --dev:#e8c96f;
-  --glow:rgba(98,220,139,.2);
+  --glow:rgba(98,220,139,.20);
 }
 
 html,body{
-  margin:0;
   width:100%;
   height:100%;
+  margin:0;
   overflow:hidden;
   background:var(--bg);
   color:var(--text);
@@ -32,7 +31,9 @@ html,body{
   BlinkMacSystemFont,"Segoe UI",sans-serif;
 }
 
-/* ---------- ENTRANCE ---------- */
+/* =========================
+   MCAT ENTRANCE
+========================= */
 
 #entrance{
   position:fixed;
@@ -43,20 +44,20 @@ html,body{
   justify-content:center;
   background:#000;
   transition:
-    opacity .65s ease,
+    opacity .6s ease,
     transform .7s cubic-bezier(.16,.84,.22,1);
 }
 
 #entrance.hidden{
   opacity:0;
   pointer-events:none;
-  transform:scale(1.25);
+  transform:scale(1.22);
 }
 
 .enter-node{
+  text-align:center;
   cursor:pointer;
   user-select:none;
-  text-align:center;
   transition:
     transform .22s ease,
     text-shadow .22s ease;
@@ -64,34 +65,35 @@ html,body{
 
 .enter-node:hover{
   transform:scale(1.06);
-  text-shadow:0 0 32px rgba(98,220,139,.24);
+  text-shadow:0 0 34px rgba(98,220,139,.25);
 }
 
 .enter-title{
-  font-size:clamp(48px,8vw,92px);
-  font-weight:800;
-  letter-spacing:-.055em;
+  font-size:clamp(52px,8vw,94px);
+  font-weight:820;
+  letter-spacing:-.06em;
   line-height:.9;
 }
 
 .enter-sub{
-  margin-top:12px;
+  margin-top:13px;
   color:var(--bio);
-  font-size:13px;
-  font-weight:700;
-  letter-spacing:.14em;
+  font-size:12px;
+  font-weight:750;
+  letter-spacing:.16em;
   text-transform:uppercase;
-  opacity:.8;
 }
 
-/* ---------- APP ---------- */
+/* =========================
+   APP
+========================= */
 
 #app{
   position:fixed;
   inset:0;
   opacity:0;
   pointer-events:none;
-  transition:opacity .55s ease .15s;
+  transition:opacity .45s ease;
 }
 
 #app.visible{
@@ -99,41 +101,48 @@ html,body{
   pointer-events:auto;
 }
 
+/* =========================
+   TOP NAV
+========================= */
+
 .topbar{
   position:absolute;
   top:0;
   left:0;
   right:0;
+  z-index:20;
   height:74px;
   display:flex;
   align-items:center;
   justify-content:space-between;
   gap:20px;
-  padding:0 30px;
-  z-index:20;
-  background:linear-gradient(
-    to bottom,
-    rgba(5,5,5,.98),
-    rgba(5,5,5,.82),
-    rgba(5,5,5,0)
-  );
+  padding:0 28px;
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(5,5,5,.98),
+      rgba(5,5,5,.72),
+      transparent
+    );
 }
 
 .crumbs{
   display:flex;
-  gap:7px;
   align-items:center;
+  gap:7px;
   flex-wrap:wrap;
-  font-size:13px;
   color:#777;
+  font-size:13px;
 }
 
 .crumb{
-  cursor:pointer;
   color:#999;
+  cursor:pointer;
 }
 
-.crumb:hover{color:#fff}
+.crumb:hover{
+  color:#fff;
+}
 
 .crumb.current{
   color:var(--bio);
@@ -142,22 +151,23 @@ html,body{
 
 .top-actions{
   display:flex;
-  gap:9px;
   align-items:center;
+  gap:8px;
 }
 
 .btn{
   appearance:none;
   border:0;
   border-radius:999px;
-  padding:10px 15px;
+  padding:9px 13px;
   background:#ededed;
   color:#111;
   font:inherit;
-  font-size:13px;
-  font-weight:750;
+  font-size:12px;
+  font-weight:760;
   cursor:pointer;
   text-decoration:none;
+  white-space:nowrap;
 }
 
 .btn.secondary{
@@ -167,12 +177,19 @@ html,body{
 }
 
 .btn.ghost{
-  background:rgba(10,10,10,.7);
+  background:rgba(12,12,12,.72);
   color:#ccc;
   border:1px solid #303030;
 }
 
-/* ---------- MAP ---------- */
+.btn.home{
+  color:var(--bio);
+  border-color:rgba(98,220,139,.38);
+}
+
+/* =========================
+   MAP
+========================= */
 
 .viewport{
   position:absolute;
@@ -180,9 +197,9 @@ html,body{
   overflow:hidden;
   background:
     radial-gradient(
-      circle at 50% 45%,
+      circle at 50% 48%,
       rgba(98,220,139,.045),
-      transparent 30%
+      transparent 34%
     ),
     #050505;
 }
@@ -192,104 +209,80 @@ html,body{
   inset:0;
   transform-origin:50% 50%;
   transition:
-    transform .68s cubic-bezier(.16,.84,.22,1),
+    transform .62s cubic-bezier(.16,.84,.22,1),
     opacity .3s ease;
 }
 
-.branch-svg{
-  position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
-  z-index:1;
-  overflow:visible;
-}
-
-.branch-visible{
-  fill:none;
-  stroke:#444;
-  stroke-width:7;
-  stroke-linecap:round;
-  transition:
-    stroke .2s ease,
-    filter .2s ease;
-}
-
-.branch-visible.major{
-  stroke:#565656;
-  stroke-width:11;
-}
-
-.branch-hit{
-  fill:none;
-  stroke:transparent;
-  stroke-width:30;
-  cursor:pointer;
-}
-
-.branch-group:hover .branch-visible{
-  stroke:#747474;
-  filter:drop-shadow(0 0 8px rgba(255,255,255,.07));
-}
+/* =========================
+   NODES
+========================= */
 
 .node{
   position:absolute;
+  z-index:4;
   transform:translate(-50%,-50%);
-  z-index:3;
-  min-width:155px;
-  max-width:230px;
-  padding:13px 15px;
-  border-radius:19px;
-  border:1px solid #383838;
-  background:rgba(21,21,21,.94);
+  min-width:150px;
+  max-width:225px;
+  padding:12px 14px;
+  border:1px solid #373737;
+  border-radius:18px;
+  background:rgba(22,22,22,.96);
   text-align:center;
   cursor:pointer;
   user-select:none;
   transition:
-    transform .22s ease,
+    transform .2s ease,
     border-color .2s ease,
-    background .2s ease,
-    box-shadow .25s ease;
+    box-shadow .22s ease,
+    background .2s ease;
 }
 
 .node:hover{
-  transform:translate(-50%,-50%) scale(1.045);
-  border-color:#707070;
-  background:#1c1c1c;
+  transform:translate(-50%,-50%) scale(1.04);
+  border-color:#696969;
+  background:#1b1b1b;
 }
 
-.node.big{
-  min-width:210px;
-  padding:18px 20px;
-  border-radius:24px;
+.node.parent-node{
+  min-width:190px;
+  padding:15px 18px;
 }
 
-.node.root{
-  border-color:#4c4c4c;
-  background:#1c1c1c;
-}
-
-.node.focused{
+.node.focus-node{
+  width:270px;
+  max-width:270px;
+  padding:16px 17px;
   border-color:var(--bio);
+  background:#171917;
   box-shadow:
-    0 0 0 1px rgba(98,220,139,.12),
-    0 0 38px var(--glow);
+    0 0 0 1px rgba(98,220,139,.10),
+    0 0 34px var(--glow);
+  cursor:default;
+}
+
+.node.focus-node:hover{
+  transform:translate(-50%,-50%);
 }
 
 .node-title{
-  font-weight:760;
+  font-size:15px;
+  font-weight:780;
   letter-spacing:-.025em;
   line-height:1.12;
 }
 
-.node.big .node-title{
-  font-size:20px;
+.parent-node .node-title{
+  font-size:18px;
+}
+
+.focus-node .node-title{
+  font-size:19px;
 }
 
 .meta{
-  margin-top:7px;
+  margin-top:6px;
   color:#888;
-  font-size:11px;
+  font-size:10px;
 }
 
 .source{
@@ -297,271 +290,265 @@ html,body{
   font-weight:750;
 }
 
-.mastered{color:var(--master)}
-.developing{color:var(--dev)}
-
-/* ---------- CURRENT SCOPE ---------- */
-
-.scope-popover{
-  position:absolute;
-  z-index:8;
-  width:290px;
-  padding:17px;
-  border-radius:21px;
-  border:1px solid #313131;
-  background:rgba(17,17,17,.96);
-  box-shadow:0 18px 55px rgba(0,0,0,.46);
-  backdrop-filter:blur(10px);
-  transition:
-    left .45s cubic-bezier(.2,.8,.2,1),
-    top .45s cubic-bezier(.2,.8,.2,1);
+.mastered{
+  color:var(--master);
 }
 
-.scope-kicker,
-.drawer-label{
-  color:#777;
+.developing{
+  color:var(--dev);
+}
+
+/* =========================
+   MERGED SCOPE
+========================= */
+
+.focus-description{
+  margin-top:8px;
+  color:#a9a9a9;
+  font-size:11px;
+  line-height:1.42;
+}
+
+.focus-actions{
+  display:flex;
+  justify-content:center;
+  gap:7px;
+  flex-wrap:wrap;
+  margin-top:11px;
+}
+
+.focus-actions .btn{
+  padding:7px 10px;
   font-size:10px;
-  letter-spacing:.14em;
+}
+
+/* =========================
+   NEURAL CONNECTIONS
+========================= */
+
+.branch-svg{
+  position:absolute;
+  inset:0;
+  z-index:1;
+  width:100%;
+  height:100%;
+  overflow:visible;
+}
+
+.branch{
+  fill:none;
+  stroke:rgba(98,220,139,.68);
+  stroke-width:3.5;
+  stroke-linecap:round;
+  filter:drop-shadow(0 0 5px rgba(98,220,139,.13));
+}
+
+.branch.major{
+  stroke-width:5;
+  stroke:rgba(98,220,139,.82);
+}
+
+.branch-hit{
+  fill:none;
+  stroke:transparent;
+  stroke-width:28;
+  cursor:pointer;
+}
+
+/* =========================
+   BRAIN NOTES — GROW OUTWARD
+========================= */
+
+.note-branch{
+  position:absolute;
+  z-index:5;
+  transform:translate(-50%,-50%) scale(.86);
+  opacity:0;
+  width:210px;
+  padding:12px 13px;
+  border:1px solid rgba(98,220,139,.34);
+  border-radius:15px;
+  background:rgba(17,20,18,.97);
+  box-shadow:0 0 22px rgba(98,220,139,.08);
+  transition:
+    transform .35s cubic-bezier(.16,.84,.22,1),
+    opacity .28s ease;
+}
+
+.note-branch.visible{
+  opacity:1;
+  transform:translate(-50%,-50%) scale(1);
+}
+
+.note-heading{
+  margin-bottom:7px;
+  color:var(--bio);
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.12em;
   text-transform:uppercase;
 }
 
-.scope-title{
-  margin-top:6px;
-  font-size:19px;
-  font-weight:800;
-  letter-spacing:-.025em;
+.note-bullets{
+  margin:0;
+  padding-left:16px;
+  color:#d1d1d1;
+  font-size:11px;
+  line-height:1.45;
 }
 
-.scope-desc{
-  margin-top:7px;
-  color:#a0a0a0;
-  font-size:12px;
-  line-height:1.5;
+.note-bullets li{
+  margin:3px 0;
 }
 
-.scope-actions{
+.pathway{
   display:flex;
-  gap:8px;
+  align-items:center;
+  gap:6px;
   flex-wrap:wrap;
-  margin-top:13px;
+  color:#ddd;
+  font-size:10.5px;
+  line-height:1.35;
 }
 
-.scope-actions .btn{
-  padding:8px 12px;
-  font-size:12px;
+.path-step{
+  padding:5px 7px;
+  border:1px solid #303730;
+  border-radius:8px;
+  background:#181b18;
 }
 
-/* ---------- HELPER ---------- */
+.arrow{
+  color:var(--bio);
+  font-weight:900;
+}
+
+/* =========================
+   HELPER
+========================= */
 
 .helper{
   position:absolute;
-  left:30px;
-  bottom:26px;
-  z-index:8;
+  left:25px;
+  bottom:22px;
+  z-index:10;
   display:flex;
-  gap:11px;
   align-items:center;
-  max-width:330px;
-  padding:11px 14px;
+  gap:10px;
+  max-width:300px;
+  padding:10px 13px;
   border:1px solid #292929;
-  border-radius:15px;
-  background:rgba(13,13,13,.78);
-  color:#a2a2a2;
-  font-size:12px;
+  border-radius:14px;
+  background:rgba(12,12,12,.75);
+  color:#969696;
+  font-size:11px;
   line-height:1.4;
-  backdrop-filter:blur(8px);
+  backdrop-filter:blur(7px);
 }
 
 .helper-icon{
   display:flex;
   align-items:center;
   justify-content:center;
-  width:30px;
-  height:30px;
-  flex:0 0 30px;
-  border-radius:50%;
+  width:28px;
+  height:28px;
+  flex:0 0 28px;
   border:1px solid #333;
-  color:#ddd;
-  font-size:15px;
-}
-
-/* ---------- NOTES ---------- */
-
-.drawer-backdrop{
-  position:fixed;
-  inset:0;
-  z-index:30;
-  background:rgba(0,0,0,.52);
-  opacity:0;
-  pointer-events:none;
-  transition:opacity .25s ease;
-}
-
-.drawer-backdrop.open{
-  opacity:1;
-  pointer-events:auto;
-}
-
-.notes-drawer{
-  position:fixed;
-  top:0;
-  right:0;
-  z-index:31;
-  width:min(430px,92vw);
-  height:100vh;
-  display:flex;
-  flex-direction:column;
-  background:#101010;
-  border-left:1px solid #2c2c2c;
-  box-shadow:-30px 0 80px rgba(0,0,0,.5);
-  transform:translateX(102%);
-  transition:transform .32s cubic-bezier(.16,.84,.22,1);
-}
-
-.notes-drawer.open{
-  transform:translateX(0);
-}
-
-.drawer-head{
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:15px;
-  padding:25px 24px 20px;
-  border-bottom:1px solid #292929;
-}
-
-.drawer-eyebrow{
-  color:#888;
-  font-size:10px;
-  letter-spacing:.16em;
-  text-transform:uppercase;
-}
-
-.drawer-title{
-  margin-top:7px;
-  font-size:27px;
-  font-weight:820;
-  letter-spacing:-.035em;
-}
-
-.drawer-source{
-  margin-top:7px;
-  color:var(--bio);
-  font-size:12px;
-  font-weight:750;
-}
-
-.drawer-close{
-  appearance:none;
-  width:38px;
-  height:38px;
   border-radius:50%;
-  border:1px solid #353535;
-  background:#1b1b1b;
-  color:#eee;
-  cursor:pointer;
-  font-size:20px;
+  color:#ddd;
 }
 
-.drawer-body{
-  padding:24px;
-  overflow:auto;
-}
-
-.drawer-section{
-  margin-bottom:26px;
-}
-
-.drawer-desc{
-  margin-top:11px;
-  color:#b5b5b5;
-  font-size:13px;
-  line-height:1.55;
-}
-
-.note-list{
-  list-style:none;
-  margin:11px 0 0;
-  padding:0;
-  display:grid;
-  gap:10px;
-}
-
-.note-list li{
-  position:relative;
-  padding:11px 13px 11px 32px;
-  border:1px solid #2c2c2c;
-  border-radius:14px;
-  background:#171717;
-  color:#dedede;
-  font-size:13px;
-  line-height:1.4;
-}
-
-.note-list li:before{
-  content:'•';
-  position:absolute;
-  left:13px;
-  top:8px;
-  color:var(--bio);
-  font-size:19px;
-}
-
-.drawer-foot{
-  margin-top:auto;
-  padding:18px 24px 22px;
-  border-top:1px solid #292929;
-  color:#777;
-  font-size:11px;
-  line-height:1.5;
-}
-
-/* ---------- RESPONSIVE ---------- */
+/* =========================
+   MOBILE
+========================= */
 
 @media(max-width:760px){
+
   .topbar{
-    padding:0 15px;
+    padding:0 12px;
+  }
+
+  .top-actions{
+    gap:5px;
   }
 
   .top-actions .btn{
-    padding:8px 10px;
-    font-size:11px;
+    padding:7px 8px;
+    font-size:10px;
   }
 
-  .scope-popover{
+  .focus-node{
     width:235px;
+    max-width:235px;
+  }
+
+  .note-branch{
+    width:175px;
   }
 
   .helper{
-    left:14px;
-    bottom:14px;
-    max-width:250px;
+    left:12px;
+    bottom:12px;
+    max-width:235px;
   }
+
 }
 </style>
 </head>
 
 <body>
 
-<!-- ENTRANCE -->
+<!-- =========================
+     ENTRANCE
+========================= -->
 
 <section id="entrance">
-  <div class="enter-node" id="enterMCAT">
-    <div class="enter-title">MCAT</div>
-    <div class="enter-sub">Enter</div>
+
+  <div
+    class="enter-node"
+    id="enterMCAT"
+  >
+
+    <div class="enter-title">
+      MCAT
+    </div>
+
+    <div class="enter-sub">
+      Enter
+    </div>
+
   </div>
+
 </section>
 
-<!-- APP -->
+<!-- =========================
+     MAIN APP
+========================= -->
 
 <main id="app">
 
   <header class="topbar">
-    <div class="crumbs" id="crumbs"></div>
+
+    <div
+      class="crumbs"
+      id="crumbs"
+    ></div>
 
     <div class="top-actions">
-      <button class="btn ghost" id="backBtn">← Zoom out</button>
+
+      <button
+        class="btn ghost home"
+        id="homeBtn"
+      >
+        Home
+      </button>
+
+      <button
+        class="btn ghost"
+        id="backBtn"
+      >
+        ← Zoom out
+      </button>
 
       <a
         class="btn secondary"
@@ -570,134 +557,44 @@ html,body{
         Lesson Reviews
       </a>
 
-      <button class="btn secondary" id="resetBtn">
-        Reset map
-      </button>
     </div>
+
   </header>
 
-  <div class="viewport" id="viewport">
+  <div
+    class="viewport"
+    id="viewport"
+  >
 
-    <div class="world" id="world"></div>
-
-    <div class="scope-popover" id="scopePopover">
-      <div class="scope-kicker">Current scope</div>
-
-      <div
-        class="scope-title"
-        id="scopeTitle"
-      ></div>
-
-      <div
-        class="scope-desc"
-        id="scopeDesc"
-      ></div>
-
-      <div class="scope-actions">
-        <button class="btn" id="review2Btn">
-          Start Review2
-        </button>
-
-        <button
-          class="btn secondary"
-          id="notesBtn"
-        >
-          Brain Notes
-        </button>
-      </div>
-    </div>
+    <div
+      class="world"
+      id="world"
+    ></div>
 
     <div class="helper">
-      <div class="helper-icon">⌖</div>
+
+      <div class="helper-icon">
+        ⌖
+      </div>
 
       <div>
-        Click a node or branch to move deeper.
-        Zoom out to reconstruct the larger map.
+        Click a concept or branch to move deeper.
+        Brain Notes grow outward from the focused concept.
       </div>
+
     </div>
 
   </div>
+
 </main>
-
-<!-- NOTES -->
-
-<div
-  class="drawer-backdrop"
-  id="drawerBackdrop"
-></div>
-
-<aside
-  class="notes-drawer"
-  id="notesDrawer"
-  aria-hidden="true"
->
-
-  <div class="drawer-head">
-
-    <div>
-      <div class="drawer-eyebrow">
-        Brain Notes
-      </div>
-
-      <div
-        class="drawer-title"
-        id="drawerTitle"
-      >
-        Concept
-      </div>
-
-      <div
-        class="drawer-source"
-        id="drawerSource"
-      ></div>
-    </div>
-
-    <button
-      class="drawer-close"
-      id="drawerClose"
-      aria-label="Close notes"
-    >
-      ×
-    </button>
-  </div>
-
-  <div class="drawer-body">
-
-    <section class="drawer-section">
-      <div class="drawer-label">
-        What this scope means
-      </div>
-
-      <div
-        class="drawer-desc"
-        id="drawerDesc"
-      ></div>
-    </section>
-
-    <section class="drawer-section">
-      <div class="drawer-label">
-        Approved knowledge represented here
-      </div>
-
-      <ul
-        class="note-list"
-        id="drawerNotes"
-      ></ul>
-    </section>
-
-  </div>
-
-  <div class="drawer-foot">
-    This currently shows the approved concept summaries
-    represented by the map. Later we can connect this
-    directly to the full live Brain note.
-  </div>
-
-</aside>
 
 <script>
 
-const data = {
+/* =========================
+   DATA
+========================= */
+
+const data={
 
   mcat:{
     title:'MCAT',
@@ -705,10 +602,16 @@ const data = {
     source:'',
     status:'',
     desc:'Everything you have learned so far across the MCAT.',
-    learned:[
-      'Living Systems is currently the illuminated region'
-    ],
-    children:['living']
+    children:['living'],
+    notes:[
+      {
+        type:'bullets',
+        title:'Learned regions',
+        items:[
+          'Living Systems'
+        ]
+      }
+    ]
   },
 
   living:{
@@ -717,15 +620,21 @@ const data = {
     source:'BIO 1.1–1.2',
     status:'',
     desc:'The biological systems and structures you have learned so far.',
-    learned:[
-      'Foundations of Life',
-      'Cells',
-      'Tissues'
-    ],
     children:[
       'foundations',
       'cells',
       'tissues'
+    ],
+    notes:[
+      {
+        type:'bullets',
+        title:'Current branches',
+        items:[
+          'Foundations of Life',
+          'Cells',
+          'Tissues'
+        ]
+      }
     ]
   },
 
@@ -734,14 +643,20 @@ const data = {
     parent:'living',
     source:'BIO 1.1',
     status:'',
-    desc:'Foundational ideas about cells and what counts as independent cellular life.',
-    learned:[
-      'Cell Theory',
-      'Boundary of Life / viruses'
-    ],
+    desc:'Foundational ideas about cells and the boundary between cellular life and viruses.',
     children:[
       'cell-theory',
       'life-boundary'
+    ],
+    notes:[
+      {
+        type:'bullets',
+        title:'Foundations',
+        items:[
+          'Cell Theory',
+          'Boundary of Life / viruses'
+        ]
+      }
     ]
   },
 
@@ -751,12 +666,18 @@ const data = {
     source:'BIO 1.1',
     status:'mastered',
     desc:'Core principles defining cells as the functional units of living systems.',
-    learned:[
-      'Cells are the basic functional unit of life',
-      'Cells arise from preexisting cells',
-      'Cells carry genetic information'
-    ],
-    children:[]
+    children:[],
+    notes:[
+      {
+        type:'bullets',
+        title:'Core principles',
+        items:[
+          'Cells are the basic functional unit of life',
+          'Cells arise from preexisting cells',
+          'Cells carry genetic information'
+        ]
+      }
+    ]
   },
 
   'life-boundary':{
@@ -765,12 +686,18 @@ const data = {
     source:'BIO 1.1',
     status:'',
     desc:'The distinction between cellular life and entities such as viruses.',
-    learned:[
-      'Viruses contain genetic material',
-      'Viruses cannot reproduce independently',
-      'Viruses are not considered living cells'
-    ],
-    children:[]
+    children:[],
+    notes:[
+      {
+        type:'bullets',
+        title:'Viruses',
+        items:[
+          'Contain genetic material',
+          'Cannot reproduce independently',
+          'Are not considered living cells'
+        ]
+      }
+    ]
   },
 
   cells:{
@@ -778,16 +705,22 @@ const data = {
     parent:'living',
     source:'BIO 1.1 · 1.2',
     status:'',
-    desc:'Integrated cell-biology scope across boundaries, internal organization, and cellular structure.',
-    learned:[
-      'Plasma Membrane',
-      'Internal Organization',
-      'Structure & Movement'
-    ],
+    desc:'Cell boundaries, internal organization, and structural systems.',
     children:[
       'membrane',
       'internal',
       'cytoskeleton'
+    ],
+    notes:[
+      {
+        type:'bullets',
+        title:'Cell branches',
+        items:[
+          'Plasma Membrane',
+          'Internal Organization',
+          'Structure & Movement'
+        ]
+      }
     ]
   },
 
@@ -796,13 +729,19 @@ const data = {
     parent:'cells',
     source:'BIO 1.2',
     status:'mastered',
-    desc:'The membrane knowledge currently approved in your Brain.',
-    learned:[
-      'Phospholipid bilayer',
-      'Hydrophilic surfaces face aqueous environments',
-      'Hydrophobic interior'
-    ],
-    children:[]
+    desc:'The phospholipid boundary separating cellular environments.',
+    children:[],
+    notes:[
+      {
+        type:'bullets',
+        title:'Structure',
+        items:[
+          'Phospholipid bilayer',
+          'Hydrophilic surfaces face aqueous environments',
+          'Hydrophobic interior'
+        ]
+      }
+    ]
   },
 
   internal:{
@@ -811,14 +750,6 @@ const data = {
     source:'BIO 1.2',
     status:'',
     desc:'Internal structures and compartments of eukaryotic cells.',
-    learned:[
-      'Nucleus',
-      'Mitochondria',
-      'Lysosomes',
-      'Endoplasmic Reticulum',
-      'Golgi Apparatus',
-      'Peroxisomes'
-    ],
     children:[
       'nucleus',
       'mitochondria',
@@ -826,6 +757,20 @@ const data = {
       'er',
       'golgi',
       'peroxisome'
+    ],
+    notes:[
+      {
+        type:'bullets',
+        title:'Organelles',
+        items:[
+          'Nucleus',
+          'Mitochondria',
+          'Lysosomes',
+          'Endoplasmic Reticulum',
+          'Golgi Apparatus',
+          'Peroxisomes'
+        ]
+      }
     ]
   },
 
@@ -834,14 +779,28 @@ const data = {
     parent:'internal',
     source:'BIO 1.2',
     status:'mastered',
-    desc:'Nuclear structure and nucleolar function.',
-    learned:[
-      'Membrane-bound nucleus',
-      'Nuclear envelope / pores',
-      'Nucleolus',
-      'rRNA synthesis and ribosome assembly'
-    ],
-    children:[]
+    desc:'Nuclear structure, genetic organization, and nucleolar function.',
+    children:[],
+    notes:[
+      {
+        type:'bullets',
+        title:'Structure',
+        items:[
+          'Membrane-bound nucleus',
+          'Nuclear envelope and pores',
+          'Nucleolus'
+        ]
+      },
+      {
+        type:'path',
+        title:'Nucleolus',
+        steps:[
+          'Nucleolus',
+          'rRNA synthesis',
+          'ribosome assembly'
+        ]
+      }
+    ]
   },
 
   mitochondria:{
@@ -849,16 +808,55 @@ const data = {
     parent:'internal',
     source:'BIO 1.2',
     status:'mastered',
-    desc:'Mitochondrial structure, energetics, endosymbiosis, and apoptosis from what you have learned so far.',
-    learned:[
-      'Outer / inner membrane',
-      'Cristae, matrix, intermembrane space',
-      'Proton gradient',
-      'ATP synthase',
-      'Endosymbiotic theory',
-      'Cytochrome c / apoptosis'
-    ],
-    children:[]
+    desc:'Structure, energetics, endosymbiosis, and apoptosis from what you have learned so far.',
+    children:[],
+    notes:[
+      {
+        type:'bullets',
+        title:'Structure',
+        items:[
+          'Outer membrane',
+          'Inner membrane / cristae',
+          'Intermembrane space',
+          'Matrix'
+        ]
+      },
+      {
+        type:'path',
+        title:'Energy',
+        steps:[
+          'H⁺ gradient',
+          'ATP synthase',
+          'ATP'
+        ]
+      },
+      {
+        type:'bullets',
+        title:'Semi-autonomy',
+        items:[
+          'Own circular DNA',
+          'Replicates by binary fission'
+        ]
+      },
+      {
+        type:'path',
+        title:'Endosymbiotic origin',
+        steps:[
+          'Anaerobic prokaryote',
+          'engulfs aerobic prokaryote',
+          'mitochondrion'
+        ]
+      },
+      {
+        type:'path',
+        title:'Apoptosis',
+        steps:[
+          'Mitochondria',
+          'releases cytochrome c / ETC enzymes',
+          'apoptosis'
+        ]
+      }
+    ]
   },
 
   lysosome:{
@@ -866,13 +864,27 @@ const data = {
     parent:'internal',
     source:'BIO 1.2',
     status:'mastered',
-    desc:'Lysosomal digestion and autolysis.',
-    learned:[
-      'Hydrolytic enzymes',
-      'Acidic interior',
-      'Autolysis after membrane rupture'
-    ],
-    children:[]
+    desc:'Acidic organelles containing hydrolytic enzymes.',
+    children:[],
+    notes:[
+      {
+        type:'bullets',
+        title:'Properties',
+        items:[
+          'Hydrolytic enzymes',
+          'Acidic interior'
+        ]
+      },
+      {
+        type:'path',
+        title:'Membrane rupture',
+        steps:[
+          'Lysosomal rupture',
+          'hydrolytic enzymes released',
+          'autolysis'
+        ]
+      }
+    ]
   },
 
   er:{
@@ -881,14 +893,26 @@ const data = {
     source:'BIO 1.2',
     status:'mastered',
     desc:'Rough and smooth ER structure and function.',
-    learned:[
-      'RER and ribosomes',
-      'Secretory / membrane proteins',
-      'SER',
-      'Lipid and steroid synthesis',
-      'Detoxification'
-    ],
-    children:[]
+    children:[],
+    notes:[
+      {
+        type:'bullets',
+        title:'Rough ER',
+        items:[
+          'Contains ribosomes',
+          'Secretory and membrane proteins'
+        ]
+      },
+      {
+        type:'bullets',
+        title:'Smooth ER',
+        items:[
+          'No ribosomes',
+          'Lipid and steroid synthesis',
+          'Detoxification'
+        ]
+      }
+    ]
   },
 
   golgi:{
@@ -897,14 +921,20 @@ const data = {
     source:'BIO 1.2',
     status:'mastered',
     desc:'Modification, targeting, sorting, and packaging of cellular products.',
-    learned:[
-      'Carbohydrate modification',
-      'Phosphorylation',
-      'Sulfation',
-      'Targeting signals',
-      'Packaging / sorting'
-    ],
-    children:[]
+    children:[],
+    notes:[
+      {
+        type:'bullets',
+        title:'Functions',
+        items:[
+          'Carbohydrate modification',
+          'Phosphorylation',
+          'Sulfation',
+          'Targeting signals',
+          'Packaging and sorting'
+        ]
+      }
+    ]
   },
 
   peroxisome:{
@@ -913,12 +943,26 @@ const data = {
     source:'BIO 1.2',
     status:'mastered',
     desc:'Oxidative metabolism and hydrogen-peroxide handling.',
-    learned:[
-      'β-oxidation',
-      'Hydrogen peroxide',
-      'Catalase'
-    ],
-    children:[]
+    children:[],
+    notes:[
+      {
+        type:'bullets',
+        title:'Functions',
+        items:[
+          'β-oxidation',
+          'Hydrogen peroxide management'
+        ]
+      },
+      {
+        type:'path',
+        title:'Hydrogen peroxide',
+        steps:[
+          'H₂O₂',
+          'catalase',
+          'managed / broken down'
+        ]
+      }
+    ]
   },
 
   cytoskeleton:{
@@ -927,18 +971,21 @@ const data = {
     source:'BIO 1.2',
     status:'developing',
     desc:'The cytoskeleton and structures that depend on it.',
-    learned:[
-      'Microfilaments / actin',
-      'Microtubules / tubulin',
-      'Intermediate filaments',
-      'Kinesin / dynein',
-      'Centrioles 9+0',
-      'Cilia / flagella 9+2'
-    ],
     children:[
       'microfilaments',
       'microtubules',
       'intermediate'
+    ],
+    notes:[
+      {
+        type:'bullets',
+        title:'Components',
+        items:[
+          'Microfilaments / actin',
+          'Microtubules / tubulin',
+          'Intermediate filaments'
+        ]
+      }
     ]
   },
 
@@ -947,14 +994,20 @@ const data = {
     parent:'cytoskeleton',
     source:'BIO 1.2',
     status:'mastered',
-    desc:'Solid actin-based cytoskeletal rods and their learned functions.',
-    learned:[
-      'Actin',
-      'Solid rods',
-      'Myosin',
-      'Cleavage furrow'
-    ],
-    children:[]
+    desc:'Solid actin-based cytoskeletal rods.',
+    children:[],
+    notes:[
+      {
+        type:'bullets',
+        title:'Properties',
+        items:[
+          'Actin',
+          'Solid rods',
+          'Myosin',
+          'Cleavage furrow'
+        ]
+      }
+    ]
   },
 
   microtubules:{
@@ -962,18 +1015,30 @@ const data = {
     parent:'cytoskeleton',
     source:'BIO 1.2',
     status:'developing',
-    desc:'Hollow tubulin structures used for transport, division, and motility structures.',
-    learned:[
-      'Tubulin',
-      'Hollow tubes',
-      'Kinesin / dynein',
-      'Mitotic spindle',
-      'Centrioles',
-      'Cilia / flagella'
-    ],
+    desc:'Hollow tubulin structures involved in transport, division, and motility.',
     children:[
       'centrioles',
       'motility'
+    ],
+    notes:[
+      {
+        type:'bullets',
+        title:'Properties',
+        items:[
+          'Tubulin',
+          'Hollow tubes',
+          'Mitotic spindle'
+        ]
+      },
+      {
+        type:'path',
+        title:'Transport',
+        steps:[
+          'Microtubules',
+          'kinesin / dynein',
+          'intracellular transport'
+        ]
+      }
     ]
   },
 
@@ -983,12 +1048,18 @@ const data = {
     source:'BIO 1.2',
     status:'developing',
     desc:'Microtubule-organizing structures with a 9+0 arrangement.',
-    learned:[
-      '9 triplets',
-      'Hollow center',
-      '9+0 shorthand'
-    ],
-    children:[]
+    children:[],
+    notes:[
+      {
+        type:'bullets',
+        title:'Arrangement',
+        items:[
+          '9 triplets',
+          'Hollow center',
+          '9+0'
+        ]
+      }
+    ]
   },
 
   motility:{
@@ -996,13 +1067,19 @@ const data = {
     parent:'microtubules',
     source:'BIO 1.2',
     status:'developing',
-    desc:'Motility structures with the 9+2 microtubule arrangement.',
-    learned:[
-      '9 doublets',
-      '2 central singlets',
-      '9+2 shorthand'
-    ],
-    children:[]
+    desc:'Motility structures with a 9+2 microtubule arrangement.',
+    children:[],
+    notes:[
+      {
+        type:'bullets',
+        title:'Arrangement',
+        items:[
+          '9 doublets',
+          '2 central singlets',
+          '9+2'
+        ]
+      }
+    ]
   },
 
   intermediate:{
@@ -1010,14 +1087,20 @@ const data = {
     parent:'cytoskeleton',
     source:'BIO 1.2',
     status:'',
-    desc:'Structural cytoskeletal proteins learned in Lesson 1.2.',
-    learned:[
-      'Keratin',
-      'Desmin',
-      'Vimentin',
-      'Lamins'
-    ],
-    children:[]
+    desc:'Structural cytoskeletal proteins.',
+    children:[],
+    notes:[
+      {
+        type:'bullets',
+        title:'Examples',
+        items:[
+          'Keratin',
+          'Desmin',
+          'Vimentin',
+          'Lamins'
+        ]
+      }
+    ]
   },
 
   tissues:{
@@ -1026,14 +1109,27 @@ const data = {
     source:'BIO 1.2',
     status:'',
     desc:'Tissue organization learned so far.',
-    learned:[
-      'Epithelial Tissue',
-      'Connective Tissue',
-      'Parenchyma vs. Stroma'
-    ],
     children:[
       'epithelial',
       'connective'
+    ],
+    notes:[
+      {
+        type:'path',
+        title:'Functional tissue',
+        steps:[
+          'Epithelial tissue',
+          'parenchyma'
+        ]
+      },
+      {
+        type:'path',
+        title:'Support tissue',
+        steps:[
+          'Connective tissue',
+          'stroma'
+        ]
+      }
     ]
   },
 
@@ -1043,15 +1139,31 @@ const data = {
     source:'BIO 1.2',
     status:'mastered',
     desc:'Epithelial structure, organization, and function.',
-    learned:[
-      'Protection',
-      'Absorption',
-      'Secretion',
-      'Sensation',
-      'Parenchyma',
-      'Simple / stratified / pseudostratified'
-    ],
-    children:[]
+    children:[],
+    notes:[
+      {
+        type:'bullets',
+        title:'Functions',
+        items:[
+          'Protection',
+          'Absorption',
+          'Secretion',
+          'Sensation'
+        ]
+      },
+      {
+        type:'bullets',
+        title:'Organization',
+        items:[
+          'Simple',
+          'Stratified',
+          'Pseudostratified',
+          'Squamous',
+          'Cuboidal',
+          'Columnar'
+        ]
+      }
+    ]
   },
 
   connective:{
@@ -1059,22 +1171,44 @@ const data = {
     parent:'tissues',
     source:'BIO 1.2',
     status:'mastered',
-    desc:'Connective-tissue roles and examples.',
-    learned:[
-      'Support',
-      'Stroma',
-      'Bone',
-      'Cartilage',
-      'Tendons / ligaments',
-      'Adipose',
-      'Blood'
-    ],
-    children:[]
+    desc:'Supportive tissue and structural framework.',
+    children:[],
+    notes:[
+      {
+        type:'path',
+        title:'Role',
+        steps:[
+          'Connective tissue',
+          'support / framework',
+          'stroma'
+        ]
+      },
+      {
+        type:'bullets',
+        title:'Examples',
+        items:[
+          'Bone',
+          'Cartilage',
+          'Tendons / ligaments',
+          'Adipose',
+          'Blood'
+        ]
+      }
+    ]
   }
 
 };
 
+/* =========================
+   STATE
+========================= */
+
 let focus='living';
+let notesOpen=false;
+
+/* =========================
+   ELEMENTS
+========================= */
 
 const entrance=
   document.getElementById('entrance');
@@ -1091,84 +1225,35 @@ const viewport=
 const crumbs=
   document.getElementById('crumbs');
 
-const scopePopover=
-  document.getElementById('scopePopover');
-
-const scopeTitle=
-  document.getElementById('scopeTitle');
-
-const scopeDesc=
-  document.getElementById('scopeDesc');
-
-const notesDrawer=
-  document.getElementById('notesDrawer');
-
-const drawerBackdrop=
-  document.getElementById('drawerBackdrop');
-
-const drawerTitle=
-  document.getElementById('drawerTitle');
-
-const drawerSource=
-  document.getElementById('drawerSource');
-
-const drawerDesc=
-  document.getElementById('drawerDesc');
-
-const drawerNotes=
-  document.getElementById('drawerNotes');
-
-
-function enterMap(){
-
-  entrance.classList.add('hidden');
-
-  app.classList.add('visible');
-
-  focus='living';
-
-  render();
-
-}
-
-
-function returnToEntrance(){
-
-  closeNotes();
-
-  app.classList.remove('visible');
-
-  entrance.classList.remove('hidden');
-
-}
-
+/* =========================
+   HELPERS
+========================= */
 
 function ancestors(key){
 
-  const list=[];
+  const path=[];
 
-  let k=key;
+  let current=key;
 
-  while(k){
+  while(current){
 
-    list.unshift(k);
+    path.unshift(current);
 
-    k=data[k].parent;
+    current=data[current].parent;
 
   }
 
-  return list;
+  return path;
 
 }
 
+function statusHTML(item){
 
-function statusHTML(d){
-
-  if(d.status==='mastered'){
+  if(item.status==='mastered'){
     return '<span class="mastered">✓</span>';
   }
 
-  if(d.status==='developing'){
+  if(item.status==='developing'){
     return '<span class="developing">◐</span>';
   }
 
@@ -1176,24 +1261,80 @@ function statusHTML(d){
 
 }
 
-
 function nodeHTML(
   key,
   x,
   y,
-  big=false,
-  focused=false
+  type='normal'
 ){
 
-  const d=data[key];
+  const item=data[key];
+
+  if(type==='focus'){
+
+    return `
+      <div
+        class="node focus-node"
+        data-key="${key}"
+        style="
+          left:${x}%;
+          top:${y}%;
+        "
+      >
+
+        <div class="node-title">
+          ${item.title}
+        </div>
+
+        <div class="meta">
+          ${
+            item.source
+            ? `<span class="source">
+                 ● ${item.source}
+               </span>`
+            : ''
+          }
+          ${statusHTML(item)}
+        </div>
+
+        <div class="focus-description">
+          ${item.desc}
+        </div>
+
+        <div class="focus-actions">
+
+          <button
+            class="btn review2-local"
+          >
+            Start Review2
+          </button>
+
+          <button
+            class="btn secondary notes-local"
+          >
+            ${
+              notesOpen
+              ? 'Hide Notes'
+              : 'Brain Notes'
+            }
+          </button>
+
+        </div>
+
+      </div>
+    `;
+
+  }
 
   return `
     <div
       class="
         node
-        ${big?'big':''}
-        ${key==='mcat'?'root':''}
-        ${focused?'focused':''}
+        ${
+          type==='parent'
+          ? 'parent-node'
+          : ''
+        }
       "
       data-key="${key}"
       style="
@@ -1203,20 +1344,20 @@ function nodeHTML(
     >
 
       <div class="node-title">
-        ${d.title}
+        ${item.title}
       </div>
 
       <div class="meta">
 
         ${
-          d.source
+          item.source
           ? `<span class="source">
-               ● ${d.source}
+               ● ${item.source}
              </span>`
           : ''
         }
 
-        ${statusHTML(d)}
+        ${statusHTML(item)}
 
       </div>
 
@@ -1225,8 +1366,7 @@ function nodeHTML(
 
 }
 
-
-function curvePath(
+function pathBetween(
   x1,
   y1,
   x2,
@@ -1234,66 +1374,77 @@ function curvePath(
   bend=0
 ){
 
-  const w=viewport.clientWidth;
-  const h=viewport.clientHeight;
+  const width=
+    viewport.clientWidth;
 
-  const ax=x1/100*w;
-  const ay=y1/100*h;
+  const height=
+    viewport.clientHeight;
 
-  const bx=x2/100*w;
-  const by=y2/100*h;
+  const ax=
+    x1/100*width;
 
-  const midY=
+  const ay=
+    y1/100*height;
+
+  const bx=
+    x2/100*width;
+
+  const by=
+    y2/100*height;
+
+  const midpoint=
     (ay+by)/2;
-
-  const c1x=
-    ax+bend;
-
-  const c2x=
-    bx-bend;
 
   return `
     M ${ax} ${ay}
-    C ${c1x} ${midY},
-      ${c2x} ${midY},
+    C ${ax+bend} ${midpoint},
+      ${bx-bend} ${midpoint},
       ${bx} ${by}
   `;
 
 }
 
-
-function branchSVG(paths){
+function svgHTML(paths){
 
   return `
-    <svg
-      class="branch-svg"
-      aria-hidden="true"
-    >
+    <svg class="branch-svg">
 
       ${
-        paths.map(p=>`
+        paths.map(
+          path=>`
 
-          <g
-            class="branch-group"
-            data-key="${p.key}"
-          >
+            <g
+              class="branch-group"
+              ${
+                path.key
+                ? `data-key="${path.key}"`
+                : ''
+              }
+            >
 
-            <path
-              class="
-                branch-visible
-                ${p.major?'major':''}
-              "
-              d="${p.d}"
-            ></path>
+              <path
+                class="
+                  branch
+                  ${path.major?'major':''}
+                "
+                d="${path.d}"
+              ></path>
 
-            <path
-              class="branch-hit"
-              d="${p.d}"
-            ></path>
+              ${
+                path.key
+                ? `
+                  <path
+                    class="branch-hit"
+                    d="${path.d}"
+                  ></path>
+                `
+                : ''
+              }
 
-          </g>
+            </g>
 
-        `).join('')
+          `
+        ).join('')
       }
 
     </svg>
@@ -1301,429 +1452,635 @@ function branchSVG(paths){
 
 }
 
+/* =========================
+   NOTE BRANCHES
+========================= */
 
-function organicOverview(){
+function noteHTML(note,x,y,index){
 
-  const nodes=[
+  if(note.type==='path'){
 
-    [
-      'mcat',
-      50,
-      15,
-      true,
-      false
-    ],
+    return `
+      <div
+        class="note-branch"
+        data-note-index="${index}"
+        style="
+          left:${x}%;
+          top:${y}%;
+        "
+      >
 
-    [
-      'living',
-      50,
-      38,
-      true,
-      true
-    ],
+        <div class="note-heading">
+          ${note.title}
+        </div>
 
-    [
-      'foundations',
-      23,
-      70,
-      false,
-      false
-    ],
+        <div class="pathway">
 
-    [
-      'cells',
-      50,
-      76,
-      false,
-      false
-    ],
+          ${
+            note.steps
+              .map(
+                (step,i)=>`
 
-    [
-      'tissues',
-      79,
-      68,
-      false,
-      false
-    ]
+                  <span class="path-step">
+                    ${step}
+                  </span>
 
-  ];
+                  ${
+                    i<
+                    note.steps.length-1
+                    ? '<span class="arrow">→</span>'
+                    : ''
+                  }
 
-  const paths=[
+                `
+              )
+              .join('')
+          }
 
-    {
-      key:'living',
-      major:true,
-      d:curvePath(
-        50,
-        20,
-        50,
-        32,
-        0
-      )
-    },
+        </div>
 
-    {
-      key:'foundations',
-      d:curvePath(
-        48,
-        43,
-        23,
-        64,
-        -110
-      )
-    },
+      </div>
+    `;
 
-    {
-      key:'cells',
-      d:curvePath(
-        50,
-        44,
-        50,
-        70,
-        20
-      )
-    },
+  }
 
-    {
-      key:'tissues',
-      d:curvePath(
-        52,
-        43,
-        79,
-        62,
-        120
-      )
-    }
+  return `
+    <div
+      class="note-branch"
+      data-note-index="${index}"
+      style="
+        left:${x}%;
+        top:${y}%;
+      "
+    >
 
-  ];
+      <div class="note-heading">
+        ${note.title}
+      </div>
 
-  world.innerHTML=
-    branchSVG(paths)+
-    nodes
-      .map(n=>nodeHTML(...n))
-      .join('');
+      <ul class="note-bullets">
+
+        ${
+          note.items
+            .map(
+              item=>`
+                <li>${item}</li>
+              `
+            )
+            .join('')
+        }
+
+      </ul>
+
+    </div>
+  `;
 
 }
 
+function notePositions(count){
 
-function focusedLayout(){
+  const sets={
+
+    1:[
+      [78,47]
+    ],
+
+    2:[
+      [76,35],
+      [77,62]
+    ],
+
+    3:[
+      [74,28],
+      [81,50],
+      [73,72]
+    ],
+
+    4:[
+      [72,25],
+      [82,42],
+      [82,64],
+      [70,80]
+    ],
+
+    5:[
+      [69,22],
+      [82,35],
+      [85,54],
+      [79,72],
+      [65,84]
+    ]
+
+  };
+
+  if(sets[count]){
+    return sets[count];
+  }
+
+  const result=[];
+
+  for(let i=0;i<count;i++){
+
+    result.push([
+      72+
+      (
+        i%2===0
+        ? 7
+        : -4
+      ),
+      18+
+      (
+        68*
+        (
+          i/
+          Math.max(
+            1,
+            count-1
+          )
+        )
+      )
+    ]);
+
+  }
+
+  return result;
+
+}
+
+/* =========================
+   RENDER
+========================= */
+
+function render(){
 
   const current=
     data[focus];
 
-  const kids=
-    current.children;
-
   const parent=
     current.parent;
 
+  const children=
+    current.children;
+
   let html='';
   let paths=[];
+
+  const focusX=
+    notesOpen
+    ? 42
+    : 50;
+
+  const focusY=
+    42;
 
   if(parent){
 
     html+=nodeHTML(
       parent,
-      50,
-      18,
-      true,
-      false
+      focusX,
+      16,
+      'parent'
     );
 
     paths.push({
+
       key:focus,
+
       major:true,
-      d:curvePath(
-        50,
-        23,
-        50,
-        36,
+
+      d:pathBetween(
+        focusX,
+        21,
+        focusX,
+        34,
         0
       )
+
     });
 
   }
 
   html+=nodeHTML(
     focus,
-    50,
-    42,
-    true,
-    true
+    focusX,
+    focusY,
+    'focus'
   );
 
-  const positions=[];
-
-  if(kids.length===1){
-
-    positions.push([
-      50,
-      75
-    ]);
-
-  }
-
-  else if(kids.length===2){
-
-    positions.push(
-      [32,75],
-      [68,75]
+  const childPositions=
+    getChildPositions(
+      children.length,
+      notesOpen
     );
 
-  }
-
-  else if(kids.length===3){
-
-    positions.push(
-      [22,74],
-      [50,78],
-      [78,72]
-    );
-
-  }
-
-  else if(kids.length===4){
-
-    positions.push(
-      [15,72],
-      [38,80],
-      [62,78],
-      [85,70]
-    );
-
-  }
-
-  else if(kids.length===5){
-
-    positions.push(
-      [11,68],
-      [30,78],
-      [50,82],
-      [70,76],
-      [89,67]
-    );
-
-  }
-
-  else if(kids.length>=6){
-
-    const firstCount=
-      Math.ceil(kids.length/2);
-
-    const row1=
-      kids.slice(
-        0,
-        firstCount
-      );
-
-    const row2=
-      kids.slice(
-        firstCount
-      );
-
-    row1.forEach(
-      (_,i)=>{
-
-        const x=
-          row1.length===1
-          ? 50
-          : 17+
-            (
-              66*
-              (
-                i/
-                (row1.length-1)
-              )
-            );
-
-        positions.push([
-          x,
-          67
-        ]);
-
-      }
-    );
-
-    row2.forEach(
-      (_,i)=>{
-
-        const x=
-          row2.length===1
-          ? 50
-          : 25+
-            (
-              50*
-              (
-                i/
-                (row2.length-1)
-              )
-            );
-
-        positions.push([
-          x,
-          84
-        ]);
-
-      }
-    );
-
-  }
-
-  kids.forEach(
-    (key,i)=>{
+  children.forEach(
+    (child,index)=>{
 
       const [
         x,
         y
       ]=
-        positions[i];
-
-      const bend=
-        (x-50)*3.4;
+        childPositions[index];
 
       paths.push({
 
-        key,
+        key:child,
 
-        major:false,
-
-        d:curvePath(
+        d:pathBetween(
+          focusX,
           50,
-          48,
           x,
           y-6,
-          bend
+          (
+            x-
+            focusX
+          )*
+          2.5
         )
 
       });
 
       html+=nodeHTML(
-        key,
+        child,
         x,
-        y,
-        false,
-        false
+        y
       );
 
     }
   );
 
-  if(!kids.length){
+  if(notesOpen){
 
-    html+=`
-      <div
-        style="
-          position:absolute;
-          left:50%;
-          top:73%;
-          transform:
-            translate(-50%,-50%);
-          color:#666;
-          font-size:13px;
-          z-index:2;
-        "
-      >
-        Deepest learned branch
-      </div>
-    `;
+    const notes=
+      current.notes||[];
+
+    const positions=
+      notePositions(
+        notes.length
+      );
+
+    notes.forEach(
+      (note,index)=>{
+
+        const [
+          x,
+          y
+        ]=
+          positions[index];
+
+        paths.push({
+
+          key:null,
+
+          d:pathBetween(
+            focusX+8,
+            focusY,
+            x-8,
+            y,
+            70+
+            index*10
+          )
+
+        });
+
+        html+=noteHTML(
+          note,
+          x,
+          y,
+          index
+        );
+
+      }
+    );
 
   }
 
   world.innerHTML=
-    branchSVG(paths)+
+    svgHTML(paths)+
     html;
+
+  bindMapEvents();
+
+  updateBreadcrumbs();
+
+  world.style.transform=
+    'scale(.96)';
+
+  requestAnimationFrame(
+    ()=>{
+
+      requestAnimationFrame(
+        ()=>{
+
+          world.style.transform=
+            'scale(1)';
+
+          if(notesOpen){
+
+            world
+              .querySelectorAll(
+                '.note-branch'
+              )
+              .forEach(
+                (
+                  note,
+                  index
+                )=>{
+
+                  setTimeout(
+                    ()=>{
+                      note
+                        .classList
+                        .add(
+                          'visible'
+                        );
+                    },
+                    60+
+                    index*60
+                  );
+
+                }
+              );
+
+          }
+
+        }
+      );
+
+    }
+  );
 
 }
 
+function getChildPositions(
+  count,
+  compressed
+){
 
-function placeScopePopover(){
+  if(count===0){
+    return [];
+  }
 
-  const focusedNode=
-    world.querySelector(
-      `.node[data-key="${focus}"]`
+  const rightLimit=
+    compressed
+    ? 58
+    : 87;
+
+  const leftLimit=
+    13;
+
+  if(count===1){
+
+    return [
+      [
+        (
+          leftLimit+
+          rightLimit
+        )/
+        2,
+        76
+      ]
+    ];
+
+  }
+
+  if(count===2){
+
+    return [
+      [27,76],
+      [compressed?56:73,76]
+    ];
+
+  }
+
+  if(count===3){
+
+    return [
+      [18,75],
+      [40,81],
+      [compressed?59:78,74]
+    ];
+
+  }
+
+  if(count<=5){
+
+    const positions=[];
+
+    for(let i=0;i<count;i++){
+
+      positions.push([
+        leftLimit+
+        (
+          (
+            rightLimit-
+            leftLimit
+          )*
+          (
+            i/
+            (
+              count-1
+            )
+          )
+        ),
+        i%2===0
+        ? 74
+        : 82
+      ]);
+
+    }
+
+    return positions;
+
+  }
+
+  const positions=[];
+
+  const first=
+    Math.ceil(
+      count/2
     );
 
-  if(!focusedNode){
-    return;
-  }
+  const row1=
+    count-
+    first;
 
-  const viewportRect=
-    viewport.getBoundingClientRect();
+  for(let i=0;i<first;i++){
 
-  const nodeRect=
-    focusedNode.getBoundingClientRect();
-
-  let left=
-    nodeRect.right-
-    viewportRect.left+
-    24;
-
-  let top=
-    nodeRect.top-
-    viewportRect.top-
-    4;
-
-  const popWidth=
-    scopePopover.offsetWidth||
-    290;
-
-  const popHeight=
-    scopePopover.offsetHeight||
-    160;
-
-  if(
-    left+
-    popWidth>
-    viewportRect.width-
-    18
-  ){
-
-    left=
-      nodeRect.left-
-      viewportRect.left-
-      popWidth-
-      24;
-
-  }
-
-  if(left<18){
-
-    left=
-      Math.max(
-        18,
+    positions.push([
+      12+
+      (
         (
-          viewportRect.width-
-          popWidth
-        )/
-        2
+          rightLimit-
+          12
+        )*
+        (
+          i/
+          Math.max(
+            1,
+            first-1
+          )
+        )
+      ),
+      69
+    ]);
+
+  }
+
+  for(let i=0;i<row1;i++){
+
+    positions.push([
+      19+
+      (
+        (
+          rightLimit-
+          24
+        )*
+        (
+          i/
+          Math.max(
+            1,
+            row1-1
+          )
+        )
+      ),
+      86
+    ]);
+
+  }
+
+  return positions;
+
+}
+
+/* =========================
+   EVENTS
+========================= */
+
+function bindMapEvents(){
+
+  world
+    .querySelectorAll(
+      '.node:not(.focus-node)'
+    )
+    .forEach(
+      node=>{
+
+        node.addEventListener(
+          'click',
+          ()=>{
+
+            zoomTo(
+              node.dataset.key
+            );
+
+          }
+        );
+
+      }
+    );
+
+  world
+    .querySelectorAll(
+      '.branch-group[data-key]'
+    )
+    .forEach(
+      branch=>{
+
+        branch.addEventListener(
+          'click',
+          ()=>{
+
+            zoomTo(
+              branch.dataset.key
+            );
+
+          }
+        );
+
+      }
+    );
+
+  const reviewButton=
+    world.querySelector(
+      '.review2-local'
+    );
+
+  if(reviewButton){
+
+    reviewButton
+      .addEventListener(
+        'click',
+        event=>{
+
+          event.stopPropagation();
+
+          const path=
+            ancestors(focus)
+              .map(
+                key=>
+                  data[key].title
+              )
+              .join(' → ');
+
+          alert(
+            `Review2 will eventually launch using:
+
+${path}
+
+Not wired yet.`
+          );
+
+        }
       );
 
   }
 
-  top=
-    Math.max(
-      86,
-      Math.min(
-        top,
-        viewportRect.height-
-        popHeight-
-        20
-      )
+  const notesButton=
+    world.querySelector(
+      '.notes-local'
     );
 
-  scopePopover.style.left=
-    `${left}px`;
+  if(notesButton){
 
-  scopePopover.style.top=
-    `${top}px`;
+    notesButton
+      .addEventListener(
+        'click',
+        event=>{
+
+          event.stopPropagation();
+
+          notesOpen=
+            !notesOpen;
+
+          render();
+
+        }
+      );
+
+  }
 
 }
 
+function zoomTo(key){
 
-function updateUI(){
+  if(!data[key]){
+    return;
+  }
 
-  const current=
-    data[focus];
+  focus=key;
+
+  notesOpen=false;
+
+  render();
+
+}
+
+/* =========================
+   BREADCRUMBS
+========================= */
+
+function updateBreadcrumbs(){
 
   const path=
     ancestors(focus);
@@ -1731,7 +2088,10 @@ function updateUI(){
   crumbs.innerHTML=
     path
       .map(
-        (key,index)=>`
+        (
+          key,
+          index
+        )=>`
 
           <span
             class="
@@ -1760,184 +2120,76 @@ function updateUI(){
       .join('');
 
   crumbs
-    .querySelectorAll('.crumb')
+    .querySelectorAll(
+      '.crumb'
+    )
     .forEach(
-      element=>{
+      crumb=>{
 
-        element.addEventListener(
+        crumb.addEventListener(
           'click',
           ()=>{
+
             zoomTo(
-              element.dataset.key
+              crumb.dataset.key
             );
+
           }
         );
 
       }
     );
 
-  scopeTitle.textContent=
-    current.title;
-
-  scopeDesc.textContent=
-    current.desc;
-
-  const backBtn=
+  const back=
     document.getElementById(
       'backBtn'
     );
 
-  backBtn.disabled=
-    !current.parent;
+  back.disabled=
+    !data[focus].parent;
 
-  backBtn.style.opacity=
-    current.parent
+  back.style.opacity=
+    data[focus].parent
     ? '1'
     : '.35';
 
 }
 
+/* =========================
+   APP CONTROLS
+========================= */
 
-function render(){
+function enterMap(){
 
-  if(focus==='living'){
-    organicOverview();
-  }
-  else{
-    focusedLayout();
-  }
+  entrance
+    .classList
+    .add('hidden');
 
-  world
-    .querySelectorAll(
-      '.node,.branch-group'
-    )
-    .forEach(
-      element=>{
+  app
+    .classList
+    .add('visible');
 
-        element.addEventListener(
-          'click',
-          event=>{
+  focus='living';
 
-            event.stopPropagation();
-
-            zoomTo(
-              element.dataset.key
-            );
-
-          }
-        );
-
-      }
-    );
-
-  updateUI();
-
-  world.style.transform=
-    'scale(.94)';
-
-  requestAnimationFrame(
-    ()=>{
-
-      requestAnimationFrame(
-        ()=>{
-
-          world.style.transform=
-            'scale(1)';
-
-        }
-      );
-
-    }
-  );
-
-  requestAnimationFrame(
-    placeScopePopover
-  );
-
-}
-
-
-function zoomTo(key){
-
-  if(!data[key]){
-    return;
-  }
-
-  focus=key;
+  notesOpen=false;
 
   render();
 
 }
 
+function goHome(){
 
-function openNotes(){
+  notesOpen=false;
 
-  const current=
-    data[focus];
-
-  drawerTitle.textContent=
-    current.title;
-
-  drawerSource.textContent=
-    current.source
-    ? `● ${current.source}`
-    : 'Current learned MCAT scope';
-
-  drawerDesc.textContent=
-    current.desc;
-
-  const notes=
-    current.learned &&
-    current.learned.length
-    ? current.learned
-    : [
-        'No detailed notes have been attached to this scope yet.'
-      ];
-
-  drawerNotes.innerHTML=
-    notes
-      .map(
-        note=>`
-          <li>${note}</li>
-        `
-      )
-      .join('');
-
-  notesDrawer
+  app
     .classList
-    .add('open');
+    .remove('visible');
 
-  drawerBackdrop
+  entrance
     .classList
-    .add('open');
-
-  notesDrawer
-    .setAttribute(
-      'aria-hidden',
-      'false'
-    );
+    .remove('hidden');
 
 }
-
-
-function closeNotes(){
-
-  notesDrawer
-    .classList
-    .remove('open');
-
-  drawerBackdrop
-    .classList
-    .remove('open');
-
-  notesDrawer
-    .setAttribute(
-      'aria-hidden',
-      'true'
-    );
-
-}
-
 
 document
   .getElementById(
@@ -1948,6 +2200,14 @@ document
     enterMap
   );
 
+document
+  .getElementById(
+    'homeBtn'
+  )
+  .addEventListener(
+    'click',
+    goHome
+  );
 
 document
   .getElementById(
@@ -1961,99 +2221,15 @@ document
         data[focus].parent;
 
       if(parent){
-        zoomTo(parent);
-      }
 
-    }
-  );
-
-
-document
-  .getElementById(
-    'resetBtn'
-  )
-  .addEventListener(
-    'click',
-    returnToEntrance
-  );
-
-
-document
-  .getElementById(
-    'review2Btn'
-  )
-  .addEventListener(
-    'click',
-    ()=>{
-
-      const path=
-        ancestors(focus)
-          .map(
-            key=>data[key].title
-          )
-          .join(' → ');
-
-      alert(
-        `Review2 will eventually launch using this scope:
-
-${path}
-
-Not wired yet.`
-      );
-
-    }
-  );
-
-
-document
-  .getElementById(
-    'notesBtn'
-  )
-  .addEventListener(
-    'click',
-    openNotes
-  );
-
-
-document
-  .getElementById(
-    'drawerClose'
-  )
-  .addEventListener(
-    'click',
-    closeNotes
-  );
-
-
-drawerBackdrop
-  .addEventListener(
-    'click',
-    closeNotes
-  );
-
-
-document
-  .addEventListener(
-    'keydown',
-    event=>{
-
-      if(event.key==='Escape'){
-
-        if(
-          notesDrawer
-            .classList
-            .contains('open')
-        ){
-
-          closeNotes();
-
-        }
+        zoomTo(
+          parent
+        );
 
       }
 
     }
   );
-
 
 window
   .addEventListener(
@@ -2063,9 +2239,13 @@ window
       if(
         app
           .classList
-          .contains('visible')
+          .contains(
+            'visible'
+          )
       ){
+
         render();
+
       }
 
     }
