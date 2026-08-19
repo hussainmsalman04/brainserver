@@ -1,240 +1,713 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>MCAT Brain Concept Map</title>
-  <style>
-    *{box-sizing:border-box}
-    :root{
-      --bg:#090909;--panel:#121212;--panel2:#171717;--line:#454545;
-      --text:#f4f4f4;--muted:#9d9d9d;--bio:#62dc8b;--master:#8fe7ad;
-      --dev:#e8c96f;--glow:rgba(98,220,139,.18)
-    }
-    body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-    .shell{width:min(1240px,calc(100% - 28px));margin:0 auto;padding:30px 0 60px}
-    .topbar{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:20px}
-    .eyebrow{color:#888;font-size:12px;letter-spacing:.16em;text-transform:uppercase;margin-bottom:8px}
-    h1{margin:0;font-size:clamp(34px,6vw,58px);line-height:.98;letter-spacing:-.045em}
-    .subtitle{margin:13px 0 0;max-width:720px;color:#a5a5a5;line-height:1.55}
-    .legend{display:flex;gap:12px;flex-wrap:wrap;justify-content:flex-end;color:#aaa;font-size:12px;padding-top:5px}
-    .bio{color:var(--bio)}
-    .nav{display:flex;gap:8px;flex-wrap:wrap}
-    .btn{appearance:none;border:0;border-radius:999px;padding:10px 15px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;background:#ededed;color:#111}
-    .btn.secondary{background:#222;color:#eee;border:1px solid #393939}
-    .btn.ghost{background:transparent;color:#cfcfcf;border:1px solid #333}
-    .map-card{border:1px solid #2d2d2d;border-radius:28px;overflow:hidden;background:radial-gradient(circle at 50% 40%,rgba(98,220,139,.045),transparent 38%),#101010;box-shadow:0 24px 80px rgba(0,0,0,.36)}
-    .toolbar{display:flex;justify-content:space-between;gap:18px;align-items:center;padding:16px 20px;border-bottom:1px solid #292929;background:rgba(15,15,15,.94)}
-    .crumbs{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:13px;color:#888}
-    .crumb{cursor:pointer;color:#aaa}.crumb.current{color:#f0f0f0;font-weight:700}.crumb:hover{color:#fff}
-    .viewport{position:relative;height:650px;overflow:hidden;perspective:1200px}
-    .world{position:absolute;inset:0;transform-origin:50% 50%;transition:transform .62s cubic-bezier(.16,.84,.22,1),opacity .35s ease}
-    .branch-svg{position:absolute;inset:0;width:100%;height:100%;z-index:1;overflow:visible}
-    .branch-visible{fill:none;stroke:#454545;stroke-width:7;stroke-linecap:round;transition:stroke .18s ease,filter .18s ease,opacity .3s ease}
-    .branch-visible.major{stroke:#565656;stroke-width:11}
-    .branch-hit{fill:none;stroke:transparent;stroke-width:28;cursor:pointer}
-    .branch-group:hover .branch-visible{stroke:#777;filter:drop-shadow(0 0 8px rgba(255,255,255,.08))}
-    .node{position:absolute;transform:translate(-50%,-50%);z-index:3;min-width:150px;max-width:220px;padding:13px 14px;border-radius:18px;border:1px solid #3c3c3c;background:#171717;text-align:center;cursor:pointer;user-select:none;transition:transform .22s ease,opacity .3s ease,border-color .2s ease,background .2s ease,box-shadow .25s ease}
-    .node:hover{transform:translate(-50%,-50%) scale(1.045);border-color:#747474;background:#1d1d1d}
-    .node.big{min-width:205px;padding:18px 20px;border-radius:23px}
-    .node.root{min-width:180px;border-color:#555;background:#202020}
-    .node.focused{border-color:rgba(98,220,139,.72);box-shadow:0 0 0 1px rgba(98,220,139,.14),0 0 34px var(--glow)}
-    .node-title{font-weight:750;letter-spacing:-.02em;line-height:1.12}.node.big .node-title{font-size:19px}
-    .meta{margin-top:7px;font-size:11px;color:#929292;line-height:1.3}.source{color:var(--bio);font-weight:750}.mastered{color:var(--master)}.developing{color:var(--dev)}
-    .scope-popover{position:absolute;z-index:5;width:280px;padding:16px;border-radius:20px;border:1px solid #343434;background:rgba(20,20,20,.96);box-shadow:0 18px 50px rgba(0,0,0,.4);backdrop-filter:blur(10px);transition:left .45s cubic-bezier(.2,.8,.2,1),top .45s cubic-bezier(.2,.8,.2,1),opacity .25s ease}
-    .scope-kicker{font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:#777;margin-bottom:6px}
-    .scope-title{font-size:18px;font-weight:780;letter-spacing:-.02em}
-    .scope-desc{font-size:12px;color:#9d9d9d;line-height:1.45;margin-top:6px}
-    .scope-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.scope-actions .btn{padding:8px 11px;font-size:12px}
-    .overview-note{position:absolute;z-index:4;left:24px;bottom:22px;color:#707070;font-size:12px;line-height:1.45;max-width:320px}
-    .bottom-card{margin-top:16px;border:1px solid #2f2f2f;border-radius:22px;background:#151515;padding:18px 20px;display:flex;align-items:flex-start;justify-content:space-between;gap:20px}
-    .bottom-card h2{margin:0 0 6px;font-size:18px}.bottom-card p{margin:0;color:#999;line-height:1.55;font-size:13px;max-width:760px}
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MCAT Brain</title>
 
-    .drawer-backdrop{
-      position:fixed;inset:0;background:rgba(0,0,0,.58);
-      opacity:0;pointer-events:none;transition:opacity .25s ease;z-index:30
-    }
-    .drawer-backdrop.open{opacity:1;pointer-events:auto}
+<style>
+*{box-sizing:border-box}
 
-    .notes-drawer{
-      position:fixed;top:0;right:0;width:min(430px,92vw);height:100vh;
-      background:#111;border-left:1px solid #303030;
-      box-shadow:-30px 0 80px rgba(0,0,0,.48);
-      transform:translateX(102%);
-      transition:transform .32s cubic-bezier(.16,.84,.22,1);
-      z-index:31;display:flex;flex-direction:column
-    }
-    .notes-drawer.open{transform:translateX(0)}
+:root{
+  --bg:#050505;
+  --panel:#121212;
+  --panel2:#181818;
+  --line:#4a4a4a;
+  --text:#f4f4f4;
+  --muted:#999;
+  --bio:#62dc8b;
+  --master:#8fe7ad;
+  --dev:#e8c96f;
+  --glow:rgba(98,220,139,.2);
+}
 
-    .drawer-head{
-      display:flex;justify-content:space-between;gap:16px;
-      align-items:flex-start;padding:22px 22px 18px;
-      border-bottom:1px solid #292929
-    }
-    .drawer-title{
-      font-size:25px;font-weight:800;
-      letter-spacing:-.03em;line-height:1.05
-    }
-    .drawer-source{
-      margin-top:7px;color:var(--bio);
-      font-size:12px;font-weight:750
-    }
-    .drawer-close{
-      appearance:none;border:1px solid #353535;
-      background:#1c1c1c;color:#eee;
-      width:36px;height:36px;border-radius:50%;
-      font-size:20px;cursor:pointer
-    }
+html,body{
+  margin:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,
+  BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
 
-    .drawer-body{padding:22px;overflow:auto}
-    .drawer-section{margin-bottom:24px}
-    .drawer-label{
-      font-size:10px;letter-spacing:.14em;
-      text-transform:uppercase;color:#777;margin-bottom:9px
-    }
-    .drawer-desc{color:#b0b0b0;font-size:13px;line-height:1.55}
+/* ---------- ENTRANCE ---------- */
 
-    .note-list{
-      margin:0;padding:0;list-style:none;
-      display:grid;gap:9px
-    }
-    .note-list li{
-      position:relative;padding:11px 12px 11px 31px;
-      border:1px solid #2d2d2d;border-radius:14px;
-      background:#171717;color:#dedede;
-      font-size:13px;line-height:1.4
-    }
-    .note-list li:before{
-      content:'•';position:absolute;left:13px;top:8px;
-      color:var(--bio);font-size:19px
-    }
+#entrance{
+  position:fixed;
+  inset:0;
+  z-index:100;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#000;
+  transition:
+    opacity .65s ease,
+    transform .7s cubic-bezier(.16,.84,.22,1);
+}
 
-    .drawer-foot{
-      margin-top:auto;padding:17px 22px;
-      border-top:1px solid #292929;color:#777;
-      font-size:11px;line-height:1.5
-    }
+#entrance.hidden{
+  opacity:0;
+  pointer-events:none;
+  transform:scale(1.25);
+}
 
-    @media(max-width:860px){
-      .topbar{display:block}
-      .legend{justify-content:flex-start;margin-top:16px}
-      .toolbar{align-items:flex-start;flex-direction:column}
-      .viewport{height:610px}
-      .scope-popover{width:235px}
-      .bottom-card{display:block}
-    }
-  </style>
+.enter-node{
+  cursor:pointer;
+  user-select:none;
+  text-align:center;
+  transition:
+    transform .22s ease,
+    text-shadow .22s ease;
+}
+
+.enter-node:hover{
+  transform:scale(1.06);
+  text-shadow:0 0 32px rgba(98,220,139,.24);
+}
+
+.enter-title{
+  font-size:clamp(48px,8vw,92px);
+  font-weight:800;
+  letter-spacing:-.055em;
+  line-height:.9;
+}
+
+.enter-sub{
+  margin-top:12px;
+  color:var(--bio);
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  opacity:.8;
+}
+
+/* ---------- APP ---------- */
+
+#app{
+  position:fixed;
+  inset:0;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .55s ease .15s;
+}
+
+#app.visible{
+  opacity:1;
+  pointer-events:auto;
+}
+
+.topbar{
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  height:74px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:20px;
+  padding:0 30px;
+  z-index:20;
+  background:linear-gradient(
+    to bottom,
+    rgba(5,5,5,.98),
+    rgba(5,5,5,.82),
+    rgba(5,5,5,0)
+  );
+}
+
+.crumbs{
+  display:flex;
+  gap:7px;
+  align-items:center;
+  flex-wrap:wrap;
+  font-size:13px;
+  color:#777;
+}
+
+.crumb{
+  cursor:pointer;
+  color:#999;
+}
+
+.crumb:hover{color:#fff}
+
+.crumb.current{
+  color:var(--bio);
+  font-weight:750;
+}
+
+.top-actions{
+  display:flex;
+  gap:9px;
+  align-items:center;
+}
+
+.btn{
+  appearance:none;
+  border:0;
+  border-radius:999px;
+  padding:10px 15px;
+  background:#ededed;
+  color:#111;
+  font:inherit;
+  font-size:13px;
+  font-weight:750;
+  cursor:pointer;
+  text-decoration:none;
+}
+
+.btn.secondary{
+  background:#181818;
+  color:#eee;
+  border:1px solid #343434;
+}
+
+.btn.ghost{
+  background:rgba(10,10,10,.7);
+  color:#ccc;
+  border:1px solid #303030;
+}
+
+/* ---------- MAP ---------- */
+
+.viewport{
+  position:absolute;
+  inset:0;
+  overflow:hidden;
+  background:
+    radial-gradient(
+      circle at 50% 45%,
+      rgba(98,220,139,.045),
+      transparent 30%
+    ),
+    #050505;
+}
+
+.world{
+  position:absolute;
+  inset:0;
+  transform-origin:50% 50%;
+  transition:
+    transform .68s cubic-bezier(.16,.84,.22,1),
+    opacity .3s ease;
+}
+
+.branch-svg{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  z-index:1;
+  overflow:visible;
+}
+
+.branch-visible{
+  fill:none;
+  stroke:#444;
+  stroke-width:7;
+  stroke-linecap:round;
+  transition:
+    stroke .2s ease,
+    filter .2s ease;
+}
+
+.branch-visible.major{
+  stroke:#565656;
+  stroke-width:11;
+}
+
+.branch-hit{
+  fill:none;
+  stroke:transparent;
+  stroke-width:30;
+  cursor:pointer;
+}
+
+.branch-group:hover .branch-visible{
+  stroke:#747474;
+  filter:drop-shadow(0 0 8px rgba(255,255,255,.07));
+}
+
+.node{
+  position:absolute;
+  transform:translate(-50%,-50%);
+  z-index:3;
+  min-width:155px;
+  max-width:230px;
+  padding:13px 15px;
+  border-radius:19px;
+  border:1px solid #383838;
+  background:rgba(21,21,21,.94);
+  text-align:center;
+  cursor:pointer;
+  user-select:none;
+  transition:
+    transform .22s ease,
+    border-color .2s ease,
+    background .2s ease,
+    box-shadow .25s ease;
+}
+
+.node:hover{
+  transform:translate(-50%,-50%) scale(1.045);
+  border-color:#707070;
+  background:#1c1c1c;
+}
+
+.node.big{
+  min-width:210px;
+  padding:18px 20px;
+  border-radius:24px;
+}
+
+.node.root{
+  border-color:#4c4c4c;
+  background:#1c1c1c;
+}
+
+.node.focused{
+  border-color:var(--bio);
+  box-shadow:
+    0 0 0 1px rgba(98,220,139,.12),
+    0 0 38px var(--glow);
+}
+
+.node-title{
+  font-weight:760;
+  letter-spacing:-.025em;
+  line-height:1.12;
+}
+
+.node.big .node-title{
+  font-size:20px;
+}
+
+.meta{
+  margin-top:7px;
+  color:#888;
+  font-size:11px;
+}
+
+.source{
+  color:var(--bio);
+  font-weight:750;
+}
+
+.mastered{color:var(--master)}
+.developing{color:var(--dev)}
+
+/* ---------- CURRENT SCOPE ---------- */
+
+.scope-popover{
+  position:absolute;
+  z-index:8;
+  width:290px;
+  padding:17px;
+  border-radius:21px;
+  border:1px solid #313131;
+  background:rgba(17,17,17,.96);
+  box-shadow:0 18px 55px rgba(0,0,0,.46);
+  backdrop-filter:blur(10px);
+  transition:
+    left .45s cubic-bezier(.2,.8,.2,1),
+    top .45s cubic-bezier(.2,.8,.2,1);
+}
+
+.scope-kicker,
+.drawer-label{
+  color:#777;
+  font-size:10px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+}
+
+.scope-title{
+  margin-top:6px;
+  font-size:19px;
+  font-weight:800;
+  letter-spacing:-.025em;
+}
+
+.scope-desc{
+  margin-top:7px;
+  color:#a0a0a0;
+  font-size:12px;
+  line-height:1.5;
+}
+
+.scope-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:13px;
+}
+
+.scope-actions .btn{
+  padding:8px 12px;
+  font-size:12px;
+}
+
+/* ---------- HELPER ---------- */
+
+.helper{
+  position:absolute;
+  left:30px;
+  bottom:26px;
+  z-index:8;
+  display:flex;
+  gap:11px;
+  align-items:center;
+  max-width:330px;
+  padding:11px 14px;
+  border:1px solid #292929;
+  border-radius:15px;
+  background:rgba(13,13,13,.78);
+  color:#a2a2a2;
+  font-size:12px;
+  line-height:1.4;
+  backdrop-filter:blur(8px);
+}
+
+.helper-icon{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:30px;
+  height:30px;
+  flex:0 0 30px;
+  border-radius:50%;
+  border:1px solid #333;
+  color:#ddd;
+  font-size:15px;
+}
+
+/* ---------- NOTES ---------- */
+
+.drawer-backdrop{
+  position:fixed;
+  inset:0;
+  z-index:30;
+  background:rgba(0,0,0,.52);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .25s ease;
+}
+
+.drawer-backdrop.open{
+  opacity:1;
+  pointer-events:auto;
+}
+
+.notes-drawer{
+  position:fixed;
+  top:0;
+  right:0;
+  z-index:31;
+  width:min(430px,92vw);
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+  background:#101010;
+  border-left:1px solid #2c2c2c;
+  box-shadow:-30px 0 80px rgba(0,0,0,.5);
+  transform:translateX(102%);
+  transition:transform .32s cubic-bezier(.16,.84,.22,1);
+}
+
+.notes-drawer.open{
+  transform:translateX(0);
+}
+
+.drawer-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:15px;
+  padding:25px 24px 20px;
+  border-bottom:1px solid #292929;
+}
+
+.drawer-eyebrow{
+  color:#888;
+  font-size:10px;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+}
+
+.drawer-title{
+  margin-top:7px;
+  font-size:27px;
+  font-weight:820;
+  letter-spacing:-.035em;
+}
+
+.drawer-source{
+  margin-top:7px;
+  color:var(--bio);
+  font-size:12px;
+  font-weight:750;
+}
+
+.drawer-close{
+  appearance:none;
+  width:38px;
+  height:38px;
+  border-radius:50%;
+  border:1px solid #353535;
+  background:#1b1b1b;
+  color:#eee;
+  cursor:pointer;
+  font-size:20px;
+}
+
+.drawer-body{
+  padding:24px;
+  overflow:auto;
+}
+
+.drawer-section{
+  margin-bottom:26px;
+}
+
+.drawer-desc{
+  margin-top:11px;
+  color:#b5b5b5;
+  font-size:13px;
+  line-height:1.55;
+}
+
+.note-list{
+  list-style:none;
+  margin:11px 0 0;
+  padding:0;
+  display:grid;
+  gap:10px;
+}
+
+.note-list li{
+  position:relative;
+  padding:11px 13px 11px 32px;
+  border:1px solid #2c2c2c;
+  border-radius:14px;
+  background:#171717;
+  color:#dedede;
+  font-size:13px;
+  line-height:1.4;
+}
+
+.note-list li:before{
+  content:'•';
+  position:absolute;
+  left:13px;
+  top:8px;
+  color:var(--bio);
+  font-size:19px;
+}
+
+.drawer-foot{
+  margin-top:auto;
+  padding:18px 24px 22px;
+  border-top:1px solid #292929;
+  color:#777;
+  font-size:11px;
+  line-height:1.5;
+}
+
+/* ---------- RESPONSIVE ---------- */
+
+@media(max-width:760px){
+  .topbar{
+    padding:0 15px;
+  }
+
+  .top-actions .btn{
+    padding:8px 10px;
+    font-size:11px;
+  }
+
+  .scope-popover{
+    width:235px;
+  }
+
+  .helper{
+    left:14px;
+    bottom:14px;
+    max-width:250px;
+  }
+}
+</style>
 </head>
 
 <body>
-<main class="shell">
-  <div class="topbar">
-    <div>
-      <div class="eyebrow">MCAT Brain</div>
-      <h1>Concept Map</h1>
-      <p class="subtitle">
-        Explore your learned MCAT knowledge by literally zooming from broad ideas into specific concepts.
-        Only material you have actually learned is shown.
-      </p>
-    </div>
 
-    <div>
-      <div class="legend">
-        <span><span class="bio">●</span> Biology</span>
-        <span>✓ Mastered</span>
-        <span>◐ Developing</span>
-      </div>
+<!-- ENTRANCE -->
 
-      <div class="nav" style="margin-top:12px;justify-content:flex-end">
-        <a class="btn secondary" href="/lesson-reviews.html">Lesson Reviews</a>
-      </div>
-    </div>
+<section id="entrance">
+  <div class="enter-node" id="enterMCAT">
+    <div class="enter-title">MCAT</div>
+    <div class="enter-sub">Enter</div>
   </div>
+</section>
 
-  <section class="map-card">
-    <div class="toolbar">
-      <div class="crumbs" id="crumbs"></div>
+<!-- APP -->
 
-      <div class="nav">
-        <button class="btn ghost" id="backBtn">← Zoom out</button>
-        <button class="btn secondary" id="homeBtn">Reset map</button>
+<main id="app">
+
+  <header class="topbar">
+    <div class="crumbs" id="crumbs"></div>
+
+    <div class="top-actions">
+      <button class="btn ghost" id="backBtn">← Zoom out</button>
+
+      <a
+        class="btn secondary"
+        href="/lesson-reviews.html"
+      >
+        Lesson Reviews
+      </a>
+
+      <button class="btn secondary" id="resetBtn">
+        Reset map
+      </button>
+    </div>
+  </header>
+
+  <div class="viewport" id="viewport">
+
+    <div class="world" id="world"></div>
+
+    <div class="scope-popover" id="scopePopover">
+      <div class="scope-kicker">Current scope</div>
+
+      <div
+        class="scope-title"
+        id="scopeTitle"
+      ></div>
+
+      <div
+        class="scope-desc"
+        id="scopeDesc"
+      ></div>
+
+      <div class="scope-actions">
+        <button class="btn" id="review2Btn">
+          Start Review2
+        </button>
+
+        <button
+          class="btn secondary"
+          id="notesBtn"
+        >
+          Brain Notes
+        </button>
       </div>
     </div>
 
-    <div class="viewport" id="viewport">
-      <div class="world" id="world"></div>
+    <div class="helper">
+      <div class="helper-icon">⌖</div>
 
-      <div class="scope-popover" id="scopePopover">
-        <div class="scope-kicker">Current scope</div>
-        <div class="scope-title" id="scopeTitle"></div>
-        <div class="scope-desc" id="scopeDesc"></div>
-
-        <div class="scope-actions">
-          <button class="btn" id="review2Btn">Start Review2</button>
-          <button class="btn secondary" id="notesBtn">Brain Notes</button>
-        </div>
-      </div>
-
-      <div class="overview-note" id="overviewNote">
-        Click a node or the branch leading to it. The map will move inward with you;
-        zooming back out reconstructs the larger structure.
+      <div>
+        Click a node or branch to move deeper.
+        Zoom out to reconstruct the larger map.
       </div>
     </div>
-  </section>
 
-  <section class="bottom-card">
-    <div>
-      <div class="eyebrow" style="margin-bottom:5px">Map behavior</div>
-      <h2>Broad branches become specific as you move inward.</h2>
-      <p>
-        The home view is intentionally spatial and organic.
-        Once you enter a branch, the layout becomes cleaner so you can navigate
-        the knowledge underneath it without the full MCAT graph becoming a wall of labels.
-      </p>
-    </div>
-  </section>
+  </div>
 </main>
 
-<div class="drawer-backdrop" id="drawerBackdrop"></div>
+<!-- NOTES -->
 
-<aside class="notes-drawer" id="notesDrawer" aria-hidden="true">
+<div
+  class="drawer-backdrop"
+  id="drawerBackdrop"
+></div>
+
+<aside
+  class="notes-drawer"
+  id="notesDrawer"
+  aria-hidden="true"
+>
+
   <div class="drawer-head">
+
     <div>
-      <div class="eyebrow" style="margin-bottom:6px">Brain Notes</div>
-      <div class="drawer-title" id="drawerTitle">Concept</div>
-      <div class="drawer-source" id="drawerSource"></div>
+      <div class="drawer-eyebrow">
+        Brain Notes
+      </div>
+
+      <div
+        class="drawer-title"
+        id="drawerTitle"
+      >
+        Concept
+      </div>
+
+      <div
+        class="drawer-source"
+        id="drawerSource"
+      ></div>
     </div>
 
-    <button class="drawer-close" id="drawerClose" aria-label="Close notes">×</button>
+    <button
+      class="drawer-close"
+      id="drawerClose"
+      aria-label="Close notes"
+    >
+      ×
+    </button>
   </div>
 
   <div class="drawer-body">
+
     <section class="drawer-section">
-      <div class="drawer-label">What this scope means</div>
-      <div class="drawer-desc" id="drawerDesc"></div>
+      <div class="drawer-label">
+        What this scope means
+      </div>
+
+      <div
+        class="drawer-desc"
+        id="drawerDesc"
+      ></div>
     </section>
 
     <section class="drawer-section">
-      <div class="drawer-label">Approved knowledge represented here</div>
-      <ul class="note-list" id="drawerNotes"></ul>
+      <div class="drawer-label">
+        Approved knowledge represented here
+      </div>
+
+      <ul
+        class="note-list"
+        id="drawerNotes"
+      ></ul>
     </section>
+
   </div>
 
   <div class="drawer-foot">
-    This drawer currently shows the approved concept summaries encoded in the Concept Map.
-    A later version can fetch the full Brain note live without cluttering the map itself.
+    This currently shows the approved concept summaries
+    represented by the map. Later we can connect this
+    directly to the full live Brain note.
   </div>
+
 </aside>
 
 <script>
-const data={
+
+const data = {
+
   mcat:{
     title:'MCAT',
     parent:null,
     source:'',
     status:'',
     desc:'Everything you have learned so far across the MCAT.',
-    learned:['Living Systems is currently the illuminated region'],
+    learned:[
+      'Living Systems is currently the illuminated region'
+    ],
     children:['living']
   },
 
@@ -244,8 +717,16 @@ const data={
     source:'BIO 1.1–1.2',
     status:'',
     desc:'The biological systems and structures you have learned so far.',
-    learned:['Foundations of Life','Cells','Tissues'],
-    children:['foundations','cells','tissues']
+    learned:[
+      'Foundations of Life',
+      'Cells',
+      'Tissues'
+    ],
+    children:[
+      'foundations',
+      'cells',
+      'tissues'
+    ]
   },
 
   foundations:{
@@ -254,8 +735,14 @@ const data={
     source:'BIO 1.1',
     status:'',
     desc:'Foundational ideas about cells and what counts as independent cellular life.',
-    learned:['Cell Theory','Boundary of Life / viruses'],
-    children:['cell-theory','life-boundary']
+    learned:[
+      'Cell Theory',
+      'Boundary of Life / viruses'
+    ],
+    children:[
+      'cell-theory',
+      'life-boundary'
+    ]
   },
 
   'cell-theory':{
@@ -297,7 +784,11 @@ const data={
       'Internal Organization',
       'Structure & Movement'
     ],
-    children:['membrane','internal','cytoskeleton']
+    children:[
+      'membrane',
+      'internal',
+      'cytoskeleton'
+    ]
   },
 
   membrane:{
@@ -328,7 +819,14 @@ const data={
       'Golgi Apparatus',
       'Peroxisomes'
     ],
-    children:['nucleus','mitochondria','lysosome','er','golgi','peroxisome']
+    children:[
+      'nucleus',
+      'mitochondria',
+      'lysosome',
+      'er',
+      'golgi',
+      'peroxisome'
+    ]
   },
 
   nucleus:{
@@ -437,7 +935,11 @@ const data={
       'Centrioles 9+0',
       'Cilia / flagella 9+2'
     ],
-    children:['microfilaments','microtubules','intermediate']
+    children:[
+      'microfilaments',
+      'microtubules',
+      'intermediate'
+    ]
   },
 
   microfilaments:{
@@ -469,7 +971,10 @@ const data={
       'Centrioles',
       'Cilia / flagella'
     ],
-    children:['centrioles','motility']
+    children:[
+      'centrioles',
+      'motility'
+    ]
   },
 
   centrioles:{
@@ -526,7 +1031,10 @@ const data={
       'Connective Tissue',
       'Parenchyma vs. Stroma'
     ],
-    children:['epithelial','connective']
+    children:[
+      'epithelial',
+      'connective'
+    ]
   },
 
   epithelial:{
@@ -563,263 +1071,735 @@ const data={
     ],
     children:[]
   }
+
 };
 
 let focus='living';
 
-const world=document.getElementById('world');
-const viewport=document.getElementById('viewport');
-const crumbs=document.getElementById('crumbs');
+const entrance=
+  document.getElementById('entrance');
 
-const scopePopover=document.getElementById('scopePopover');
-const scopeTitle=document.getElementById('scopeTitle');
-const scopeDesc=document.getElementById('scopeDesc');
+const app=
+  document.getElementById('app');
 
-const notesDrawer=document.getElementById('notesDrawer');
-const drawerBackdrop=document.getElementById('drawerBackdrop');
-const drawerTitle=document.getElementById('drawerTitle');
-const drawerSource=document.getElementById('drawerSource');
-const drawerDesc=document.getElementById('drawerDesc');
-const drawerNotes=document.getElementById('drawerNotes');
+const world=
+  document.getElementById('world');
+
+const viewport=
+  document.getElementById('viewport');
+
+const crumbs=
+  document.getElementById('crumbs');
+
+const scopePopover=
+  document.getElementById('scopePopover');
+
+const scopeTitle=
+  document.getElementById('scopeTitle');
+
+const scopeDesc=
+  document.getElementById('scopeDesc');
+
+const notesDrawer=
+  document.getElementById('notesDrawer');
+
+const drawerBackdrop=
+  document.getElementById('drawerBackdrop');
+
+const drawerTitle=
+  document.getElementById('drawerTitle');
+
+const drawerSource=
+  document.getElementById('drawerSource');
+
+const drawerDesc=
+  document.getElementById('drawerDesc');
+
+const drawerNotes=
+  document.getElementById('drawerNotes');
+
+
+function enterMap(){
+
+  entrance.classList.add('hidden');
+
+  app.classList.add('visible');
+
+  focus='living';
+
+  render();
+
+}
+
+
+function returnToEntrance(){
+
+  closeNotes();
+
+  app.classList.remove('visible');
+
+  entrance.classList.remove('hidden');
+
+}
+
 
 function ancestors(key){
-  const a=[];
+
+  const list=[];
+
   let k=key;
 
   while(k){
-    a.unshift(k);
+
+    list.unshift(k);
+
     k=data[k].parent;
+
   }
 
-  return a;
+  return list;
+
 }
+
 
 function statusHTML(d){
-  return d.status==='mastered'
-    ? '<span class="mastered">✓</span>'
-    : d.status==='developing'
-    ? '<span class="developing">◐</span>'
-    : '';
+
+  if(d.status==='mastered'){
+    return '<span class="mastered">✓</span>';
+  }
+
+  if(d.status==='developing'){
+    return '<span class="developing">◐</span>';
+  }
+
+  return '';
+
 }
 
-function nodeHTML(key,x,y,big=false,focused=false){
+
+function nodeHTML(
+  key,
+  x,
+  y,
+  big=false,
+  focused=false
+){
+
   const d=data[key];
 
   return `
     <div
-      class="node ${big?'big':''} ${key==='mcat'?'root':''} ${focused?'focused':''}"
+      class="
+        node
+        ${big?'big':''}
+        ${key==='mcat'?'root':''}
+        ${focused?'focused':''}
+      "
       data-key="${key}"
-      style="left:${x}%;top:${y}%"
+      style="
+        left:${x}%;
+        top:${y}%;
+      "
     >
-      <div class="node-title">${d.title}</div>
+
+      <div class="node-title">
+        ${d.title}
+      </div>
 
       <div class="meta">
-        ${d.source ? `<span class="source">● ${d.source}</span>` : ''}
+
+        ${
+          d.source
+          ? `<span class="source">
+               ● ${d.source}
+             </span>`
+          : ''
+        }
+
         ${statusHTML(d)}
+
       </div>
+
     </div>
   `;
+
 }
 
-function curvePath(x1,y1,x2,y2,bend=0){
+
+function curvePath(
+  x1,
+  y1,
+  x2,
+  y2,
+  bend=0
+){
+
   const w=viewport.clientWidth;
   const h=viewport.clientHeight;
 
   const ax=x1/100*w;
   const ay=y1/100*h;
+
   const bx=x2/100*w;
   const by=y2/100*h;
 
-  const midY=(ay+by)/2;
-  const c1x=ax+bend;
-  const c2x=bx-bend;
+  const midY=
+    (ay+by)/2;
 
-  return `M ${ax} ${ay} C ${c1x} ${midY}, ${c2x} ${midY}, ${bx} ${by}`;
+  const c1x=
+    ax+bend;
+
+  const c2x=
+    bx-bend;
+
+  return `
+    M ${ax} ${ay}
+    C ${c1x} ${midY},
+      ${c2x} ${midY},
+      ${bx} ${by}
+  `;
+
 }
+
 
 function branchSVG(paths){
-  return `
-    <svg class="branch-svg" aria-hidden="true">
-      ${paths.map(p=>`
-        <g class="branch-group" data-key="${p.key}">
-          <path
-            class="branch-visible ${p.major?'major':''}"
-            d="${p.d}"
-          ></path>
 
-          <path
-            class="branch-hit"
-            d="${p.d}"
-          ></path>
-        </g>
-      `).join('')}
+  return `
+    <svg
+      class="branch-svg"
+      aria-hidden="true"
+    >
+
+      ${
+        paths.map(p=>`
+
+          <g
+            class="branch-group"
+            data-key="${p.key}"
+          >
+
+            <path
+              class="
+                branch-visible
+                ${p.major?'major':''}
+              "
+              d="${p.d}"
+            ></path>
+
+            <path
+              class="branch-hit"
+              d="${p.d}"
+            ></path>
+
+          </g>
+
+        `).join('')
+      }
+
     </svg>
   `;
+
 }
 
+
 function organicOverview(){
+
   const nodes=[
-    ['mcat',49,15,true,false],
-    ['living',49,38,true,true],
-    ['foundations',23,72,false,false],
-    ['cells',50,75,false,false],
-    ['tissues',79,68,false,false]
+
+    [
+      'mcat',
+      50,
+      15,
+      true,
+      false
+    ],
+
+    [
+      'living',
+      50,
+      38,
+      true,
+      true
+    ],
+
+    [
+      'foundations',
+      23,
+      70,
+      false,
+      false
+    ],
+
+    [
+      'cells',
+      50,
+      76,
+      false,
+      false
+    ],
+
+    [
+      'tissues',
+      79,
+      68,
+      false,
+      false
+    ]
+
   ];
 
   const paths=[
+
     {
       key:'living',
       major:true,
-      d:curvePath(49,20,49,32,0)
+      d:curvePath(
+        50,
+        20,
+        50,
+        32,
+        0
+      )
     },
+
     {
       key:'foundations',
-      d:curvePath(48,43,23,66,-90)
+      d:curvePath(
+        48,
+        43,
+        23,
+        64,
+        -110
+      )
     },
+
     {
       key:'cells',
-      d:curvePath(50,44,50,69,20)
+      d:curvePath(
+        50,
+        44,
+        50,
+        70,
+        20
+      )
     },
+
     {
       key:'tissues',
-      d:curvePath(52,43,79,62,105)
+      d:curvePath(
+        52,
+        43,
+        79,
+        62,
+        120
+      )
     }
+
   ];
 
   world.innerHTML=
     branchSVG(paths)+
-    nodes.map(n=>nodeHTML(...n)).join('');
+    nodes
+      .map(n=>nodeHTML(...n))
+      .join('');
+
 }
 
+
 function focusedLayout(){
-  const d=data[focus];
-  const kids=d.children;
-  const parent=d.parent;
+
+  const current=
+    data[focus];
+
+  const kids=
+    current.children;
+
+  const parent=
+    current.parent;
 
   let html='';
   let paths=[];
 
   if(parent){
-    html+=nodeHTML(parent,50,13,true,false);
+
+    html+=nodeHTML(
+      parent,
+      50,
+      18,
+      true,
+      false
+    );
 
     paths.push({
       key:focus,
       major:true,
-      d:curvePath(50,18,50,32,0)
+      d:curvePath(
+        50,
+        23,
+        50,
+        36,
+        0
+      )
     });
+
   }
 
-  html+=nodeHTML(focus,50,38,true,true);
+  html+=nodeHTML(
+    focus,
+    50,
+    42,
+    true,
+    true
+  );
 
   const positions=[];
 
   if(kids.length===1){
-    positions.push([50,72]);
+
+    positions.push([
+      50,
+      75
+    ]);
+
   }
+
   else if(kids.length===2){
-    positions.push([34,72],[66,72]);
+
+    positions.push(
+      [32,75],
+      [68,75]
+    );
+
   }
+
   else if(kids.length===3){
-    positions.push([23,72],[50,76],[77,70]);
+
+    positions.push(
+      [22,74],
+      [50,78],
+      [78,72]
+    );
+
   }
+
   else if(kids.length===4){
-    positions.push([16,70],[38,78],[62,76],[84,68]);
+
+    positions.push(
+      [15,72],
+      [38,80],
+      [62,78],
+      [85,70]
+    );
+
   }
+
   else if(kids.length===5){
-    positions.push([12,68],[31,78],[50,82],[69,76],[88,66]);
+
+    positions.push(
+      [11,68],
+      [30,78],
+      [50,82],
+      [70,76],
+      [89,67]
+    );
+
   }
+
   else if(kids.length>=6){
-    const top=Math.ceil(kids.length/2);
-    const row1=kids.slice(0,top);
-    const row2=kids.slice(top);
 
-    row1.forEach((_,i)=>{
-      positions.push([
-        18+(64*(row1.length===1?.5:i/(row1.length-1))),
-        64
-      ]);
-    });
+    const firstCount=
+      Math.ceil(kids.length/2);
 
-    row2.forEach((_,i)=>{
-      positions.push([
-        24+(52*(row2.length===1?.5:i/(row2.length-1))),
-        84
-      ]);
-    });
+    const row1=
+      kids.slice(
+        0,
+        firstCount
+      );
+
+    const row2=
+      kids.slice(
+        firstCount
+      );
+
+    row1.forEach(
+      (_,i)=>{
+
+        const x=
+          row1.length===1
+          ? 50
+          : 17+
+            (
+              66*
+              (
+                i/
+                (row1.length-1)
+              )
+            );
+
+        positions.push([
+          x,
+          67
+        ]);
+
+      }
+    );
+
+    row2.forEach(
+      (_,i)=>{
+
+        const x=
+          row2.length===1
+          ? 50
+          : 25+
+            (
+              50*
+              (
+                i/
+                (row2.length-1)
+              )
+            );
+
+        positions.push([
+          x,
+          84
+        ]);
+
+      }
+    );
+
   }
 
-  kids.forEach((k,i)=>{
-    const [x,y]=positions[i];
-    const bend=(x-50)*3.2;
+  kids.forEach(
+    (key,i)=>{
 
-    paths.push({
-      key:k,
-      major:false,
-      d:curvePath(50,44,x,y-6,bend)
-    });
+      const [
+        x,
+        y
+      ]=
+        positions[i];
 
-    html+=nodeHTML(k,x,y,false,false);
-  });
+      const bend=
+        (x-50)*3.4;
+
+      paths.push({
+
+        key,
+
+        major:false,
+
+        d:curvePath(
+          50,
+          48,
+          x,
+          y-6,
+          bend
+        )
+
+      });
+
+      html+=nodeHTML(
+        key,
+        x,
+        y,
+        false,
+        false
+      );
+
+    }
+  );
 
   if(!kids.length){
+
     html+=`
       <div
         style="
           position:absolute;
           left:50%;
-          top:72%;
-          transform:translate(-50%,-50%);
-          color:#707070;
+          top:73%;
+          transform:
+            translate(-50%,-50%);
+          color:#666;
           font-size:13px;
-          text-align:center;
-          z-index:2
+          z-index:2;
         "
       >
-        This is currently the deepest learned branch here.
+        Deepest learned branch
       </div>
     `;
+
   }
 
   world.innerHTML=
     branchSVG(paths)+
     html;
+
 }
 
+
 function placeScopePopover(){
-  const focusNode=
-    world.querySelector(`.node[data-key="${focus}"]`);
 
-  if(!focusNode)return;
+  const focusedNode=
+    world.querySelector(
+      `.node[data-key="${focus}"]`
+    );
 
-  const vp=viewport.getBoundingClientRect();
-  const n=focusNode.getBoundingClientRect();
+  if(!focusedNode){
+    return;
+  }
 
-  let left=n.right-vp.left+22;
-  let top=n.top-vp.top-5;
+  const viewportRect=
+    viewport.getBoundingClientRect();
 
-  const width=scopePopover.offsetWidth||280;
+  const nodeRect=
+    focusedNode.getBoundingClientRect();
 
-  if(left+width>vp.width-18){
-    left=n.left-vp.left-width-22;
+  let left=
+    nodeRect.right-
+    viewportRect.left+
+    24;
+
+  let top=
+    nodeRect.top-
+    viewportRect.top-
+    4;
+
+  const popWidth=
+    scopePopover.offsetWidth||
+    290;
+
+  const popHeight=
+    scopePopover.offsetHeight||
+    160;
+
+  if(
+    left+
+    popWidth>
+    viewportRect.width-
+    18
+  ){
+
+    left=
+      nodeRect.left-
+      viewportRect.left-
+      popWidth-
+      24;
+
   }
 
   if(left<18){
-    left=Math.max(18,(vp.width-width)/2);
+
+    left=
+      Math.max(
+        18,
+        (
+          viewportRect.width-
+          popWidth
+        )/
+        2
+      );
+
   }
 
-  top=Math.max(
-    18,
-    Math.min(
-      top,
-      vp.height-(scopePopover.offsetHeight||150)-18
-    )
-  );
+  top=
+    Math.max(
+      86,
+      Math.min(
+        top,
+        viewportRect.height-
+        popHeight-
+        20
+      )
+    );
 
-  scopePopover.style.left=`${left}px`;
-  scopePopover.style.top=`${top}px`;
+  scopePopover.style.left=
+    `${left}px`;
+
+  scopePopover.style.top=
+    `${top}px`;
+
 }
 
+
+function updateUI(){
+
+  const current=
+    data[focus];
+
+  const path=
+    ancestors(focus);
+
+  crumbs.innerHTML=
+    path
+      .map(
+        (key,index)=>`
+
+          <span
+            class="
+              crumb
+              ${
+                index===
+                path.length-1
+                ? 'current'
+                : ''
+              }
+            "
+            data-key="${key}"
+          >
+            ${data[key].title}
+          </span>
+
+          ${
+            index<
+            path.length-1
+            ? '<span>›</span>'
+            : ''
+          }
+
+        `
+      )
+      .join('');
+
+  crumbs
+    .querySelectorAll('.crumb')
+    .forEach(
+      element=>{
+
+        element.addEventListener(
+          'click',
+          ()=>{
+            zoomTo(
+              element.dataset.key
+            );
+          }
+        );
+
+      }
+    );
+
+  scopeTitle.textContent=
+    current.title;
+
+  scopeDesc.textContent=
+    current.desc;
+
+  const backBtn=
+    document.getElementById(
+      'backBtn'
+    );
+
+  backBtn.disabled=
+    !current.parent;
+
+  backBtn.style.opacity=
+    current.parent
+    ? '1'
+    : '.35';
+
+}
+
+
 function render(){
+
   if(focus==='living'){
     organicOverview();
   }
@@ -827,157 +1807,271 @@ function render(){
     focusedLayout();
   }
 
-  world.querySelectorAll('.node,.branch-group')
-    .forEach(el=>{
-      el.addEventListener('click',e=>{
-        e.stopPropagation();
-        zoomTo(el.dataset.key);
-      });
-    });
+  world
+    .querySelectorAll(
+      '.node,.branch-group'
+    )
+    .forEach(
+      element=>{
+
+        element.addEventListener(
+          'click',
+          event=>{
+
+            event.stopPropagation();
+
+            zoomTo(
+              element.dataset.key
+            );
+
+          }
+        );
+
+      }
+    );
 
   updateUI();
 
-  world.style.transform='scale(.94)';
+  world.style.transform=
+    'scale(.94)';
 
-  requestAnimationFrame(()=>{
-    requestAnimationFrame(()=>{
-      world.style.transform='scale(1)';
-    });
-  });
+  requestAnimationFrame(
+    ()=>{
 
-  requestAnimationFrame(placeScopePopover);
+      requestAnimationFrame(
+        ()=>{
+
+          world.style.transform=
+            'scale(1)';
+
+        }
+      );
+
+    }
+  );
+
+  requestAnimationFrame(
+    placeScopePopover
+  );
+
 }
+
 
 function zoomTo(key){
-  if(!data[key])return;
+
+  if(!data[key]){
+    return;
+  }
 
   focus=key;
+
   render();
+
 }
 
-function updateUI(){
-  const d=data[focus];
-  const path=ancestors(focus);
-
-  crumbs.innerHTML=path.map((k,i)=>`
-    <span
-      class="crumb ${i===path.length-1?'current':''}"
-      data-key="${k}"
-    >
-      ${data[k].title}
-    </span>
-    ${i<path.length-1?'<span>›</span>':''}
-  `).join('');
-
-  crumbs.querySelectorAll('.crumb')
-    .forEach(c=>{
-      c.addEventListener(
-        'click',
-        ()=>zoomTo(c.dataset.key)
-      );
-    });
-
-  scopeTitle.textContent=d.title;
-  scopeDesc.textContent=d.desc;
-
-  document.getElementById('backBtn').disabled=!d.parent;
-
-  document.getElementById('backBtn').style.opacity=
-    d.parent?'1':'.35';
-}
 
 function openNotes(){
-  const d=data[focus];
 
-  drawerTitle.textContent=d.title;
+  const current=
+    data[focus];
+
+  drawerTitle.textContent=
+    current.title;
 
   drawerSource.textContent=
-    d.source
-      ? `● ${d.source}`
-      : 'Current learned MCAT scope';
+    current.source
+    ? `● ${current.source}`
+    : 'Current learned MCAT scope';
 
-  drawerDesc.textContent=d.desc;
+  drawerDesc.textContent=
+    current.desc;
 
   const notes=
-    d.learned && d.learned.length
-      ? d.learned
-      : ['No detailed notes have been attached to this scope yet.'];
+    current.learned &&
+    current.learned.length
+    ? current.learned
+    : [
+        'No detailed notes have been attached to this scope yet.'
+      ];
 
   drawerNotes.innerHTML=
     notes
-      .map(item=>`<li>${item}</li>`)
+      .map(
+        note=>`
+          <li>${note}</li>
+        `
+      )
       .join('');
 
-  notesDrawer.classList.add('open');
-  drawerBackdrop.classList.add('open');
+  notesDrawer
+    .classList
+    .add('open');
 
-  notesDrawer.setAttribute(
-    'aria-hidden',
-    'false'
-  );
+  drawerBackdrop
+    .classList
+    .add('open');
+
+  notesDrawer
+    .setAttribute(
+      'aria-hidden',
+      'false'
+    );
+
 }
+
 
 function closeNotes(){
-  notesDrawer.classList.remove('open');
-  drawerBackdrop.classList.remove('open');
 
-  notesDrawer.setAttribute(
-    'aria-hidden',
-    'true'
-  );
+  notesDrawer
+    .classList
+    .remove('open');
+
+  drawerBackdrop
+    .classList
+    .remove('open');
+
+  notesDrawer
+    .setAttribute(
+      'aria-hidden',
+      'true'
+    );
+
 }
 
-document.getElementById('backBtn')
-  .addEventListener('click',()=>{
-    const p=data[focus].parent;
 
-    if(p)zoomTo(p);
-  });
+document
+  .getElementById(
+    'enterMCAT'
+  )
+  .addEventListener(
+    'click',
+    enterMap
+  );
 
-document.getElementById('homeBtn')
-  .addEventListener('click',()=>{
-    zoomTo('living');
-  });
 
-document.getElementById('review2Btn')
-  .addEventListener('click',()=>{
-    alert(
-      `Review2 will eventually launch using this scope:
+document
+  .getElementById(
+    'backBtn'
+  )
+  .addEventListener(
+    'click',
+    ()=>{
 
-${ancestors(focus).map(k=>data[k].title).join(' → ')}
+      const parent=
+        data[focus].parent;
+
+      if(parent){
+        zoomTo(parent);
+      }
+
+    }
+  );
+
+
+document
+  .getElementById(
+    'resetBtn'
+  )
+  .addEventListener(
+    'click',
+    returnToEntrance
+  );
+
+
+document
+  .getElementById(
+    'review2Btn'
+  )
+  .addEventListener(
+    'click',
+    ()=>{
+
+      const path=
+        ancestors(focus)
+          .map(
+            key=>data[key].title
+          )
+          .join(' → ');
+
+      alert(
+        `Review2 will eventually launch using this scope:
+
+${path}
 
 Not wired yet.`
-    );
-  });
+      );
 
-document.getElementById('notesBtn')
+    }
+  );
+
+
+document
+  .getElementById(
+    'notesBtn'
+  )
   .addEventListener(
     'click',
     openNotes
   );
 
-document.getElementById('drawerClose')
+
+document
+  .getElementById(
+    'drawerClose'
+  )
   .addEventListener(
     'click',
     closeNotes
   );
 
-drawerBackdrop.addEventListener(
-  'click',
-  closeNotes
-);
 
-document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){
-    closeNotes();
-  }
-});
+drawerBackdrop
+  .addEventListener(
+    'click',
+    closeNotes
+  );
 
-window.addEventListener('resize',()=>{
-  render();
-});
 
-render();
+document
+  .addEventListener(
+    'keydown',
+    event=>{
+
+      if(event.key==='Escape'){
+
+        if(
+          notesDrawer
+            .classList
+            .contains('open')
+        ){
+
+          closeNotes();
+
+        }
+
+      }
+
+    }
+  );
+
+
+window
+  .addEventListener(
+    'resize',
+    ()=>{
+
+      if(
+        app
+          .classList
+          .contains('visible')
+      ){
+        render();
+      }
+
+    }
+  );
+
 </script>
+
 </body>
 </html>
