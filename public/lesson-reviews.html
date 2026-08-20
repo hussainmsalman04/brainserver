@@ -112,3 +112,320 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 20px;
+      padding: 22px 24px;
+      border-bottom: 1px solid #242424;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 17px;
+      font-weight: 800;
+    }
+
+    .section-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #52e28b;
+      box-shadow: 0 0 14px rgba(82, 226, 139, 0.35);
+    }
+
+    .section-meta {
+      color: #777;
+      font-size: 11px;
+    }
+
+    #lesson-list {
+      padding: 0 18px 10px;
+    }
+
+    .chapter {
+      padding: 20px 0 6px;
+    }
+
+    .chapter + .chapter {
+      border-top: 1px solid #262626;
+    }
+
+    .chapter-title {
+      padding: 0 10px 12px;
+      color: #d6d6d6;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .lesson {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 22px;
+      padding: 16px 12px;
+      border-top: 1px solid #242424;
+    }
+
+    .lesson:first-of-type {
+      border-top: 0;
+    }
+
+    .lesson-info {
+      min-width: 0;
+    }
+
+    .lesson-title {
+      margin-bottom: 5px;
+      font-size: 14px;
+      font-weight: 800;
+      line-height: 1.4;
+    }
+
+    .meta {
+      color: #858585;
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .done {
+      color: #5be393;
+      font-weight: 800;
+    }
+
+    .actions {
+      flex: 0 0 auto;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 36px;
+      padding: 0 17px;
+      border-radius: 999px;
+      background: #f1f1f1;
+      color: #111;
+      font-size: 12px;
+      font-weight: 800;
+      transition:
+        background 0.15s ease,
+        transform 0.15s ease;
+    }
+
+    .btn:hover {
+      background: #fff;
+      transform: translateY(-1px);
+    }
+
+    .loading,
+    .empty,
+    .error {
+      padding: 30px 22px;
+      color: #8d8d8d;
+      font-size: 13px;
+      text-align: center;
+    }
+
+    .error {
+      color: #ff9a9a;
+    }
+
+    .footer-note {
+      padding: 16px 24px 20px;
+      border-top: 1px solid #242424;
+      color: #707070;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 680px) {
+      .shell {
+        width: min(100% - 24px, 900px);
+        padding-top: 36px;
+      }
+
+      .topbar {
+        flex-direction: column;
+      }
+
+      .lesson {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .actions,
+      .btn {
+        width: 100%;
+      }
+
+      .section-header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="shell">
+    <div class="topbar">
+      <div>
+        <div class="eyebrow">MCAT Brain</div>
+
+        <h1>Lesson Reviews</h1>
+
+        <p class="subtitle">
+          Your permanent source-based archive for the lesson-end Review system.
+          Each lesson below opens the same scoped Review you receive after
+          completing a Kaplan lesson.
+        </p>
+      </div>
+
+      <a
+        class="secondary-btn"
+        href="/concept-map.html?focus=living"
+      >
+        Concept Map
+      </a>
+    </div>
+
+    <section class="panel">
+      <div class="section-header">
+        <div class="section-title">
+          <span class="section-dot"></span>
+          Biology
+        </div>
+
+        <div class="section-meta">
+          Automatically synced from the Brain
+        </div>
+      </div>
+
+      <div id="lesson-list">
+        <div class="loading">
+          Loading available lesson Reviews…
+        </div>
+      </div>
+
+      <div class="footer-note">
+        New Kaplan Bio lessons appear here automatically after they are saved
+        to the Brain. This page does not create another copy of Review — it is
+        simply another entrance to the same scoped Review system.
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const lessonList = document.getElementById("lesson-list");
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    async function loadLessons() {
+      try {
+        const response = await fetch("/api/review-index");
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        const lessons =
+          Array.isArray(data.lessons)
+            ? data.lessons
+            : [];
+
+        if (lessons.length === 0) {
+          lessonList.innerHTML = `
+            <div class="empty">
+              No Kaplan Biology lesson Reviews found yet.
+            </div>
+          `;
+
+          return;
+        }
+
+        const chapters = new Map();
+
+        for (const lesson of lessons) {
+          if (!chapters.has(lesson.chapter)) {
+            chapters.set(lesson.chapter, []);
+          }
+
+          chapters
+            .get(lesson.chapter)
+            .push(lesson);
+        }
+
+        lessonList.innerHTML =
+          [...chapters.entries()]
+            .map(([chapter, chapterLessons]) => {
+              const rows =
+                chapterLessons
+                  .map((lesson) => `
+                    <div class="lesson">
+                      <div class="lesson-info">
+                        <div class="lesson-title">
+                          BIO ${escapeHtml(lesson.scope)}
+                          —
+                          ${escapeHtml(lesson.title)}
+                        </div>
+
+                        <div class="meta">
+                          <span class="done">
+                            ✓ Review available
+                          </span>
+                          · Scoped lesson Review
+                        </div>
+                      </div>
+
+                      <div class="actions">
+                        <a
+                          class="btn"
+                          href="/recall.html?scope=${encodeURIComponent(
+                            lesson.scope
+                          )}"
+                        >
+                          Open Review
+                        </a>
+                      </div>
+                    </div>
+                  `)
+                  .join("");
+
+              return `
+                <div class="chapter">
+                  <div class="chapter-title">
+                    Chapter ${escapeHtml(chapter)}
+                  </div>
+
+                  ${rows}
+                </div>
+              `;
+            })
+            .join("");
+      } catch (error) {
+        console.error(
+          "Failed to load Review index:",
+          error
+        );
+
+        lessonList.innerHTML = `
+          <div class="error">
+            Could not load lesson Reviews.
+          </div>
+        `;
+      }
+    }
+
+    loadLessons();
+  </script>
+</body>
+</html>
