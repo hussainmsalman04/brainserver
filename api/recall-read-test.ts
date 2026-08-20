@@ -148,26 +148,68 @@ function extractBrainSection(
   return matchedBlocks.join("\n\n").trim();
 }
 
-// --- Even-coverage subtopics ------------------------------------------------
-// Detect subtopic headers within the material: line-leading bold headers that
-// end in a colon, e.g. "**Nucleus:**", "**RER vs. SER:**". Inline emphasis
-// like "**actin**" is skipped (not line-leading, no trailing colon). Returns
-// labels in note order, de-duplicated. Empty when the note has no such headers
-// (in which case generation stays unconstrained — back-compat).
-function detectSubtopics(material: string): string[] {
-  const seen = new Set<string>();
-  const out: string[] = [];
-  for (const line of material.split(/\r?\n/)) {
-    const m = line.match(/^\s*\*\*(.+?):\*\*/);
-    if (m) {
-      const label = m[1].trim();
-      if (label && !seen.has(label)) {
-        seen.add(label);
-        out.push(label);
+// --- Knowledge-target coverage ---------------------------------------------
+
+type KnowledgeTarget = {
+  id: string;
+  subtopic: string;
+  text: string;
+};
+
+function targetId(subtopic: string, text: string): string {
+  return `${subtopic}::${text}`
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 120);
+}
+
+function detectKnowledgeTargets(material: string): KnowledgeTarget[] {
+  const targets: KnowledgeTarget[] = [];
+  let currentSubtopic = "General";
+
+  for (const rawLine of material.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line) continue;
+
+    const heading = line.match(/^\*\*(.+?):\*\*/);
+
+    if (heading) {
+      currentSubtopic = heading[1].trim();
+
+      const remainder = line.slice(heading[0].length).trim();
+
+      if (remainder) {
+        targets.push({
+          id: targetId(currentSubtopic, remainder),
+          subtopic: currentSubtopic,
+          text: remainder,
+        });
+      }
+
+      continue;
+    }
+
+    if (/^[-*]\s+/.test(line)) {
+      const text = line.replace(/^[-*]\s+/, "").trim();
+
+      if (text) {
+        targets.push({
+          id: targetId(currentSubtopic, text),
+          subtopic: currentSubtopic,
+          text,
+        });
       }
     }
   }
-  return out;
+
+  const seen = new Set<string>();
+
+  return targets.filter((target) => {
+    if (seen.has(target.id)) return false;
+    seen.add(target.id);
+    return true;
+  });
 }
 
 // --- Covered-dimension collision gate ---------------------------------------
