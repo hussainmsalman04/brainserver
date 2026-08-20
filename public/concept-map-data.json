@@ -109,7 +109,8 @@
     "children": [
       "membrane",
       "internal",
-      "cytoskeleton"
+      "cytoskeleton",
+      "prokaryotic-cell"
     ],
     "notes": [
       {
@@ -575,6 +576,90 @@
           "Tendons / ligaments",
           "Adipose",
           "Blood"
+        ]
+      }
+    ]
+  },
+  "prokaryotic-cell": {
+    "title": "Prokaryotic Cell",
+    "parent": "cells",
+    "source": "BIO 1.3",
+    "status": "",
+    "desc": "Simplest organisms, including all bacteria; lack membrane-bound organelles. Genetic material is a single circular DNA molecule concentrated in the nucleoid. Understanding their structure guides antibiotic choice.",
+    "children": [
+      "prokaryotic-domains"
+    ],
+    "notes": [
+      {
+        "type": "bullets",
+        "title": "Defining features",
+        "items": [
+          "Include all bacteria",
+          "No membrane-bound organelles",
+          "Single circular molecule of DNA",
+          "DNA concentrated in the nucleoid region (not a membrane-bound nucleus)"
+        ]
+      }
+    ]
+  },
+  "prokaryotic-domains": {
+    "title": "Prokaryotic Domains",
+    "parent": "prokaryotic-cell",
+    "source": "BIO 1.3",
+    "status": "",
+    "desc": "Two of the three domains of life contain prokaryotes: Archaea and Bacteria. Originally grouped as kingdom Monera before genetic/biochemical analysis separated them.",
+    "children": [
+      "archaea"
+    ],
+    "notes": [
+      {
+        "type": "bullets",
+        "title": "Key points",
+        "items": [
+          "Three domains of life: Archaea, Bacteria, Eukarya",
+          "Prokaryotic domains: Archaea and Bacteria",
+          "Historically grouped as kingdom Monera",
+          "Archaea-Bacteria difference is at least as large as either vs. Eukarya",
+          "Trap: 'prokaryote' is a structural label, not an evolutionary grouping"
+        ]
+      }
+    ]
+  },
+  "archaea": {
+    "title": "Archaea",
+    "parent": "prokaryotic-domains",
+    "source": "BIO 1.3",
+    "status": "",
+    "desc": "Single-celled prokaryotes that look like bacteria but have eukaryote-like molecular machinery. Memory hook: molecular biology = eukaryote-like; structure & division = bacteria-like.",
+    "children": [],
+    "notes": [
+      {
+        "type": "bullets",
+        "title": "Eukaryote-like (molecular biology)",
+        "items": [
+          "Initiate translation with methionine",
+          "Similar RNA polymerases",
+          "DNA associated with histones",
+          "Basis for shared-origin hypothesis with eukaryotes"
+        ]
+      },
+      {
+        "type": "bullets",
+        "title": "Bacteria-like (structure & division)",
+        "items": [
+          "Single circular chromosome",
+          "Divide by binary fission or budding",
+          "Similar overall structure to bacteria",
+          "Resistant to many antibiotics"
+        ]
+      },
+      {
+        "type": "bullets",
+        "title": "Metabolism & habitat",
+        "items": [
+          "Some photosynthetic; many chemosynthetic (energy from inorganic compounds, e.g. sulfur/nitrogen such as ammonia)",
+          "Historically extremophiles (high temp, high salinity, no light)",
+          "Now known to be widespread, including in the human body"
         ]
       }
     ]
