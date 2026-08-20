@@ -430,12 +430,26 @@ if (askedSubtopicsRaw) {
   }
 }
 
-const subtopics = detectSubtopics(brainMaterial);
-const remaining = subtopics.filter((s) => !askedSubtopics.includes(s));
+const knowledgeTargets =
+  detectKnowledgeTargets(brainMaterial);
 
-// If the note has detectable subtopics and every one has been asked, the
-// review for this scope is finished — stop instead of generating repeats.
-if (subtopics.length > 0 && remaining.length === 0) {
+const subtopics =
+  knowledgeTargets.map(
+    (target) => target.id
+  );
+
+const remainingTargets =
+  knowledgeTargets.filter(
+    (target) =>
+      !askedSubtopics.includes(target.id)
+  );
+
+// Review is complete only after every detected knowledge target
+// has received coverage.
+if (
+  knowledgeTargets.length > 0 &&
+  remainingTargets.length === 0
+) {
   return res.status(200).json({
     success: true,
     sectionComplete: true,
@@ -446,13 +460,28 @@ if (subtopics.length > 0 && remaining.length === 0) {
   });
 }
 
-// Target the next uncovered subtopic (note order). Null when the note has no
-// detectable subtopics — generation then stays unconstrained.
-const targetSubtopic: string | null =
-  remaining.length > 0 ? remaining[0] : null;
+const target =
+  remainingTargets[0] ?? null;
 
-const targetBlock = targetSubtopic
-  ? `\nTARGET SUBTOPIC:\nFocus this question specifically on the subtopic "${targetSubtopic}". Select your one or two facts from within that subtopic's content in the BRAIN MATERIAL. Do not draw the question from a different subtopic.\n`
+// Keep this variable name because the frontend already tracks it.
+// It now contains a knowledge-target ID instead of a broad heading.
+const targetSubtopic: string | null =
+  target?.id ?? null;
+
+const targetBlock = target
+  ? `
+TARGET KNOWLEDGE:
+Subtopic: "${target.subtopic}"
+Knowledge target: "${target.text}"
+
+Generate a compact question that directly tests this knowledge target.
+
+You MAY combine it with ONE closely related uncovered fact from the same
+subtopic when doing so naturally tests both in one answer.
+
+Do not repeat a knowledge dimension that has already been demonstrated merely
+to make the question broader.
+`
   : "";
 
     const MAX_ATTEMPTS = 3;
