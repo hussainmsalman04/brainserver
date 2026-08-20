@@ -607,11 +607,22 @@ Rules:
         });
       }
 
-      if (gradeResult.requiredDimensions.length === 0) {
-        return res.status(502).json({
-          error: "Grader did not identify a required knowledge gap",
-        });
-      }
+    if (gradeResult.requiredDimensions.length === 0) {
+  const fallbackDimensions =
+    gradeResult.knowledgeGap.length > 0
+      ? gradeResult.knowledgeGap
+      : gradeResult.testedDimensions
+          .map((dimension) => dimension.label)
+          .filter(Boolean);
+
+  if (fallbackDimensions.length === 0) {
+    return res.status(502).json({
+      error: "Grader returned no usable retest dimensions",
+    });
+  }
+
+  gradeResult.requiredDimensions = fallbackDimensions;
+}
       
     const attempts: Array<{
       attempt: number;
