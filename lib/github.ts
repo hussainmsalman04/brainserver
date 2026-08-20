@@ -176,4 +176,66 @@ export class VaultClient {
     const existing = await this.readFile(path);
     return this.appendUsingExisting(path, toAppend, commitMessage, existing);
   }
+/**
+ * Safely replace a whole file.
+ * Reads first so GitHub's current SHA protects against blind overwrites.
+ */
+async writeFile(
+  path: string,
+  content: string,
+  commitMessage: string
+): Promise<{ commitSha: string; created: boolean }> {
+  const existing = await this.readFile(path);
+
+  const utf8 = new TextEncoder().encode(content);
+
+  let binary = "";
+
+  for (let i = 0; i < utf8.length; i++) {
+    binary += String.fromCharCode(utf8[i]);
+  }
+
+  const b64 = btoa(binary);
+
+  const { owner, repo, branch } = this.cfg;
+
+  const body: Record<string, unknown> = {
+    message: commitMessage,
+    content: b64,
+    branch,
+  };
+
+  if (existing) {
+    body.sha = existing.sha;
+  }
+
+  const res = await this.ghFetch(
+    `/repos/${owner}/${repo}/contents/${encodeURI(path)}`,
+    {
+      method: "PUT",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(body),
+    }
+  );
+
+  if (!res.ok) {
+    throw new Error(
+      `GitHub PUT ${path} ${res.status}: ${await res.text()}`
+    );
+  }
+
+  const result = (await res.json()) as {
+    commit?: {
+      sha?: string;
+    };
+  };
+
+  return {
+    commitSha: result.commit?.sha ?? "",
+    created: !existing,
+  };
+}
+  
 }
