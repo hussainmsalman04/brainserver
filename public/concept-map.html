@@ -1653,13 +1653,40 @@ window
   );
 loadConceptMapData()
   .then(()=>{
+
     console.log('Concept Map data loaded');
+
+    const params = new URLSearchParams(
+      window.location.search
+    );
+
+    const requestedFocus = params.get('focus');
+
+    if(requestedFocus && data[requestedFocus]){
+
+      focus = requestedFocus;
+      notesOpen = false;
+
+      entrance
+        .classList
+        .add('hidden');
+
+      app
+        .classList
+        .add('visible');
+
+      render();
+
+    }
+
   })
   .catch(error=>{
+
     console.error(
       'Concept Map failed to initialize:',
       error
     );
+
   });
 </script>
 
