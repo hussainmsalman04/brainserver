@@ -8,32 +8,54 @@ type Lesson = {
   title: string;
 };
 
+function cleanHeading(line: string): string {
+  return line
+    .replace(/^#{1,6}\s*/, "")
+    .replace(/^Kaplan\s+Bio\s+\d+\.\d+\s*(?:--|—|-)\s*/i, "")
+    .replace(/\s+\(cont\.?\)\s*$/i, "")
+    .trim();
+}
+
 function extractLessons(content: string): Lesson[] {
+  const lines = content.split(/\r?\n/);
   const lessons = new Map<string, Lesson>();
 
-  for (const line of content.split(/\r?\n/)) {
-    const match = line.match(
-      /^##\s+Kaplan\s+Bio\s+(\d+)\.(\d+)\s+--\s+(.+?)\s*$/i
+  for (let i = 0; i < lines.length; i++) {
+    const scopeMatch = lines[i].match(
+      /^\s*Scope:\s*Kaplan\s+Bio\s+(\d+)\.(\d+)\s*$/i
     );
 
-    if (!match) continue;
+    if (!scopeMatch) continue;
 
-    const chapter = parseInt(match[1], 10);
-    const lesson = parseInt(match[2], 10);
+    const chapter = parseInt(scopeMatch[1], 10);
+    const lesson = parseInt(scopeMatch[2], 10);
     const scope = `${chapter}.${lesson}`;
 
-    // First heading for a lesson wins.
-    // This prevents "(cont.)" sections from creating duplicate rows.
-    if (!lessons.has(scope)) {
-      lessons.set(scope, {
-        scope,
-        chapter,
-        lesson,
-        title: match[3]
-          .replace(/\s+\(cont\.?\)\s*$/i, "")
-          .trim(),
-      });
+    if (lessons.has(scope)) continue;
+
+    let title = `Kaplan Bio ${scope}`;
+
+    // Find the nearest heading immediately above the Scope line.
+    for (let j = i - 1; j >= Math.max(0, i - 6); j--) {
+      const candidate = lines[j].trim();
+
+      if (/^#{1,6}\s+/.test(candidate)) {
+        const cleaned = cleanHeading(candidate);
+
+        if (cleaned) {
+          title = cleaned;
+        }
+
+        break;
+      }
     }
+
+    lessons.set(scope, {
+      scope,
+      chapter,
+      lesson,
+      title,
+    });
   }
 
   return [...lessons.values()].sort(
