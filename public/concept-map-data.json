@@ -5,23 +5,30 @@
     "source": "",
     "status": "",
     "desc": "Everything you have learned so far across the MCAT.",
-    "children": ["living"],
+    "children": [
+      "living"
+    ],
     "notes": [
       {
         "type": "bullets",
         "title": "Learned regions",
-        "items": ["Living Systems"]
+        "items": [
+          "Living Systems"
+        ]
       }
     ]
   },
-
   "living": {
     "title": "Living Systems",
     "parent": "mcat",
     "source": "BIO 1.1–1.2",
     "status": "",
     "desc": "The biological systems and structures you have learned so far.",
-    "children": ["foundations", "cells", "tissues"],
+    "children": [
+      "foundations",
+      "cells",
+      "tissues"
+    ],
     "notes": [
       {
         "type": "bullets",
@@ -34,7 +41,6 @@
       }
     ]
   },
-
   "foundations": {
     "title": "Foundations of Life",
     "parent": "living",
@@ -56,7 +62,6 @@
       }
     ]
   },
-
   "cell-theory": {
     "title": "Cell Theory",
     "parent": "foundations",
@@ -76,7 +81,6 @@
       }
     ]
   },
-
   "life-boundary": {
     "title": "Boundary of Life",
     "parent": "foundations",
@@ -96,7 +100,6 @@
       }
     ]
   },
-
   "cells": {
     "title": "Cells",
     "parent": "living",
@@ -120,7 +123,6 @@
       }
     ]
   },
-
   "membrane": {
     "title": "Plasma Membrane",
     "parent": "cells",
@@ -140,7 +142,6 @@
       }
     ]
   },
-
   "internal": {
     "title": "Internal Organization",
     "parent": "cells",
@@ -170,7 +171,6 @@
       }
     ]
   },
-
   "nucleus": {
     "title": "Nucleus",
     "parent": "internal",
@@ -199,7 +199,6 @@
       }
     ]
   },
-
   "mitochondria": {
     "title": "Mitochondria",
     "parent": "internal",
@@ -255,7 +254,6 @@
       }
     ]
   },
-
   "lysosome": {
     "title": "Lysosomes",
     "parent": "internal",
@@ -283,7 +281,6 @@
       }
     ]
   },
-
   "er": {
     "title": "Endoplasmic Reticulum",
     "parent": "internal",
@@ -311,7 +308,6 @@
       }
     ]
   },
-
   "golgi": {
     "title": "Golgi Apparatus",
     "parent": "internal",
@@ -333,7 +329,6 @@
       }
     ]
   },
-
   "peroxisome": {
     "title": "Peroxisomes",
     "parent": "internal",
@@ -361,7 +356,6 @@
       }
     ]
   },
-
   "cytoskeleton": {
     "title": "Structure & Movement",
     "parent": "cells",
@@ -385,7 +379,6 @@
       }
     ]
   },
-
   "microfilaments": {
     "title": "Microfilaments",
     "parent": "cytoskeleton",
@@ -406,7 +399,6 @@
       }
     ]
   },
-
   "microtubules": {
     "title": "Microtubules",
     "parent": "cytoskeleton",
@@ -438,7 +430,6 @@
       }
     ]
   },
-
   "centrioles": {
     "title": "Centrioles",
     "parent": "microtubules",
@@ -458,7 +449,6 @@
       }
     ]
   },
-
   "motility": {
     "title": "Cilia / Flagella",
     "parent": "microtubules",
@@ -478,7 +468,6 @@
       }
     ]
   },
-
   "intermediate": {
     "title": "Intermediate Filaments",
     "parent": "cytoskeleton",
@@ -499,7 +488,6 @@
       }
     ]
   },
-
   "tissues": {
     "title": "Tissues",
     "parent": "living",
@@ -529,7 +517,6 @@
       }
     ]
   },
-
   "epithelial": {
     "title": "Epithelial Tissue",
     "parent": "tissues",
@@ -562,7 +549,6 @@
       }
     ]
   },
-
   "connective": {
     "title": "Connective Tissue",
     "parent": "tissues",
