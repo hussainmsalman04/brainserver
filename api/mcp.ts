@@ -38,8 +38,36 @@ const AppendInput = z.object({
   entry: z.string(),
   commit_message: z.string().optional(),
 });
-const SaveInput = AppendInput;
+const ConceptMapNoteInput = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("bullets"),
+    title: z.string(),
+    items: z.array(z.string()),
+  }),
+  z.object({
+    type: z.literal("path"),
+    title: z.string(),
+    steps: z.array(z.string()),
+  }),
+]);
 
+const ConceptMapNodeInput = z.object({
+  id: z.string(),
+  title: z.string(),
+  parent: z.string(),
+  source: z.string(),
+  desc: z.string().optional(),
+  status: z.enum(["", "mastered", "developing"]).optional(),
+  notes: z.array(ConceptMapNoteInput).optional(),
+});
+
+const SaveInput = AppendInput.extend({
+  concept_map: z
+    .object({
+      nodes: z.array(ConceptMapNodeInput),
+    })
+    .optional(),
+});
 // ---------- Build MCP server ----------
 
 function buildServer(vault: VaultClient): Server {
@@ -88,6 +116,97 @@ function buildServer(vault: VaultClient): Server {
                 "Markdown memory to append. Keep it self-contained and structured. The server only skips effectively identical entries; it does not make risky semantic merge decisions.",
             },
             commit_message: { type: "string", description: "Optional git commit message." },
+            concept_map: {
+  type: "object",
+  description:
+    "Optional Concept Map growth derived from this approved lesson. Existing concepts should be enriched rather than duplicated. Include only concepts supported by the approved lesson.",
+  properties: {
+    nodes: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          id: {
+            type: "string",
+            description:
+              "Stable lowercase concept ID such as `mitochondria` or `oxidative-phosphorylation`.",
+          },
+          title: {
+            type: "string",
+            description:
+              "Human-readable concept title.",
+          },
+          parent: {
+            type: "string",
+            description:
+              "Existing or simultaneously-created parent concept ID.",
+          },
+          source: {
+            type: "string",
+            description:
+              "Lesson source such as `BIO 1.3`.",
+          },
+          desc: {
+            type: "string",
+            description:
+              "Short concept summary grounded only in the approved lesson.",
+          },
+          status: {
+            type: "string",
+            enum: ["", "mastered", "developing"],
+          },
+          notes: {
+            type: "array",
+            items: {
+              oneOf: [
+                {
+                  type: "object",
+                  properties: {
+                    type: {
+                      type: "string",
+                      const: "bullets",
+                    },
+                    title: {
+                      type: "string",
+                    },
+                    items: {
+                      type: "array",
+                      items: {
+                        type: "string",
+                      },
+                    },
+                  },
+                  required: ["type", "title", "items"],
+                },
+                {
+                  type: "object",
+                  properties: {
+                    type: {
+                      type: "string",
+                      const: "path",
+                    },
+                    title: {
+                      type: "string",
+                    },
+                    steps: {
+                      type: "array",
+                      items: {
+                        type: "string",
+                      },
+                    },
+                  },
+                  required: ["type", "title", "steps"],
+                },
+              ],
+            },
+          },
+        },
+        required: ["id", "title", "parent", "source"],
+      },
+    },
+  },
+  required: ["nodes"],
+},
           },
           required: ["path", "entry"],
         },
@@ -137,7 +256,12 @@ function buildServer(vault: VaultClient): Server {
       }
 
       if (name === "save_to_brain") {
-        const { path, entry, commit_message } = SaveInput.parse(args);
+     const {
+  path,
+  entry,
+  commit_message,
+  concept_map,
+} = SaveInput.parse(args);
         const err = validateVaultPath(path);
         if (err) return toolError(err);
         if (entry.length > 50_000) return toolError("entry too long (max 50000 chars)");
@@ -146,27 +270,56 @@ function buildServer(vault: VaultClient): Server {
         if (skippedDuplicate) {
           return toolText(`No change: an effectively identical entry is already present in ${path}.`);
         }
-        try {
-  const conceptMapResult = await updateConceptMap(
-    {
-      nodes: [],
-    },
-    `concept-map: wiring test from ${path}`
-  );
+ let conceptMapSummary = "";
 
-  console.log(
-    "Concept Map update wiring test:",
-    conceptMapResult
-  );
-} catch (error) {
-  console.error(
-    "Concept Map update failed after Brain save:",
-    error
-  );
+if (
+  concept_map &&
+  concept_map.nodes.length > 0
+) {
+  try {
+    const conceptMapResult =
+      await updateConceptMap(
+        concept_map,
+        `concept-map: grow from ${path}`
+      );
+
+    console.log(
+      "Concept Map updated:",
+      conceptMapResult
+    );
+
+    const parts: string[] = [];
+
+    if (conceptMapResult.addedNodes.length > 0) {
+      parts.push(
+        `added ${conceptMapResult.addedNodes.join(", ")}`
+      );
+    }
+
+    if (conceptMapResult.enrichedNodes.length > 0) {
+      parts.push(
+        `enriched ${conceptMapResult.enrichedNodes.join(", ")}`
+      );
+    }
+
+    if (parts.length > 0) {
+      conceptMapSummary =
+        ` Concept Map: ${parts.join("; ")}.`;
+    }
+  } catch (error) {
+    console.error(
+      "Concept Map update failed after Brain save:",
+      error
+    );
+
+    conceptMapSummary =
+      " Brain save succeeded, but Concept Map growth failed.";
+  }
 }
-        return toolText(
-          `${created ? "Created and wrote" : "Safely appended to"} ${path}. Commit ${commitSha.slice(0, 7)}.`
-        );
+
+return toolText(
+  `${created ? "Created and wrote" : "Safely appended to"} ${path}. Commit ${commitSha.slice(0, 7)}.${conceptMapSummary}`
+);
       }
 
       if (name === "append_to_vault") {
