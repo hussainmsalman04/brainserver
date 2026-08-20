@@ -1,3 +1,5 @@
+import { VaultClient } from "./github.js";
+
 export type ConceptMapNote =
   | {
       type: "bullets";
@@ -42,12 +44,14 @@ export type ConceptMapMergeResult = {
   enrichedNodes: string[];
 };
 
-/**
- * Convert arbitrary concept names into stable map IDs.
- *
- * Example:
- * "Oxidative Phosphorylation" -> "oxidative-phosphorylation"
- */
+export type ConceptMapUpdateResult = {
+  commitSha: string;
+  addedNodes: string[];
+  enrichedNodes: string[];
+};
+
+const CONCEPT_MAP_PATH = "public/concept-map-data.json";
+
 export function normalizeConceptId(value: string): string {
   return value
     .trim()
@@ -57,10 +61,19 @@ export function normalizeConceptId(value: string): string {
 }
 
 function uniqueStrings(values: string[]): string[] {
-  return [...new Set(values.map((value) => value.trim()).filter(Boolean))];
+  return [
+    ...new Set(
+      values
+        .map((value) => value.trim())
+        .filter(Boolean)
+    ),
+  ];
 }
 
-function mergeSource(existing: string, incoming: string): string {
+function mergeSource(
+  existing: string,
+  incoming: string
+): string {
   const oldParts = existing
     .split("·")
     .map((part) => part.trim())
@@ -71,22 +84,33 @@ function mergeSource(existing: string, incoming: string): string {
     .map((part) => part.trim())
     .filter(Boolean);
 
-  return uniqueStrings([...oldParts, ...newParts]).join(" · ");
+  return uniqueStrings([
+    ...oldParts,
+    ...newParts,
+  ]).join(" · ");
 }
 
-function noteSignature(note: ConceptMapNote): string {
+function noteSignature(
+  note: ConceptMapNote
+): string {
   if (note.type === "bullets") {
     return [
       note.type,
       note.title.trim().toLowerCase(),
-      ...note.items.map((item) => item.trim().toLowerCase()),
+      ...note.items.map(
+        (item) =>
+          item.trim().toLowerCase()
+      ),
     ].join("|");
   }
 
   return [
     note.type,
     note.title.trim().toLowerCase(),
-    ...note.steps.map((step) => step.trim().toLowerCase()),
+    ...note.steps.map(
+      (step) =>
+        step.trim().toLowerCase()
+    ),
   ].join("|");
 }
 
@@ -95,10 +119,14 @@ function mergeNotes(
   incoming: ConceptMapNote[]
 ): ConceptMapNote[] {
   const result = [...existing];
-  const seen = new Set(existing.map(noteSignature));
+
+  const seen = new Set(
+    existing.map(noteSignature)
+  );
 
   for (const note of incoming) {
-    const signature = noteSignature(note);
+    const signature =
+      noteSignature(note);
 
     if (seen.has(signature)) {
       continue;
@@ -111,15 +139,20 @@ function mergeNotes(
   return result;
 }
 
-function cloneMap(data: ConceptMapData): ConceptMapData {
-  return JSON.parse(JSON.stringify(data)) as ConceptMapData;
+function cloneMap(
+  data: ConceptMapData
+): ConceptMapData {
+  return JSON.parse(
+    JSON.stringify(data)
+  ) as ConceptMapData;
 }
 
 function validateNodePatch(
   patch: ConceptMapNodePatch,
   map: ConceptMapData
 ): string | null {
-  const id = normalizeConceptId(patch.id);
+  const id =
+    normalizeConceptId(patch.id);
 
   if (!id) {
     return "Concept Map node id is empty.";
@@ -137,15 +170,11 @@ function validateNodePatch(
     return `Concept Map node "${id}" is missing a lesson source.`;
   }
 
-  const parentId = normalizeConceptId(patch.parent);
+  const parentId =
+    normalizeConceptId(
+      patch.parent
+    );
 
-  /*
-   * Parent may either:
-   * 1. already exist in the map, or
-   * 2. be another node being introduced by the same patch.
-   *
-   * The second case is checked later once all incoming IDs are known.
-   */
   if (id === parentId) {
     return `Concept Map node "${id}" cannot be its own parent.`;
   }
@@ -166,71 +195,79 @@ function validateNodePatch(
   return null;
 }
 
-/**
- * Safely apply an approved lesson's concept-map patch.
- *
- * Behavior:
- *
- * Existing concept:
- * - preserves the current node
- * - appends new lesson provenance
- * - merges non-duplicate notes
- * - optionally enriches the description
- *
- * New concept:
- * - creates the node
- * - attaches it to its parent
- *
- * This function never deletes nodes.
- * This function never moves an existing node automatically.
- */
 export function applyConceptMapPatch(
   current: ConceptMapData,
   patch: ConceptMapPatch
 ): ConceptMapMergeResult {
-  const data = cloneMap(current);
+  const data =
+    cloneMap(current);
 
   const addedNodes: string[] = [];
   const enrichedNodes: string[] = [];
 
-  if (!patch || !Array.isArray(patch.nodes)) {
-    throw new Error("Concept Map patch must contain a nodes array.");
+  if (
+    !patch ||
+    !Array.isArray(patch.nodes)
+  ) {
+    throw new Error(
+      "Concept Map patch must contain a nodes array."
+    );
   }
 
-  const incomingIds = new Set(
-    patch.nodes.map((node) => normalizeConceptId(node.id))
-  );
+  const incomingIds =
+    new Set(
+      patch.nodes.map(
+        (node) =>
+          normalizeConceptId(
+            node.id
+          )
+      )
+    );
 
   for (const nodePatch of patch.nodes) {
-    const error = validateNodePatch(nodePatch, data);
+    const error =
+      validateNodePatch(
+        nodePatch,
+        data
+      );
 
     if (error) {
       throw new Error(error);
     }
 
-    const id = normalizeConceptId(nodePatch.id);
-    const parentId = normalizeConceptId(nodePatch.parent);
+    const id =
+      normalizeConceptId(
+        nodePatch.id
+      );
 
-    if (!data[parentId] && !incomingIds.has(parentId)) {
+    const parentId =
+      normalizeConceptId(
+        nodePatch.parent
+      );
+
+    if (
+      !data[parentId] &&
+      !incomingIds.has(parentId)
+    ) {
       throw new Error(
         `Concept Map parent "${parentId}" does not exist for "${id}".`
       );
     }
   }
 
-  /*
-   * We may receive parent + child in the same patch.
-   * Process repeatedly until every node whose parent is available
-   * has been merged.
-   */
-  const pending = [...patch.nodes];
+  const pending = [
+    ...patch.nodes,
+  ];
 
   let safetyCounter = 0;
 
   while (pending.length > 0) {
     safetyCounter += 1;
 
-    if (safetyCounter > patch.nodes.length + 5) {
+    if (
+      safetyCounter >
+      patch.nodes.length + 5
+    ) {
       throw new Error(
         "Concept Map patch contains an unresolved parent relationship."
       );
@@ -238,54 +275,68 @@ export function applyConceptMapPatch(
 
     let progressed = false;
 
-    for (let index = pending.length - 1; index >= 0; index -= 1) {
-      const nodePatch = pending[index];
+    for (
+      let index =
+        pending.length - 1;
+      index >= 0;
+      index -= 1
+    ) {
+      const nodePatch =
+        pending[index];
 
-      const id = normalizeConceptId(nodePatch.id);
-      const parentId = normalizeConceptId(nodePatch.parent);
+      const id =
+        normalizeConceptId(
+          nodePatch.id
+        );
+
+      const parentId =
+        normalizeConceptId(
+          nodePatch.parent
+        );
 
       if (!data[parentId]) {
         continue;
       }
 
-      const existing = data[id];
+      const existing =
+        data[id];
 
       if (existing) {
-        /*
-         * Important safety rule:
-         *
-         * We do NOT automatically re-parent an existing concept.
-         * If later semantic review decides a concept belongs elsewhere,
-         * that should be an explicit reviewed structural change.
-         */
-        if (existing.parent !== parentId) {
+        if (
+          existing.parent !==
+          parentId
+        ) {
           throw new Error(
             `Concept "${id}" already exists under "${existing.parent}" and cannot be automatically moved to "${parentId}".`
           );
         }
 
-        existing.source = mergeSource(
-          existing.source,
-          nodePatch.source
-        );
+        existing.source =
+          mergeSource(
+            existing.source,
+            nodePatch.source
+          );
 
-        existing.notes = mergeNotes(
-          existing.notes ?? [],
-          nodePatch.notes ?? []
-        );
+        existing.notes =
+          mergeNotes(
+            existing.notes ?? [],
+            nodePatch.notes ?? []
+          );
 
         if (
           nodePatch.desc &&
           nodePatch.desc.trim() &&
-          nodePatch.desc.trim() !== existing.desc.trim()
+          nodePatch.desc.trim() !==
+            existing.desc.trim()
         ) {
-          /*
-           * Keep the existing approved description as the anchor.
-           * Add genuinely new summary information instead of replacing it.
-           */
-          const incomingDescription = nodePatch.desc.trim();
+          const incomingDescription =
+            nodePatch.desc.trim();
 
-          if (!existing.desc.includes(incomingDescription)) {
+          if (
+            !existing.desc.includes(
+              incomingDescription
+            )
+          ) {
             existing.desc =
               `${existing.desc.trim()} ${incomingDescription}`.trim();
           }
@@ -293,31 +344,47 @@ export function applyConceptMapPatch(
 
         if (
           nodePatch.status &&
-          nodePatch.status !== existing.status
+          nodePatch.status !==
+            existing.status
         ) {
-          existing.status = nodePatch.status;
+          existing.status =
+            nodePatch.status;
         }
 
         enrichedNodes.push(id);
       } else {
         data[id] = {
-          title: nodePatch.title.trim(),
-          parent: parentId,
-          source: nodePatch.source.trim(),
-          status: nodePatch.status ?? "",
+          title:
+            nodePatch.title.trim(),
+
+          parent:
+            parentId,
+
+          source:
+            nodePatch.source.trim(),
+
+          status:
+            nodePatch.status ?? "",
+
           desc:
             nodePatch.desc?.trim() ||
             `${nodePatch.title.trim()} from the material learned so far.`,
+
           children: [],
-          notes: nodePatch.notes ?? [],
+
+          notes:
+            nodePatch.notes ?? [],
         };
 
         addedNodes.push(id);
       }
 
-      const parent = data[parentId];
+      const parent =
+        data[parentId];
 
-      if (!parent.children.includes(id)) {
+      if (
+        !parent.children.includes(id)
+      ) {
         parent.children.push(id);
       }
 
@@ -325,15 +392,21 @@ export function applyConceptMapPatch(
       progressed = true;
     }
 
-    if (!progressed && pending.length > 0) {
-      const unresolved = pending
-        .map(
-          (node) =>
-            `${normalizeConceptId(node.id)} -> ${normalizeConceptId(
-              node.parent
-            )}`
-        )
-        .join(", ");
+    if (
+      !progressed &&
+      pending.length > 0
+    ) {
+      const unresolved =
+        pending
+          .map(
+            (node) =>
+              `${normalizeConceptId(
+                node.id
+              )} -> ${normalizeConceptId(
+                node.parent
+              )}`
+          )
+          .join(", ");
 
       throw new Error(
         `Concept Map patch has unresolved relationships: ${unresolved}`
@@ -343,7 +416,159 @@ export function applyConceptMapPatch(
 
   return {
     data,
-    addedNodes: uniqueStrings(addedNodes),
-    enrichedNodes: uniqueStrings(enrichedNodes),
+    addedNodes:
+      uniqueStrings(
+        addedNodes
+      ),
+
+    enrichedNodes:
+      uniqueStrings(
+        enrichedNodes
+      ),
+  };
+}
+
+function getConceptMapClient():
+  VaultClient {
+  const token =
+    process.env
+      .CONCEPT_MAP_GITHUB_TOKEN;
+
+  const owner =
+    process.env
+      .CONCEPT_MAP_REPO_OWNER;
+
+  const repo =
+    process.env
+      .CONCEPT_MAP_REPO_NAME;
+
+  const branch =
+    process.env
+      .CONCEPT_MAP_BRANCH ??
+    "main";
+
+  if (!token) {
+    throw new Error(
+      "CONCEPT_MAP_GITHUB_TOKEN is missing."
+    );
+  }
+
+  if (!owner) {
+    throw new Error(
+      "CONCEPT_MAP_REPO_OWNER is missing."
+    );
+  }
+
+  if (!repo) {
+    throw new Error(
+      "CONCEPT_MAP_REPO_NAME is missing."
+    );
+  }
+
+  return new VaultClient(
+    token,
+    {
+      owner,
+      repo,
+      branch,
+    }
+  );
+}
+
+export async function readConceptMap():
+  Promise<ConceptMapData> {
+  const client =
+    getConceptMapClient();
+
+  const file =
+    await client.readFile(
+      CONCEPT_MAP_PATH
+    );
+
+  if (!file) {
+    throw new Error(
+      `${CONCEPT_MAP_PATH} does not exist.`
+    );
+  }
+
+  let parsed: unknown;
+
+  try {
+    parsed =
+      JSON.parse(
+        file.content
+      );
+  } catch {
+    throw new Error(
+      `${CONCEPT_MAP_PATH} is not valid JSON.`
+    );
+  }
+
+  if (
+    !parsed ||
+    typeof parsed !== "object" ||
+    Array.isArray(parsed)
+  ) {
+    throw new Error(
+      `${CONCEPT_MAP_PATH} has an invalid structure.`
+    );
+  }
+
+  const map =
+    parsed as ConceptMapData;
+
+  if (
+    !map.mcat ||
+    !map.living
+  ) {
+    throw new Error(
+      "Concept Map is missing required root nodes."
+    );
+  }
+
+  return map;
+}
+
+export async function updateConceptMap(
+  patch: ConceptMapPatch,
+  commitMessage:
+    string =
+      "concept-map: grow from approved lesson"
+): Promise<ConceptMapUpdateResult> {
+  const client =
+    getConceptMapClient();
+
+  const current =
+    await readConceptMap();
+
+  const merged =
+    applyConceptMapPatch(
+      current,
+      patch
+    );
+
+  const serialized =
+    `${JSON.stringify(
+      merged.data,
+      null,
+      2
+    )}\n`;
+
+  const result =
+    await client.writeFile(
+      CONCEPT_MAP_PATH,
+      serialized,
+      commitMessage
+    );
+
+  return {
+    commitSha:
+      result.commitSha,
+
+    addedNodes:
+      merged.addedNodes,
+
+    enrichedNodes:
+      merged.enrichedNodes,
   };
 }
