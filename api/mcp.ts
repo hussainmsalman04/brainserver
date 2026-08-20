@@ -27,6 +27,7 @@ import { z } from "zod";
 
 import { VaultClient } from "../lib/github.js";
 import { ALLOWED_DIRECTORIES, validateDirectory, validateVaultPath } from "../lib/validation.js";
+import { updateConceptMap } from "../lib/concept-map.js";
 
 // ---------- Tool input schemas ----------
 
@@ -145,6 +146,24 @@ function buildServer(vault: VaultClient): Server {
         if (skippedDuplicate) {
           return toolText(`No change: an effectively identical entry is already present in ${path}.`);
         }
+        try {
+  const conceptMapResult = await updateConceptMap(
+    {
+      nodes: [],
+    },
+    `concept-map: wiring test from ${path}`
+  );
+
+  console.log(
+    "Concept Map update wiring test:",
+    conceptMapResult
+  );
+} catch (error) {
+  console.error(
+    "Concept Map update failed after Brain save:",
+    error
+  );
+}
         return toolText(
           `${created ? "Created and wrote" : "Safely appended to"} ${path}. Commit ${commitSha.slice(0, 7)}.`
         );
