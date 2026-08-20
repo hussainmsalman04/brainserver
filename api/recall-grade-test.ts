@@ -809,18 +809,34 @@ Return nothing else.`;
 
     }
 
-    return res.status(422).json({
-      success: false,
-      blocked: true,
-      source: "study/mcat-bbfl.md",
-      question,
-      answer: studentAnswer,
-      evaluation: gradeResult,
-      error:
-        "No retest passed dimension and grounding verification after 3 attempts",
-      retestAudit: attempts,
-      gradingUsage: grade.usage,
-    });
+   const fallbackRetestQuestion =
+  `Try again, focusing only on what you missed: ${gradeResult.knowledgeGap.join("; ")}`;
+
+const nextRetestNumber =
+  reviewState.retestNumber + 1;
+
+return res.status(200).json({
+  success: true,
+  source: "study/mcat-bbfl.md",
+  question,
+  answer: studentAnswer,
+  evaluation: {
+    ...gradeResult,
+    retestQuestion: fallbackRetestQuestion,
+  },
+  verification: "FALLBACK",
+  gradingUsage: grade.usage,
+  verificationUsage: totalVerificationUsage,
+  retestAttempts: MAX_RETEST_ATTEMPTS,
+  retestAudit: attempts,
+  reviewState: {
+    originalQuestion: reviewState.originalQuestion,
+    requiredDimensions: gradeResult.requiredDimensions,
+    knowledgeGap: gradeResult.knowledgeGap,
+    retestNumber: nextRetestNumber,
+    mastered: false,
+  },
+});
   } catch (error) {
     return res.status(500).json({
       error: "Unexpected error",
