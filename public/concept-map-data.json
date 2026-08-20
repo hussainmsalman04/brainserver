@@ -587,7 +587,9 @@
     "status": "",
     "desc": "Simplest organisms, including all bacteria; lack membrane-bound organelles. Genetic material is a single circular DNA molecule concentrated in the nucleoid. Understanding their structure guides antibiotic choice.",
     "children": [
-      "prokaryotic-domains"
+      "prokaryotic-domains",
+      "plasmid",
+      "prokaryotic-ribosome"
     ],
     "notes": [
       {
@@ -609,7 +611,8 @@
     "status": "",
     "desc": "Two of the three domains of life contain prokaryotes: Archaea and Bacteria. Originally grouped as kingdom Monera before genetic/biochemical analysis separated them.",
     "children": [
-      "archaea"
+      "archaea",
+      "bacteria"
     ],
     "notes": [
       {
@@ -660,6 +663,156 @@
           "Some photosynthetic; many chemosynthetic (energy from inorganic compounds, e.g. sulfur/nitrogen such as ammonia)",
           "Historically extremophiles (high temp, high salinity, no light)",
           "Now known to be widespread, including in the human body"
+        ]
+      }
+    ]
+  },
+  "plasmid": {
+    "title": "Plasmid",
+    "parent": "prokaryotic-cell",
+    "source": "BIO 1.3",
+    "status": "",
+    "desc": "Small extra circular DNA, not part of the genome and not required for survival, but can confer advantages such as antibiotic resistance.",
+    "children": [],
+    "notes": [
+      {
+        "type": "bullets",
+        "title": "Key points",
+        "items": [
+          "Small circular DNA separate from the chromosome",
+          "Not genomic, not required for survival",
+          "Can confer antibiotic resistance",
+          "DNA in nucleoid on histone-like proteins; true histones are in Archaea"
+        ]
+      }
+    ]
+  },
+  "prokaryotic-ribosome": {
+    "title": "Prokaryotic Ribosome",
+    "parent": "prokaryotic-cell",
+    "source": "BIO 1.3",
+    "status": "",
+    "desc": "Prokaryotic 30S + 50S vs. eukaryotic 40S + 60S. The structural size difference enables selective antibiotic targeting (selective toxicity).",
+    "children": [],
+    "notes": [
+      {
+        "type": "bullets",
+        "title": "Key points",
+        "items": [
+          "Prokaryotic: 30S + 50S subunits",
+          "Eukaryotic: 40S + 60S subunits",
+          "Different structure enables antibiotics (tetracyclines, aminoglycosides, macrolides) to target bacteria selectively"
+        ]
+      }
+    ]
+  },
+  "bacteria": {
+    "title": "Bacteria",
+    "parent": "prokaryotic-domains",
+    "source": "BIO 1.3",
+    "status": "",
+    "desc": "Prokaryotic domain; all have a cell membrane and cytoplasm. Share analogous structures with eukaryotes, so drugs achieve selectivity via biochemical differences. Host relationships range from mutualistic to pathogenic.",
+    "children": [
+      "bacterial-flagellum",
+      "gram-staining",
+      "bacterial-metabolism"
+    ],
+    "notes": [
+      {
+        "type": "bullets",
+        "title": "Host relationships",
+        "items": [
+          "Mutualistic symbiotes: both benefit (gut bacteria make vitamin K and biotin/B7)",
+          "Pathogens/parasites: no host benefit, cause disease",
+          "Intracellular example: Chlamydia trachomatis",
+          "Extracellular example: Clostridium tetani (secretes toxins into blood)"
+        ]
+      },
+      {
+        "type": "bullets",
+        "title": "Classification by shape (3)",
+        "items": [
+          "Cocci = spherical (Streptococcus pyogenes, Staphylococcus aureus)",
+          "Bacilli = rod (E. coli, M. tuberculosis)",
+          "Spirilli = spiral (Treponema pallidum, Borrelia burgdorferi, Leptospira interrogans)"
+        ]
+      }
+    ]
+  },
+  "bacterial-flagellum": {
+    "title": "Bacterial Flagellum & Chemotaxis",
+    "parent": "bacteria",
+    "source": "BIO 1.3",
+    "status": "",
+    "desc": "Whip-like propulsion structure enabling chemotaxis (movement toward food or away from toxins). Basal body is the motor; filament is made of flagellin.",
+    "children": [],
+    "notes": [
+      {
+        "type": "bullets",
+        "title": "Three parts",
+        "items": [
+          "Filament: hollow, helical, made of flagellin",
+          "Basal body: the motor, anchors to membrane, rotates up to 300 Hz",
+          "Hook: transmits basal-body torque to the filament",
+          "Archaea have flagella too but structurally different"
+        ]
+      }
+    ]
+  },
+  "gram-staining": {
+    "title": "Gram Staining & Cell Envelope",
+    "parent": "bacteria",
+    "source": "BIO 1.3",
+    "status": "",
+    "desc": "Crystal violet then safranin counterstain distinguishes wall architecture. Envelope = cell wall + cell membrane. LPS (gram-negative) drives a much stronger immune response than lipoteichoic acid (gram-positive).",
+    "children": [],
+    "notes": [
+      {
+        "type": "path",
+        "title": "Gram-positive",
+        "steps": [
+          "retains crystal violet",
+          "deep purple",
+          "thick peptidoglycan + lipoteichoic acid"
+        ]
+      },
+      {
+        "type": "path",
+        "title": "Gram-negative",
+        "steps": [
+          "loses crystal violet, takes safranin",
+          "pink-red",
+          "thin peptidoglycan + periplasmic space",
+          "outer membrane with LPS"
+        ]
+      },
+      {
+        "type": "bullets",
+        "title": "Clinical",
+        "items": [
+          "Penicillin blocks peptidoglycan cross-linking to fail the wall to osmotic lysis (esp. gram-positive)",
+          "Most bacteria resistant; a few still sensitive (S. pyogenes, T. pallidum)",
+          "LPS triggers stronger inflammation than lipoteichoic acid"
+        ]
+      }
+    ]
+  },
+  "bacterial-metabolism": {
+    "title": "Aerobes & Anaerobes",
+    "parent": "bacteria",
+    "source": "BIO 1.3",
+    "status": "",
+    "desc": "Four-way oxygen classification. High-yield trap is facultative (uses O2 when present) vs. aerotolerant (never uses O2 but is unharmed by it).",
+    "children": [],
+    "notes": [
+      {
+        "type": "bullets",
+        "title": "Four categories",
+        "items": [
+          "Obligate aerobes: require O2",
+          "Obligate anaerobes: O2 is lethal (reactive oxygen radicals)",
+          "Facultative anaerobes: use O2 if present, switch to anaerobic if absent",
+          "Aerotolerant anaerobes: never use O2 but are not harmed by it"
         ]
       }
     ]
