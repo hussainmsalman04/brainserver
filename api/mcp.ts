@@ -68,6 +68,9 @@ const SaveInput = AppendInput.extend({
     })
     .optional(),
 });
+const UpdateConceptMapInput = z.object({
+  nodes: z.array(ConceptMapNodeInput),
+});
 // ---------- Build MCP server ----------
 
 function buildServer(vault: VaultClient): Server {
@@ -212,6 +215,96 @@ function buildServer(vault: VaultClient): Server {
         },
       },
       {
+  name: "update_concept_map",
+  description:
+    "Update only the derived MCAT Concept Map without writing to the Brain vault. Use for one-time backfills or retrying Concept Map growth after the Brain save has already succeeded.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      nodes: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: {
+              type: "string",
+              description:
+                "Stable lowercase semantic concept ID.",
+            },
+            title: {
+              type: "string",
+            },
+            parent: {
+              type: "string",
+              description:
+                "Existing or simultaneously-created parent concept ID.",
+            },
+            source: {
+              type: "string",
+              description:
+                "Approved lesson source such as BIO 1.3.",
+            },
+            desc: {
+              type: "string",
+            },
+            status: {
+              type: "string",
+              enum: ["", "mastered", "developing"],
+            },
+            notes: {
+              type: "array",
+              items: {
+                oneOf: [
+                  {
+                    type: "object",
+                    properties: {
+                      type: {
+                        type: "string",
+                        const: "bullets",
+                      },
+                      title: {
+                        type: "string",
+                      },
+                      items: {
+                        type: "array",
+                        items: {
+                          type: "string",
+                        },
+                      },
+                    },
+                    required: ["type", "title", "items"],
+                  },
+                  {
+                    type: "object",
+                    properties: {
+                      type: {
+                        type: "string",
+                        const: "path",
+                      },
+                      title: {
+                        type: "string",
+                      },
+                      steps: {
+                        type: "array",
+                        items: {
+                          type: "string",
+                        },
+                      },
+                    },
+                    required: ["type", "title", "steps"],
+                  },
+                ],
+              },
+            },
+          },
+          required: ["id", "title", "parent", "source"],
+        },
+      },
+    },
+    required: ["nodes"],
+  },
+},
+      {
         name: "append_to_vault",
         description:
        "Append a structured markdown entry to a vault file, creating the file if missing. This is a lower-level fallback tool. Prefer save_to_brain for normal approved saves.",
@@ -321,7 +414,42 @@ return toolText(
   `${created ? "Created and wrote" : "Safely appended to"} ${path}. Commit ${commitSha.slice(0, 7)}.${conceptMapSummary}`
 );
       }
+if (name === "update_concept_map") {
+  const patch = UpdateConceptMapInput.parse(args);
 
+  if (patch.nodes.length === 0) {
+    return toolText(
+      "No Concept Map changes requested."
+    );
+  }
+
+  const result = await updateConceptMap(
+    patch,
+    "concept-map: manual backfill"
+  );
+
+  const parts: string[] = [];
+
+  if (result.addedNodes.length > 0) {
+    parts.push(
+      `added ${result.addedNodes.join(", ")}`
+    );
+  }
+
+  if (result.enrichedNodes.length > 0) {
+    parts.push(
+      `enriched ${result.enrichedNodes.join(", ")}`
+    );
+  }
+
+  return toolText(
+    `Concept Map updated. Commit ${result.commitSha.slice(0, 7)}.${
+      parts.length > 0
+        ? ` ${parts.join("; ")}.`
+        : " No structural changes were needed."
+    }`
+  );
+}
       if (name === "append_to_vault") {
         const { path, entry, commit_message } = AppendInput.parse(args);
         const err = validateVaultPath(path);
