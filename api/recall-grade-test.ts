@@ -1,62 +1,140 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { VaultClient } from "../lib/github.js";
 import { checkAuth } from "../lib/auth.js";
+type ScopeMatcher = {
+  chapters: Set<number>; // whole chapters to include
+  lessons: Set<string>; // specific "c.l" lessons to include
+};
+
+function parseScopeQuery(scope: string): ScopeMatcher | null {
+  // Drop any "kaplan bio" label, keep only digits, dot, comma, hyphen.
+  const cleaned = scope
+    .toLowerCase()
+    .replace(/kaplan\s+bio/g, " ")
+    .replace(/[^0-9.,\-]/g, " ")
+    .trim();
+
+  if (!cleaned) return null;
+
+  const chapters = new Set<number>();
+  const lessons = new Set<string>();
+
+  for (const rawToken of cleaned.split(/[,\s]+/)) {
+    const token = rawToken.trim();
+    if (!token) continue;
+
+    // Range: "1-3" -> whole chapters 1,2,3
+    const range = token.match(/^(\d+)\s*-\s*(\d+)$/);
+    if (range) {
+      const start = parseInt(range[1], 10);
+      const end = parseInt(range[2], 10);
+      if (start <= end) {
+        for (let c = start; c <= end; c++) chapters.add(c);
+      }
+      continue;
+    }
+
+    // Specific lesson: "1.2"
+    const lesson = token.match(/^(\d+)\.(\d+)$/);
+    if (lesson) {
+      lessons.add(
+        `${parseInt(lesson[1], 10)}.${parseInt(lesson[2], 10)}`
+      );
+      continue;
+    }
+
+    // Whole chapter: "1"
+    const chapter = token.match(/^(\d+)$/);
+    if (chapter) {
+      chapters.add(parseInt(chapter[1], 10));
+      continue;
+    }
+    // Unrecognized token -> ignored
+  }
+
+  if (chapters.size === 0 && lessons.size === 0) return null;
+  return { chapters, lessons };
+}
+
+// Pull the "Kaplan Bio X.Y" tag from a heading, or a "Scope:" line in the body
+// as a fallback. Tolerant of parens, colons, date prefixes, etc. Returns the
+// normalized "c.l" (no leading zeros) or null when untagged.
+function sectionTag(headingText: string, body: string): string | null {
+  const fromHeading = headingText.match(/kaplan\s+bio\s+(\d+)\.(\d+)/i);
+  if (fromHeading) {
+    return `${parseInt(fromHeading[1], 10)}.${parseInt(fromHeading[2], 10)}`;
+  }
+  const fromScope = body.match(
+    /^\s*scope:\s*(?:kaplan\s+bio\s+)?(\d+)\.(\d+)/im
+  );
+  if (fromScope) {
+    return `${parseInt(fromScope[1], 10)}.${parseInt(fromScope[2], 10)}`;
+  }
+  return null;
+}
+
+function tagMatches(tag: string, matcher: ScopeMatcher): boolean {
+  if (matcher.lessons.has(tag)) return true;
+  const chapter = parseInt(tag.split(".")[0], 10);
+  return matcher.chapters.has(chapter);
+}
+
 function extractBrainSection(
   content: string,
   scope: string
 ): string | null {
-  const target = scope.trim().toLowerCase();
-
-  if (!target) {
+  if (!scope.trim()) {
     return content;
+  }
+
+  const matcher = parseScopeQuery(scope);
+  if (!matcher) {
+    return null;
   }
 
   const lines = content.split(/\r?\n/);
 
-  const startIndex = lines.findIndex((line) => {
-    const match = line.match(/^(#+)\s+(.+?)\s*$/);
-
-    return (
-      !!match &&
-      match[2].toLowerCase().includes(target)
-    );
+  // Index every heading with its level.
+  const headings: { index: number; level: number; text: string }[] = [];
+  lines.forEach((line, index) => {
+    const m = line.match(/^(#+)\s+(.+?)\s*$/);
+    if (m) {
+      headings.push({ index, level: m[1].length, text: m[2] });
+    }
   });
 
-  if (startIndex === -1) {
+  if (headings.length === 0) {
     return null;
   }
 
-  const headingMatch =
-    lines[startIndex].match(/^(#+)\s+/);
+  const matchedBlocks: string[] = [];
 
-  if (!headingMatch) {
-    return null;
-  }
+  for (let h = 0; h < headings.length; h++) {
+    const heading = headings[h];
 
-  const headingLevel = headingMatch[1].length;
-  let endIndex = lines.length;
+    // Section runs until the next heading of the same or higher level, so
+    // nested sub-headings stay inside their parent section.
+    let endIndex = lines.length;
+    for (let j = h + 1; j < headings.length; j++) {
+      if (headings[j].level <= heading.level) {
+        endIndex = headings[j].index;
+        break;
+      }
+    }
 
-  for (
-    let index = startIndex + 1;
-    index < lines.length;
-    index++
-  ) {
-    const nextHeading =
-      lines[index].match(/^(#+)\s+/);
+    const block = lines.slice(heading.index, endIndex).join("\n");
+    const tag = sectionTag(heading.text, block);
 
-    if (
-      nextHeading &&
-      nextHeading[1].length <= headingLevel
-    ) {
-      endIndex = index;
-      break;
+    if (tag && tagMatches(tag, matcher)) {
+      matchedBlocks.push(block.trim());
     }
   }
 
-  return lines
-    .slice(startIndex, endIndex)
-    .join("\n")
-    .trim();
+  if (matchedBlocks.length === 0) {
+    return null;
+  }
+
+  return matchedBlocks.join("\n\n").trim();
 }
 
 const MODEL = "google/gemini-3.1-flash-lite";
