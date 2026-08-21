@@ -110,7 +110,8 @@
       "membrane",
       "internal",
       "cytoskeleton",
-      "prokaryotic-cell"
+      "prokaryotic-cell",
+      "virus"
     ],
     "notes": [
       {
@@ -939,5 +940,140 @@
     "desc": "Integration of foreign genetic material taken up from the environment, usually spilled by other bacteria that lysed. Requires no cell contact and no vector. Common in gram-negative rods.",
     "children": [],
     "notes": []
+  },
+  "virus": {
+    "title": "Virus",
+    "parent": "cells",
+    "source": "BIO 1.5",
+    "status": "",
+    "desc": "Acellular obligate intracellular parasites that lack ribosomes and must hijack host machinery to replicate. Size 20-300 nm. Fail cell theory.",
+    "children": [
+      "subviral-particles",
+      "viral-life-cycle",
+      "viral-genome",
+      "viral-structure"
+    ],
+    "notes": [
+      {
+        "type": "bullets",
+        "title": "Key points",
+        "items": [
+          "Acellular; no organelles or nucleus",
+          "20-300 nm (prokaryotes 1-10 um; eukaryotes ~10x larger)",
+          "Lack ribosomes, so they are obligate intracellular parasites",
+          "Progeny released as virions"
+        ]
+      }
+    ]
+  },
+  "subviral-particles": {
+    "title": "Subviral Particles",
+    "parent": "virus",
+    "source": "BIO 1.5",
+    "status": "",
+    "desc": "Very small subviral particles that cause disease: prions (infectious proteins) and viroids (short circular ssRNA).",
+    "children": [],
+    "notes": [
+      {
+        "type": "bullets",
+        "title": "Prions",
+        "items": [
+          "Infectious proteins, nonliving",
+          "Force misfolding: alpha-helix to beta-pleated sheet",
+          "Reduced solubility, resists degradation, aggregates disrupt cell function",
+          "Diseases: mad cow (BSE), Creutzfeldt-Jakob, familial fatal insomnia"
+        ]
+      },
+      {
+        "type": "bullets",
+        "title": "Viroids",
+        "items": [
+          "Very short circular ssRNA",
+          "Silence genes by binding RNA sequences, blocking protein synthesis",
+          "Mostly plant pathogens",
+          "Human example HDV: harmful only when coinfected with HBV"
+        ]
+      }
+    ]
+  },
+  "viral-life-cycle": {
+    "title": "Viral Life Cycle",
+    "parent": "virus",
+    "source": "BIO 1.5",
+    "status": "",
+    "desc": "Viruses bind specific host receptors, translate viral genes using host machinery, assemble virions, and release progeny. Bacteriophages follow a lytic or lysogenic cycle.",
+    "children": [],
+    "notes": [
+      {
+        "type": "path",
+        "title": "Stages",
+        "steps": [
+          "infection: bind specific host receptors",
+          "translation & progeny assembly",
+          "progeny release"
+        ]
+      },
+      {
+        "type": "bullets",
+        "title": "Progeny release routes",
+        "items": [
+          "Cell death spills progeny",
+          "Lysis: cell bursts when overfilled (disadvantage: virus loses the host)",
+          "Extrusion: buds off by fusing with membrane, keeps host alive = productive cycle"
+        ]
+      },
+      {
+        "type": "bullets",
+        "title": "Lytic vs lysogenic",
+        "items": [
+          "Lytic: little regard for host, host lyses, virus is virulent",
+          "Lysogenic: integrates as provirus/prophage, host survives, replicates with the bacterium",
+          "Reversible: radiation, light, or chemicals can trigger reversion to lytic",
+          "Prophage can grab bacterial genes (transduction) and reduces susceptibility to superinfection"
+        ]
+      }
+    ]
+  },
+  "viral-genome": {
+    "title": "Viral Genome",
+    "parent": "virus",
+    "source": "BIO 1.5",
+    "status": "",
+    "desc": "DNA or RNA, single- or double-stranded, circular or linear. High-yield distinction among ssRNA viruses is which enzyme (if any) the virion must carry.",
+    "children": [],
+    "notes": [
+      {
+        "type": "bullets",
+        "title": "Genome types & enzyme logic",
+        "items": [
+          "DNA viruses: most enter the nucleus, transcribed to mRNA, then translated",
+          "+sense ssRNA: directly translated like mRNA, carries no enzyme",
+          "-sense ssRNA: carries RNA replicase in the virion (RNA to RNA) to build the complementary + strand",
+          "Retrovirus: carries reverse transcriptase (RNA to DNA), integrates into host genome, permanent infection (HIV)",
+          "Enzyme logic: +sense none; -sense replicase; retrovirus reverse transcriptase"
+        ]
+      }
+    ]
+  },
+  "viral-structure": {
+    "title": "Viral Structure",
+    "parent": "virus",
+    "source": "BIO 1.5",
+    "status": "",
+    "desc": "Genetic material plus a capsid (protein coat), sometimes surrounded by an envelope. Enveloped viruses are easier to kill because the envelope is fragile.",
+    "children": [],
+    "notes": [
+      {
+        "type": "bullets",
+        "title": "Structure & envelope",
+        "items": [
+          "Capsid = protein coat",
+          "Envelope (only some viruses) = phospholipids + virus-specific proteins",
+          "Enveloped viruses easier to kill: envelope sensitive to heat, detergents, desiccation",
+          "Non-enveloped more resistant to sterilization, persist on surfaces",
+          "Bacteriophages add a tail sheath (injects genome) and tail fibers (recognize host)"
+        ]
+      }
+    ]
   }
 }
