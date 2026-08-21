@@ -589,7 +589,9 @@
     "children": [
       "prokaryotic-domains",
       "plasmid",
-      "prokaryotic-ribosome"
+      "prokaryotic-ribosome",
+      "genetic-recombination",
+      "binary-fission"
     ],
     "notes": [
       {
@@ -670,9 +672,9 @@
   "plasmid": {
     "title": "Plasmid",
     "parent": "prokaryotic-cell",
-    "source": "BIO 1.3",
+    "source": "BIO 1.3 · BIO 1.4",
     "status": "",
-    "desc": "Small extra circular DNA, not part of the genome and not required for survival, but can confer advantages such as antibiotic resistance.",
+    "desc": "Small extra circular DNA, not part of the genome and not required for survival, but can confer advantages such as antibiotic resistance. Extrachromosomal circular DNA carrying beneficial genes such as antibiotic resistance and virulence factors. Episomes are the subset that can integrate into the genome.",
     "children": [],
     "notes": [
       {
@@ -683,6 +685,15 @@
           "Not genomic, not required for survival",
           "Can confer antibiotic resistance",
           "DNA in nucleoid on histone-like proteins; true histones are in Archaea"
+        ]
+      },
+      {
+        "type": "bullets",
+        "title": "Virulence factors & episomes",
+        "items": [
+          "Virulence factors raise pathogenicity: toxin production, attachment projections, immune evasion",
+          "Episomes = plasmids capable of integrating into the genome",
+          "Episome integration of the F factor underlies Hfr"
         ]
       }
     ]
@@ -715,7 +726,8 @@
     "children": [
       "bacterial-flagellum",
       "gram-staining",
-      "bacterial-metabolism"
+      "bacterial-metabolism",
+      "bacterial-growth-curve"
     ],
     "notes": [
       {
@@ -816,5 +828,116 @@
         ]
       }
     ]
+  },
+  "bacterial-growth-curve": {
+    "title": "Bacterial Growth Curve",
+    "parent": "bacteria",
+    "source": "BIO 1.4",
+    "status": "",
+    "desc": "Colony growth over time (log of number vs. time) proceeds through four ordered phases: lag, exponential/log, stationary, death.",
+    "children": [],
+    "notes": [
+      {
+        "type": "path",
+        "title": "Four phases",
+        "steps": [
+          "lag (adapting, little division)",
+          "exponential/log (division ramps, exponential growth)",
+          "stationary (resources dwindle, plateau)",
+          "death (resource depletion, decline)"
+        ]
+      }
+    ]
+  },
+  "genetic-recombination": {
+    "title": "Genetic Recombination",
+    "parent": "prokaryotic-cell",
+    "source": "BIO 1.4",
+    "status": "",
+    "desc": "Prokaryotes acquire foreign genetic material to increase diversity and drive evolution. Three mechanisms sorted by what they require: transformation (naked DNA), conjugation (contact bridge), transduction (viral vector).",
+    "children": [
+      "transposon",
+      "transduction",
+      "conjugation",
+      "transformation"
+    ],
+    "notes": []
+  },
+  "binary-fission": {
+    "title": "Binary Fission",
+    "parent": "prokaryotic-cell",
+    "source": "BIO 1.4",
+    "status": "",
+    "desc": "Asexual reproduction in prokaryotes. Circular chromosome attaches to the cell wall and replicates while the cell grows, then the membrane and wall invaginate at the midline to yield two identical daughter cells. Faster than mitosis (no spindle).",
+    "children": [],
+    "notes": [
+      {
+        "type": "path",
+        "title": "Steps",
+        "steps": [
+          "circular chromosome attaches to cell wall",
+          "chromosome replicates while cell grows",
+          "membrane and wall invaginate at midline",
+          "two identical daughter cells"
+        ]
+      },
+      {
+        "type": "bullets",
+        "title": "Key points",
+        "items": [
+          "Fewer events than mitosis, so it is fast",
+          "Ideal E. coli divides about every 20 minutes",
+          "No mitotic spindle"
+        ]
+      }
+    ]
+  },
+  "transposon": {
+    "title": "Transposon",
+    "parent": "genetic-recombination",
+    "source": "BIO 1.4",
+    "status": "",
+    "desc": "Genetic elements that insert into and excise themselves from the genome. Not limited to prokaryotes (also in eukaryotes). Insertion into a coding region can disrupt that gene.",
+    "children": [],
+    "notes": []
+  },
+  "transduction": {
+    "title": "Transduction",
+    "parent": "genetic-recombination",
+    "source": "BIO 1.4",
+    "status": "",
+    "desc": "The only recombination process requiring a vector. A bacteriophage accidentally packages host DNA during assembly and injects it into another bacterium, where it integrates. Viruses are obligate intracellular pathogens.",
+    "children": [],
+    "notes": []
+  },
+  "conjugation": {
+    "title": "Conjugation & Hfr",
+    "parent": "genetic-recombination",
+    "source": "BIO 1.4",
+    "status": "",
+    "desc": "Bacterial mating: a conjugation bridge transfers DNA unidirectionally from donor male (F+) to recipient female (F-). The bridge is built from sex pili requiring sex-factor plasmids such as the F (fertility) factor.",
+    "children": [],
+    "notes": [
+      {
+        "type": "bullets",
+        "title": "F+ vs Hfr",
+        "items": [
+          "Transfer is unidirectional: F+ donor to F- recipient",
+          "Bridge = sex pili on the donor; require sex-factor plasmids (F factor in E. coli)",
+          "F+ x F-: F factor is a free plasmid, copies and transfers cleanly, recipient becomes F+",
+          "Hfr (high frequency of recombination): F factor integrated into chromosome, so the cell tries to transfer the whole genome",
+          "Hfr x F-: bridge usually breaks before the full sequence (and full F factor) transfers, so recipient gains chromosomal genes but usually stays F-"
+        ]
+      }
+    ]
+  },
+  "transformation": {
+    "title": "Transformation",
+    "parent": "genetic-recombination",
+    "source": "BIO 1.4",
+    "status": "",
+    "desc": "Integration of foreign genetic material taken up from the environment, usually spilled by other bacteria that lysed. Requires no cell contact and no vector. Common in gram-negative rods.",
+    "children": [],
+    "notes": []
   }
 }
